@@ -11,8 +11,12 @@
 - Unity 6 (6000.0.32f1)
 - C#
 - UniTask
+  - https://github.com/Cysharp/UniTask
 - DOTween
-- AudioManager（BGM・SEの管理）
+  - https://dotween.demigiant.com/
+- AudioManager
+  - https://github.com/kankikuchi/AudioManager
 
-##作品動画URL
+## 作品動画URL
 https://www.youtube.com/watch?v=AzPuaAeeBLI&t=2s
+
