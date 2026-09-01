@@ -1,5 +1,6 @@
-using Cysharp.Threading.Tasks;
+ï»¿using Cysharp.Threading.Tasks;
 using KanKikuchi.AudioManager;
+using System.Linq;
 using System.Threading;
 using TMPro;
 using UnityEngine;
@@ -20,6 +21,8 @@ public class HomeRunDerbyManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _ballCountText;
     [SerializeField] private Button _restartButton;
     [SerializeField] private int _ballCount = 10;
+    [SerializeField] private int _resultDisplayDelay = 1000; // çµæœè¡¨ç¤ºã¾ã§ã®å¾…æ©Ÿæ™‚é–“(ms)
+    [SerializeField] private int _fadeDuration = 500; // ãƒ•ã‚§ãƒ¼ãƒ‰ã®æ™‚é–“(ms)
     private BattingBallResult _currentResult;
     private CancellationTokenSource _cts;
     private int _consecutiveHomeRunCount = 0;
@@ -28,12 +31,13 @@ public class HomeRunDerbyManager : MonoBehaviour
 
     private void Awake()
     {
+        _ballCountText.text = $"Ã—{_ballCount}";
         if (_battingResultEvent != null) _battingResultEvent.RegisterListener(OnBattingResultReceived);
-        else Debug.LogError("BattingResultEvent ‚ªİ’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ");
+        else Debug.LogError("BattingResultEvent ãŒè¨­å®šã•ã‚Œã¦ã„ã¾ã›ã‚“");
         if (_ballLandedEvent != null) _ballLandedEvent.RegisterListener(OnBallLanded);
-        else Debug.LogError("BallLandedEvent ‚ªİ’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ");
+        else Debug.LogError("BallLandedEvent ãŒè¨­å®šã•ã‚Œã¦ã„ã¾ã›ã‚“");
         if (_ballReachedTargetEvent != null) _ballReachedTargetEvent.RegisterListener(ResetAtBat);
-        else Debug.LogError("BallReachedTargetEvent ‚ªİ’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ");
+        else Debug.LogError("BallReachedTargetEvent ãŒè¨­å®šã•ã‚Œã¦ã„ã¾ã›ã‚“");
     }
 
     private void OnDestroy()
@@ -45,6 +49,7 @@ public class HomeRunDerbyManager : MonoBehaviour
 
     private void Start()
     {
+        Fade.FadeImage(_fadeDuration, false);
         BGMManager.Instance.Play(
             BGMPath.SPORTS_SEASON, 0.3f, 0, 1, true, false);
         _startDirection.Direction(null).Forget();
@@ -66,11 +71,15 @@ public class HomeRunDerbyManager : MonoBehaviour
 
     private void ResetAtBat(PitchBallMove ball)
     {
-        Debug.Log("[Manager] ƒ{[ƒ‹“’…@Œ‹‰Ê•\¦‚Ö");
-        if (_batterAnimationControl.IsSwinging)
+        _currentResult = new BattingBallResult(BattingBallType.Miss);
+        WaitResultDisplay().Forget();
+    }
+
+    private void OnBallLanded()
+    {
+        if (_currentResult.BallType != BattingBallType.HomeRun)
         {
-            Debug.Log("[Manager] ƒXƒCƒ“ƒO’†‚Ì‚½‚ßAƒXƒCƒ“ƒOI—¹‘Ò‚¿");
-            WaitSwinging().Forget();
+            WaitResultDisplay().Forget();
         }
         else
         {
@@ -78,14 +87,9 @@ public class HomeRunDerbyManager : MonoBehaviour
         }
     }
 
-    private void OnBallLanded()
+    private async UniTaskVoid WaitResultDisplay()
     {
-        ResultDisplay().Forget();
-    }
-
-    private async UniTaskVoid WaitSwinging()
-    {
-        await UniTask.WaitUntil(() => _batterAnimationControl.IsFinSwing);
+        await UniTask.Delay(_resultDisplayDelay);
         ResultDisplay().Forget();
     }
 
@@ -94,30 +98,38 @@ public class HomeRunDerbyManager : MonoBehaviour
         ResultDisplayData resultData;
         if (_currentResult == null)
         {
-            // Œ‹‰Ê‚ª‚È‚¢ê‡‚ÍŒ©“¦‚µ
+            // çµæœãŒãªã„å ´åˆã¯è¦‹é€ƒã—
             resultData = _scoreCalculator.CalculateScore(_consecutiveHomeRunCount, false, true);
-
         }
         else
         {
-            // ƒtƒ@ƒEƒ‹”»’è
+            // ãƒ•ã‚¡ã‚¦ãƒ«åˆ¤å®š
             bool isFoul = _currentResult.BallType == BattingBallType.Foul;
-            // ƒ~ƒX”»’è
+            // ãƒŸã‚¹åˆ¤å®š
             bool isMiss = _currentResult.BallType == BattingBallType.Miss;
-            // ƒXƒRƒAŒvZ
+            // ã‚¹ã‚³ã‚¢è¨ˆç®—
             resultData = _scoreCalculator.CalculateScore(_consecutiveHomeRunCount, isFoul, isMiss);
-            _isResultDisplaying = true;
         }
 
+
+        // ã‚¹ã‚³ã‚¢ã«åŠ ç®—ã•ã‚ŒãŸæ™‚ã®ã¿çµæœè¡¨ç¤º
+        if (_currentResult.BallType == BattingBallType.Hit || _currentResult.BallType == BattingBallType.HomeRun)
+        {
+            _isResultDisplaying = true;
+            // ãƒªã‚¶ãƒ«ãƒˆè¡¨ç¤º
+            _cts = new CancellationTokenSource();
+            await _resultDisplay.DisplayResult(resultData, _cts.Token);
+            _cts = null;
+            _isResultDisplaying = false;
+            await UniTask.WaitUntil(() => Input.GetMouseButtonDown(0));
+        }
+
+        Fade.FadeImage(_fadeDuration, true);
         _atBatResetEvent?.RaiseEvent();
-        // ƒŠƒUƒ‹ƒg•\¦
-        _cts = new CancellationTokenSource();
-        await _resultDisplay.DisplayResult(resultData, _cts.Token);
-        _isResultDisplaying = false;
-        _cts = null;
-        // ƒNƒŠƒbƒN‘Ò‚¿
-        await UniTask.WaitUntil(() => Input.GetMouseButtonDown(0));
         _resultDisplay.ResultHide();
+        // ã‚¯ãƒªãƒƒã‚¯å¾…ã¡
+        await UniTask.WaitForSeconds(_fadeDuration);
+        Fade.FadeImage(_fadeDuration, false);
         StartNextAtBat();
     }
 
@@ -126,12 +138,12 @@ public class HomeRunDerbyManager : MonoBehaviour
         _ballCount--;
         if (_ballCount <= 0)
         {
-            Debug.Log("‘S‚Ä‚Ì‘ÅÈ‚ªI—¹‚µ‚Ü‚µ‚½");
+            Debug.Log("å…¨ã¦ã®æ‰“å¸­ãŒçµ‚äº†ã—ã¾ã—ãŸ");
             _resultDisplay.DisPlayFinalResult(_homeRunCount, ShowRestartButton).Forget();
             return;
         }
-        Debug.Log("Ÿ‚Ì‘ÅÈ‚ğŠJn");
-        _ballCountText.text = $"~{_ballCount}";
+        Debug.Log("æ¬¡ã®æ‰“å¸­ã‚’é–‹å§‹");
+        _ballCountText.text = $"Ã—{_ballCount}";
         _currentResult = null;
         StartPitch();
     }
@@ -144,7 +156,7 @@ public class HomeRunDerbyManager : MonoBehaviour
 
     public void Restart()
     {
-        // Scene‚ğƒŠƒ[ƒh‚µ‚ÄƒQ[ƒ€‚ğÄŠJ‚·‚é
+        // Sceneã‚’ãƒªãƒ­ãƒ¼ãƒ‰ã—ã¦ã‚²ãƒ¼ãƒ ã‚’å†é–‹ã™ã‚‹
         UnityEngine.SceneManagement.
             SceneManager.LoadScene(UnityEngine.SceneManagement.
             SceneManager.GetActiveScene().name);
@@ -152,7 +164,7 @@ public class HomeRunDerbyManager : MonoBehaviour
 
     private void StartPitch()
     {
-        Debug.Log("“Š‹…‚ğŠJn");
+        Debug.Log("æŠ•çƒã‚’é–‹å§‹");
         _startPitchEvent.RaiseEvent();
 
     }
