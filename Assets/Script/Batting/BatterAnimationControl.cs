@@ -9,7 +9,7 @@ public class BatterAnimationControl : MonoBehaviour
     [SerializeField] OnPitchBallReleaseEvent _ballReleaseEvent;
     [SerializeField] OnBallLandedEvent _ballLandedEvent;
     [SerializeField] OnAtBatResetEvent _atBatReset;
-
+    
     private Vector3 _startPos;
     private Vector3 _startRote;
     public bool IsFinSwing => _isFinSwing;
@@ -28,11 +28,16 @@ public class BatterAnimationControl : MonoBehaviour
         if (_ballReleaseEvent != null) _ballReleaseEvent.RegisterListener(OnRelease);
         else Debug.LogError("OnPitchBallReleaseEvent が未設定");
 
-        if (_ballLandedEvent != null) _ballLandedEvent.RegisterListener(ResetAtBat);
-        else Debug.LogError("OnBallLandedEvent が未設定");
-
         if (_atBatReset != null) _atBatReset.RegisterListener(ResetAtBat);
         else Debug.LogError("OnAtBatResetEvent が未設定");
+    }
+
+    private void OnDestroy()
+    {
+        _inputEvent?.UnregisterListener(OnInput);
+        _ballReleaseEvent?.UnregisterListener(OnRelease);
+        _ballLandedEvent?.UnregisterListener(ResetAtBat);
+        _atBatReset?.UnregisterListener(ResetAtBat);
     }
 
     /// <summary>
