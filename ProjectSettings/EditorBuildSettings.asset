@@ -9,7 +9,10 @@ EditorBuildSettings:
     path: Assets/Test.unity
     guid: eec23608dcb824b48b4108293e81745a
   - enabled: 1
-    path: Assets/Scenes/HomeRun.unity
+    path: Assets/Scenes/Title.unity
+    guid: a5e565b364163eb449a4aa946336e7c0
+  - enabled: 1
+    path: Assets/Scenes/Homerun.unity
     guid: 4168babd3ab15b343acceec5c445ac61
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
