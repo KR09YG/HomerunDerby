@@ -25,4 +25,13 @@ public class BattingBallResult
     public BattingBallType BallType;
     public int LandingIndex;
     public float Distance;
+
+    /// <summary>
+    /// 空振りなどで強制的に結果を設定する場合に使用するコンストラクタ
+    /// </summary>
+    /// <param name="type"></param>
+    public BattingBallResult(BattingBallType type   )
+    {
+        BallType = BattingBallType.Miss;
+    }
 }
