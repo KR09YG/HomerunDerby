@@ -1,11 +1,15 @@
-﻿using UnityEngine;
+﻿using Cysharp.Threading.Tasks;
+using KanKikuchi.AudioManager;
 using System.Collections.Generic;
 using System.Linq;
-using KanKikuchi.AudioManager;
+using Unity.VisualScripting;
+using UnityEditorInternal;
+using UnityEngine;
 
 public class BattingCalculator : MonoBehaviour
 {
     [Header("参照")]
+    [SerializeField] private HomeRunDerbyManager _homeRunDerbyManager;
     [SerializeField] private BattingCursor _cursor;
     [SerializeField] private StrikeZone _strikeZone;
     [SerializeField] private BattingParameters _parameters;
@@ -124,7 +128,7 @@ public class BattingCalculator : MonoBehaviour
             trajectory, ballPos, distance, launchAngle, horizontalAngle, firstGroundLayer, landingIndex);
 
         // 9. 結果オブジェクト作成
-        BattingBallResult result = new BattingBallResult
+        BattingBallResult result = new BattingBallResult(ballType)
         {
             InitialVelocity = initialVelocity,
             ExitVelocity = exitVelocity,
@@ -142,15 +146,15 @@ public class BattingCalculator : MonoBehaviour
             LandingIndex = landingIndex
         };
 
-        // 10. イベント発火
-        _battedBallResultEvent?.RaiseEvent(result);
 
         if (_parameters.EnableDebugLogs)
         {
             Debug.Log($"[Batting] ExitVel={exitVelocity * 3.6f:F0}km/h, Angle={launchAngle:F1}°, Distance={distance:F1}m, Type={ballType}, Layer={firstGroundLayer}");
         }
-    }
 
+        // 10. イベント発火
+        _battedBallResultEvent?.RaiseEvent(result);
+    }
 
     private float GetPitchSpeed(PitchBallMove ball)
     {
@@ -247,10 +251,7 @@ public class BattingCalculator : MonoBehaviour
 
     private void RaiseMissEvent()
     {
-        _battedBallResultEvent?.RaiseEvent(new BattingBallResult
-        {
-            BallType = BattingBallType.Miss
-        });
+        _battedBallResultEvent?.RaiseEvent(new BattingBallResult(BattingBallType.Miss));
     }
 
     private void OnDrawGizmos()
