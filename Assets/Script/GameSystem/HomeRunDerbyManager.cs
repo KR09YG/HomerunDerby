@@ -21,8 +21,8 @@ public class HomeRunDerbyManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _ballCountText;
     [SerializeField] private Button _restartButton;
     [SerializeField] private int _ballCount = 10;
-    [SerializeField] private int _resultDisplayDelay = 1000; // 結果表示までの待機時間(ms)
-    [SerializeField] private int _fadeDuration = 500; // フェードの時間(ms)
+    [SerializeField] private float _resultDisplayDelay = 1f; // 結果表示までの待機時間(s)
+    [SerializeField] private float _fadeDuration = 0.5f; // フェードの時間(s)
     private BattingBallResult _currentResult;
     private CancellationTokenSource _cts;
     private int _consecutiveHomeRunCount = 0;
@@ -89,7 +89,7 @@ public class HomeRunDerbyManager : MonoBehaviour
 
     private async UniTaskVoid WaitResultDisplay()
     {
-        await UniTask.Delay(_resultDisplayDelay);
+        await UniTask.WaitForSeconds(_resultDisplayDelay);
         ResultDisplay().Forget();
     }
 
@@ -121,13 +121,14 @@ public class HomeRunDerbyManager : MonoBehaviour
             await _resultDisplay.DisplayResult(resultData, _cts.Token);
             _cts = null;
             _isResultDisplaying = false;
-            await UniTask.WaitUntil(() => Input.GetMouseButtonDown(0));
+            await UniTask.WhenAny(UniTask.WaitUntil(
+                () => Input.GetMouseButtonDown(0)),
+                UniTask.WaitForSeconds(_resultDisplayDelay));
         }
 
         Fade.FadeImage(_fadeDuration, true);
         _atBatResetEvent?.RaiseEvent();
         _resultDisplay.ResultHide();
-        // クリック待ち
         await UniTask.WaitForSeconds(_fadeDuration);
         Fade.FadeImage(_fadeDuration, false);
         StartNextAtBat();
