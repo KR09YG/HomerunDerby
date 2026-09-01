@@ -9,7 +9,7 @@ public class BattingBallMove : BallMoveTrajectory
 
     [SerializeField] private ScoreCalculator _scoreCalculator;
     [SerializeField] private float _foulDisplayDistance;
-    [Tooltip("ファールになった時の表示時間(ms)"), SerializeField] private int _foulBallDisplayTime;
+    [Tooltip("着地してからの止まるまでの時間(ms)"), SerializeField] private int _delayBallStopTime;
 
     private bool _hasLanded = false;
     private BattingBallResult _result;
@@ -32,9 +32,10 @@ public class BattingBallMove : BallMoveTrajectory
 
     protected override void Update()
     {
-        base.Update();
         if (!_isMoving) return;
+        base.Update();
 
+        if (_hasLanded) return;
         _scoreCalculator.CalculateDistance(transform.position);
 
         if (_result.LandingIndex < _index)
@@ -44,8 +45,8 @@ public class BattingBallMove : BallMoveTrajectory
             {
                 Debug.Log("ボールが着地しました");
                 _hasLanded = true;
-                _isMoving = false;
                 _onBallLanded?.RaiseEvent();
+                WaitStopBallAsync().Forget();
             }
         }
     }
@@ -70,11 +71,6 @@ public class BattingBallMove : BallMoveTrajectory
 
         float distance = Vector3.Distance(_trajectory[0], _trajectory[result.LandingIndex]);
 
-        if (_result.BallType == BattingBallType.Foul && distance < _foulDisplayDistance)
-        {
-            _ = WaitFoulBallAsync();
-        }
-
         _elapsedTime = 0f;
         _isMoving = false;
 
@@ -83,10 +79,9 @@ public class BattingBallMove : BallMoveTrajectory
         StartMoving();
     }
 
-    private async UniTaskVoid WaitFoulBallAsync()
+    private async UniTaskVoid WaitStopBallAsync()
     {
-        await UniTask.Delay(_foulBallDisplayTime);
-        Debug.Log("ファールボールの表示時間が終了しました");
+        await UniTask.Delay(_delayBallStopTime);
         _isMoving = false;
     }
 
