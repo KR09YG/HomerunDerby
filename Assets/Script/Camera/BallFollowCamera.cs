@@ -16,15 +16,13 @@ public class BallFollowCamera : MonoBehaviour
     [Header("Follow Target")]
     [SerializeField] private Transform _ball;
 
-    [Header("FOVê›íË")]
-    [SerializeField] private float _fovDefault = 60f;
-    [SerializeField] private float _fovZoomMin = 25f;
-    [SerializeField] private float _zoomDistanceMax = 80f;
-    [SerializeField] private float _zoomDistanceMin = 10f;
-    [SerializeField, Range(1f, 20f)] private float _fovSpeed = 5f;
+    [Header("Follow Pivot")]
+    [SerializeField] private Transform _followPivot;
+
+    [Header("Follow Distance")]
+    [SerializeField] private float _followDistance = 0.7f;
 
     private bool _isFollowing = false;
-    private CinemachineComposer _composer;
 
     private void Awake()
     {
@@ -32,13 +30,6 @@ public class BallFollowCamera : MonoBehaviour
         else Debug.LogError("OnBattingResultEvent Ç™ñ¢ê›íË");
         if (_atBatResetEvent != null) _atBatResetEvent.RegisterListener(OnFinishedFollowing);
         else Debug.LogError("OnAtBatResetEvent Ç™ñ¢ê›íË");
-
-        _composer = _ballFollowCamera.GetCinemachineComponent<CinemachineComposer>();
-
-        // èâä˙FOV
-        var lens = _ballFollowCamera.m_Lens;
-        lens.FieldOfView = _fovDefault;
-        _ballFollowCamera.m_Lens = lens;
     }
 
     private void OnDestroy()
@@ -50,18 +41,7 @@ public class BallFollowCamera : MonoBehaviour
     private void LateUpdate()
     {
         if (!_isFollowing) return;
-        UpdateFov();
-    }
-
-    private void UpdateFov()
-    {
-        float dist = Vector3.Distance(_ballFollowCamera.transform.position, _ball.position);
-        float t = Mathf.InverseLerp(_zoomDistanceMin, _zoomDistanceMax, dist);
-        float targetFov = Mathf.Lerp(_fovZoomMin, _fovDefault, t);
-
-        var lens = _ballFollowCamera.m_Lens;
-        lens.FieldOfView = Mathf.Lerp(lens.FieldOfView, targetFov, _fovSpeed * Time.deltaTime);
-        _ballFollowCamera.m_Lens = lens;
+        FollowingBall();
     }
 
     private void OnHit(BattingBallResult result)
@@ -75,6 +55,19 @@ public class BallFollowCamera : MonoBehaviour
         _ballFollowCamera.Priority = 10;
         _isFollowing = true;
     }
+    private void FollowingBall()
+    {
+        if (!_isFollowing) return;
+        _ballFollowCamera.transform.position = GetCameraPosition();
+
+    }
+
+    private Vector3 GetCameraPosition()
+    {
+        Vector3 distance = _ball.position - _followPivot.position;
+        return _followPivot.position + distance * _followDistance;
+
+    }
 
     public void OnFinishedFollowing()
     {
@@ -83,14 +76,11 @@ public class BallFollowCamera : MonoBehaviour
         WaitCameraChange().Forget();
     }
 
+
     private async UniTaskVoid WaitCameraChange()
     {
         await UniTask.Delay(1000);
         _ballFollowCamera.Priority = 0;
         _batterCamera.Priority = 10;
-
-        var lens = _ballFollowCamera.m_Lens;
-        lens.FieldOfView = _fovDefault;
-        _ballFollowCamera.m_Lens = lens;
     }
 }
