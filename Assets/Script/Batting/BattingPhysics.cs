@@ -1,41 +1,41 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public static class BattingPhysics
 {
     private const float BALL_MASS_KG = 0.145f;
     private const float EFFECTIVE_BAT_MASS_FACTOR = 0.7f;
-    private const float KMH_TO_MS = 1f / 3.6f;
+    private const float KPH_TO_MPS = 1f / 3.6f;
     private const float BALL_RADIUS_M = 0.0366f;
     private const float RPM_TO_RAD_PER_SEC = 2f * Mathf.PI / 60f;
 
     /// <summary>
     /// 打球初速を計算
     /// </summary>
-    /// <param name="pitchSpeedMs">投球速度(m/s)</param>
+    /// <param name="pitchSpeedMps">投球速度(m/s)</param>
     /// <param name="batSpeedKmh">バット速度(km/h)</param>
     /// <param name="batMass">バット質量(kg)</param>
     /// <param name="cor">反発係数</param>
     /// <param name="efficiency">インパクト効率</param>
     public static float CalculateExitVelocity(
-        float pitchSpeedMs,
+        float pitchSpeedMps,
         float batSpeedKmh,
         float batMass,
         float cor,
         float efficiency)
     {
         // バット速度をm/sに変換
-        float batSpeedMs = batSpeedKmh * KMH_TO_MS;
+        float batSpeedMps = batSpeedKmh * KPH_TO_MPS;
         // 有効バット質量を計算
         float effectiveBatMass = batMass * EFFECTIVE_BAT_MASS_FACTOR;
         // 打球初速計算
         float numerator =
-            (BALL_MASS_KG - cor * effectiveBatMass) * pitchSpeedMs +
-            effectiveBatMass * (1f + cor) * batSpeedMs;
+            (BALL_MASS_KG - cor * effectiveBatMass) * pitchSpeedMps +
+            effectiveBatMass * (1f + cor) * batSpeedMps;
         // 分母計算
         float denominator = BALL_MASS_KG + effectiveBatMass;
         // 最終的な打球初速に効率を乗算
-        float baseVelocity = numerator / denominator;
-        return baseVelocity * efficiency;
+        float baseVelocityMps = numerator / denominator;
+        return baseVelocityMps * efficiency;
     }
 
     /// <summary>
@@ -77,12 +77,12 @@ public static class BattingPhysics
         // オフセットに基づいて角度補正を計算
         float normalizedOffset = verticalOffset / MAX_VERTICAL_OFFSET;
         // 角度のズレをべき乗で計算
-        float angleOffset = Mathf.Sign(normalizedOffset) *
+        float angleOffsetDeg = Mathf.Sign(normalizedOffset) *
                            Mathf.Pow(Mathf.Abs(normalizedOffset), param.LaunchAnglePower) *
                            param.LaunchAngleScale;
 
-        float launchAngle = param.IdealLaunchAngle - angleOffset;
-        return Mathf.Clamp(launchAngle, param.MinLaunchAngle, param.MaxLaunchAngle);
+        float launchAngleDeg = param.IdealLaunchAngle - angleOffsetDeg;
+        return Mathf.Clamp(launchAngleDeg, param.MinLaunchAngle, param.MaxLaunchAngle);
     }
 
     /// <summary>
@@ -94,8 +94,8 @@ public static class BattingPhysics
         if (Mathf.Abs(timing) > param.FoulThreshold)
         {
             float excessTiming = (Mathf.Abs(timing) - param.FoulThreshold) / (1f - param.FoulThreshold);
-            float foulAngle = Mathf.Lerp(param.MaxFairAngle, param.MaxFoulAngle, excessTiming);
-            return Mathf.Sign(timing) * foulAngle;
+            float foulAngleDeg = Mathf.Lerp(param.MaxFairAngle, param.MaxFoulAngle, excessTiming);
+            return Mathf.Sign(timing) * foulAngleDeg;
         }
 
         // タイミングに基づいて水平角度を計算
@@ -108,16 +108,16 @@ public static class BattingPhysics
     /// スピン量を計算
     /// </summary>
     public static float CalculateSpinRate(
-        float exitVelocity,
-        float launchAngle,
+        float exitVelocityMps,
+        float launchAngleDeg,
         float efficiency,
         BattingParameters param)
     {
-        float velocityFactor = exitVelocity / 40f;
-        float angleFactor = 1f + (launchAngle / 30f) * 0.3f;
-        float spinRate = param.BaseBackspinRPM * velocityFactor * angleFactor * efficiency;
+        float velocityFactor = exitVelocityMps / 40f;
+        float angleFactor = 1f + (launchAngleDeg / 30f) * 0.3f;
+        float calculatedSpinRateRpm = param.BaseBackspinRPM * velocityFactor * angleFactor * efficiency;
 
-        return Mathf.Clamp(spinRate, param.MinSpinRate, param.MaxSpinRate);
+        return Mathf.Clamp(calculatedSpinRateRpm, param.MinSpinRate, param.MaxSpinRate);
     }
 
     /// <summary>
@@ -125,11 +125,11 @@ public static class BattingPhysics
     /// </summary>
     public static float CalculateLiftCoefficient(
         float spinRateRpm,
-        float speedMs,
+        float speedMps,
         BattingParameters param)
     {
-        float omega = spinRateRpm * RPM_TO_RAD_PER_SEC;
-        float spinRatio = (omega * BALL_RADIUS_M) / speedMs;
+        float angularVelocityRadPerSec = spinRateRpm * RPM_TO_RAD_PER_SEC;
+        float spinRatio = (angularVelocityRadPerSec * BALL_RADIUS_M) / speedMps;
 
         float cl = (param.LiftCoefficientA * spinRatio) / (param.LiftCoefficientB + spinRatio);
         return Mathf.Clamp(cl, 0f, param.MaxLiftCoefficient);
@@ -138,15 +138,15 @@ public static class BattingPhysics
     /// <summary>
     /// 打球方向ベクトルを計算
     /// </summary>
-    public static Vector3 CalculateBattedBallDirection(float launchAngle, float horizontalAngle)
+    public static Vector3 CalculateBattedBallDirection(float launchAngleDeg, float horizontalAngleDeg)
     {
         // 打ち上げ角度と水平角度から方向ベクトルを計算
-        float launchRad = launchAngle * Mathf.Deg2Rad;
-        float horizontalRad = horizontalAngle * Mathf.Deg2Rad;
+        float launchAngleRad = launchAngleDeg * Mathf.Deg2Rad;
+        float horizontalAngleRad = horizontalAngleDeg * Mathf.Deg2Rad;
 
-        float x = Mathf.Sin(horizontalRad) * Mathf.Cos(launchRad);
-        float y = Mathf.Sin(launchRad);
-        float z = -Mathf.Cos(horizontalRad) * Mathf.Cos(launchRad);
+        float x = Mathf.Sin(horizontalAngleRad) * Mathf.Cos(launchAngleRad);
+        float y = Mathf.Sin(launchAngleRad);
+        float z = -Mathf.Cos(horizontalAngleRad) * Mathf.Cos(launchAngleRad);
 
         return new Vector3(x, y, z).normalized;
     }
