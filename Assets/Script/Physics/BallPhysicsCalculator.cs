@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,12 +26,12 @@ public struct BallData
 
 public static class BallPhysicsCalculator
 {
-    private const float KMH_TO_MS = 1f / 3.6f;
+    private const float KPH_TO_MPS = 1f / 3.6f;
 
     public struct SimulationConfig
     {
         public float DeltaTime;
-        public float MaxSimulationTime;
+        public float MaxSimulationTimeSeconds;
         public float? StopAtZ;
         public BounceSettings BounceSettings;
         public string GroundLayer;
@@ -41,14 +41,14 @@ public static class BallPhysicsCalculator
     {
         Debug.Log("========== 軌道計算開始 ==========");
 
-        float speedMs = request.BallData.Speed * KMH_TO_MS;
+        float speedMps = request.BallData.Speed * KPH_TO_MPS;
 
         Vector3 spinAxis = ToSpinAxis(
             request.BallData.SpinTilt,
             request.BallData.SpinEfficiency);
 
         float liftCoefficient = CalcCl(
-            speedMs,
+            speedMps,
             request.BallData.RotateSpeed * request.BallData.SpinEfficiency);
 
         // PassPointを終点として最適化
@@ -56,13 +56,13 @@ public static class BallPhysicsCalculator
         solverSettings.StopPosition = request.PassPoint;
         solverSettings.StopAtTarget = true;
 
-        Vector3 optimalVelocity = PitchVelocitySolver.FindOptimalVelocityAdvanced(
+        Vector3 optimalVelocityMps = PitchVelocitySolver.FindOptimalVelocityAdvanced(
             request.ReleasePoint,
             request.PassPoint,
             spinAxis,
             request.BallData.RotateSpeed * request.BallData.SpinEfficiency,
             liftCoefficient,
-            speedMs,
+            speedMps,
             solverSettings,
             request.BounceSettings
         );
@@ -71,14 +71,14 @@ public static class BallPhysicsCalculator
         var config = new SimulationConfig
         {
             DeltaTime = solverSettings.DeltaTime != 0 ? solverSettings.DeltaTime : 0.01f,
-            MaxSimulationTime = solverSettings.MaxSimulationTime != 0 ? solverSettings.MaxSimulationTime : 5f,
+            MaxSimulationTimeSeconds = solverSettings.MaxSimulationTime != 0 ? solverSettings.MaxSimulationTime : 5f,
             StopAtZ = request.StopZ,
             BounceSettings = request.BounceSettings
         };
 
         List<Vector3> trajectory = SimulateTrajectory(
             request.ReleasePoint,
-            optimalVelocity,
+            optimalVelocityMps,
             spinAxis,
             request.BallData.RotateSpeed * request.BallData.SpinEfficiency,
             liftCoefficient,
@@ -102,22 +102,22 @@ public static class BallPhysicsCalculator
     /// Tilt=90°  Y+ → シュート方向
     /// Tilt=270° Y- → スライダー方向
     /// </summary>
-    public static Vector3 ToSpinAxis(float spinTilt, float spinEfficiency)
+    public static Vector3 ToSpinAxis(float spinTiltDeg, float spinEfficiency)
     {
-        float rad = spinTilt * Mathf.Deg2Rad;
-        float x = Mathf.Cos(rad) * spinEfficiency;
-        float y = Mathf.Sin(rad) * spinEfficiency;
+        float spinTiltRad = spinTiltDeg * Mathf.Deg2Rad;
+        float x = Mathf.Cos(spinTiltRad) * spinEfficiency;
+        float y = Mathf.Sin(spinTiltRad) * spinEfficiency;
         float z = 1.0f - spinEfficiency;
         Vector3 axis = new Vector3(x, y, z);
         return axis.magnitude > 1e-6f ? axis.normalized : Vector3.forward;
     }
 
     /// <summary>有効回転数ベースでClを動的計算</summary>
-    public static float CalcCl(float speedMs, float effectiveRpm)
+    public static float CalcCl(float speedMps, float effectiveSpinRateRpm)
     {
-        float omega = effectiveRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
-        float spinParam = speedMs > 0f
-            ? (BallPhysicsConstants.BALL_RADIUS * omega) / speedMs
+        float effectiveAngularVelocityRadPerSec = effectiveSpinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
+        float spinParam = speedMps > 0f
+            ? (BallPhysicsConstants.BALL_RADIUS * effectiveAngularVelocityRadPerSec) / speedMps
             : 0f;
         return Mathf.Clamp(
             1.5f * spinParam / (1f + 2.0f * spinParam),
@@ -126,15 +126,15 @@ public static class BallPhysicsCalculator
 
     public static List<Vector3> SimulateTrajectory(
         Vector3 startPosition,
-        Vector3 initialVelocity,
+        Vector3 initialVelocityMps,
         Vector3 spinAxisNormalized,
-        float spinRateRPM,
+        float spinRateRpm,
         float liftCoefficient,
         SimulationConfig config)
     {
         return BallTrajectorySimulator.SimulateTrajectory(
-            startPosition, initialVelocity, spinAxisNormalized,
-            spinRateRPM, liftCoefficient, config);
+            startPosition, initialVelocityMps, spinAxisNormalized,
+            spinRateRpm, liftCoefficient, config);
     }
 
     public static Vector3 FindPointAtZ(List<Vector3> trajectory, float targetZ)
@@ -156,15 +156,15 @@ public static class BallPhysicsCalculator
 
     public static (List<Vector3> trajectory, string firstGroundLayer, int landingIndex) SimulateTrajectoryWithGroundInfo(
         Vector3 startPosition,
-        Vector3 initialVelocity,
+        Vector3 initialVelocityMps,
         Vector3 spinAxisNormalized,
-        float spinRateRPM,
+        float spinRateRpm,
         float liftCoefficient,
         SimulationConfig config)
     {
         var result = BallTrajectorySimulator.SimulateTrajectoryWithMetadata(
-            startPosition, initialVelocity, spinAxisNormalized,
-            spinRateRPM, liftCoefficient, config);
+            startPosition, initialVelocityMps, spinAxisNormalized,
+            spinRateRpm, liftCoefficient, config);
         return (result.Points, result.FirstGroundLayer, result.LandingIndex);
     }
 }

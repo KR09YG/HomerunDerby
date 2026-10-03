@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -38,25 +38,25 @@ public static class BallTrajectorySimulator
     /// </summary>
     private static void SimulatePhysicsStep(
         ref Vector3 position,
-        ref Vector3 velocity,
+        ref Vector3 velocityMps,
         Vector3 spinAxisNormalized,
-        float spinRateRPM,
+        float spinRateRpm,
         float liftCoefficient,
         float deltaTime)
     {
-        Vector3 gravity = Physics.gravity;
-        Vector3 dragForce = BallAerodynamics.CalculateDragForce(velocity);
-        Vector3 magnusForce = BallAerodynamics.CalculateMagnusForce(
-            velocity,
+        Vector3 gravityMetersPerSecondSquared = Physics.gravity;
+        Vector3 dragForceNewtons = BallAerodynamics.CalculateDragForce(velocityMps);
+        Vector3 magnusForceNewtons = BallAerodynamics.CalculateMagnusForce(
+            velocityMps,
             spinAxisNormalized,
-            spinRateRPM,
+            spinRateRpm,
             liftCoefficient
         );
 
-        Vector3 acceleration = gravity + (dragForce + magnusForce) / BALL_MASS_KG;
+        Vector3 accelerationMetersPerSecondSquared = gravityMetersPerSecondSquared + (dragForceNewtons + magnusForceNewtons) / BALL_MASS_KG;
 
-        velocity += acceleration * deltaTime;
-        position += velocity * deltaTime;
+        velocityMps += accelerationMetersPerSecondSquared * deltaTime;
+        position += velocityMps * deltaTime;
     }
 
     /// <summary>
@@ -64,36 +64,36 @@ public static class BallTrajectorySimulator
     /// </summary>
     private static TrajectoryResult SimulateTrajectoryInternal(
         Vector3 startPosition,
-        Vector3 initialVelocity,
+        Vector3 initialVelocityMps,
         Vector3 spinAxisNormalized,
-        float spinRateRPM,
+        float spinRateRpm,
         float liftCoefficient,
         BallPhysicsCalculator.SimulationConfig config,
         bool trackGroundLayer)
     {
         List<Vector3> trajectory = new List<Vector3> { startPosition };
         Vector3 position = startPosition;
-        Vector3 velocity = initialVelocity;
+        Vector3 velocityMps = initialVelocityMps;
 
-        float elapsed = 0f;
+        float elapsedSeconds = 0f;
         int bounceCount = 0;
         bool isRolling = false;
         string firstGroundLayer = null;
         int landingIndex = 0;
 
-        while (elapsed < config.MaxSimulationTime)
+        while (elapsedSeconds < config.MaxSimulationTimeSeconds)
         {
             Vector3 prevPos = position;
             Vector3 newPos = position;
-            Vector3 newVel = velocity;
+            Vector3 newVelocityMps = velocityMps;
 
-            SimulatePhysicsStep(ref newPos, ref newVel, spinAxisNormalized,
-                               spinRateRPM, liftCoefficient, config.DeltaTime);
+            SimulatePhysicsStep(ref newPos, ref newVelocityMps, spinAxisNormalized,
+                               spinRateRpm, liftCoefficient, config.DeltaTime);
 
             // フェンス反射
             if (!isRolling && config.BounceSettings != null)
             {
-                BallCollisions.TryReflectOnFence(prevPos, ref newPos, ref newVel,
+                BallCollisions.TryReflectOnFence(prevPos, ref newPos, ref newVelocityMps,
                                                 config.DeltaTime,
                                                 config.BounceSettings.wallRestitution);
             }
@@ -108,7 +108,7 @@ public static class BallTrajectorySimulator
                     firstGroundLayer = DetectGroundLayer(newPos, config.BounceSettings);
                     landingIndex = trajectory.Count;
                     bool shouldRoll = BallCollisions.HandleGroundBounce(
-                        ref newVel, config.BounceSettings, bounceCount);
+                        ref newVelocityMps, config.BounceSettings, bounceCount);
 
                     bounceCount++;
                     if (shouldRoll) isRolling = true;
@@ -116,19 +116,19 @@ public static class BallTrajectorySimulator
             }
 
             position = newPos;
-            velocity = newVel;
+            velocityMps = newVelocityMps;
             trajectory.Add(position);
 
-            elapsed += config.DeltaTime;
+            elapsedSeconds += config.DeltaTime;
 
             // 転がり処理
             if (isRolling && config.BounceSettings != null)
             {
                 position = BallCollisions.SimulateRolling(
-                    position, ref velocity, config.BounceSettings, config.DeltaTime);
+                    position, ref velocityMps, config.BounceSettings, config.DeltaTime);
                 trajectory[trajectory.Count - 1] = position;
 
-                if (velocity.magnitude < config.BounceSettings.stopVelocityThreshold)
+                if (velocityMps.magnitude < config.BounceSettings.stopVelocityThreshold)
                     break;
             }
 
@@ -157,15 +157,15 @@ public static class BallTrajectorySimulator
     /// </summary>
     public static List<Vector3> SimulateTrajectory(
         Vector3 startPosition,
-        Vector3 initialVelocity,
+        Vector3 initialVelocityMps,
         Vector3 spinAxisNormalized,
-        float spinRateRPM,
+        float spinRateRpm,
         float liftCoefficient,
         BallPhysicsCalculator.SimulationConfig config)
     {
         var result = SimulateTrajectoryInternal(
-            startPosition, initialVelocity, spinAxisNormalized,
-            spinRateRPM, liftCoefficient, config,
+            startPosition, initialVelocityMps, spinAxisNormalized,
+            spinRateRpm, liftCoefficient, config,
             trackGroundLayer: false);
 
         return result.Points;
@@ -176,15 +176,15 @@ public static class BallTrajectorySimulator
     /// </summary>
     public static TrajectoryResult SimulateTrajectoryWithMetadata(
         Vector3 startPosition,
-        Vector3 initialVelocity,
+        Vector3 initialVelocityMps,
         Vector3 spinAxisNormalized,
-        float spinRateRPM,
+        float spinRateRpm,
         float liftCoefficient,
         BallPhysicsCalculator.SimulationConfig config)
     {
         return SimulateTrajectoryInternal(
-            startPosition, initialVelocity, spinAxisNormalized,
-            spinRateRPM, liftCoefficient, config,
+            startPosition, initialVelocityMps, spinAxisNormalized,
+            spinRateRpm, liftCoefficient, config,
             trackGroundLayer: true);
     }
 

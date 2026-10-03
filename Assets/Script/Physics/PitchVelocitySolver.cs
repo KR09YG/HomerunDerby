@@ -4,30 +4,30 @@ using UnityEngine;
 internal static class PitchVelocitySolver
 {
     /// <summary>
-    /// I“_‚É“’B‚·‚éÅ“K‚È‰‘¬‚ğ’Tõ
+    /// çµ‚ç‚¹ã«åˆ°é”ã™ã‚‹æœ€é©ãªåˆé€Ÿã‚’æ¢ç´¢
     /// </summary>
     internal static Vector3 FindOptimalVelocityAdvanced(
         Vector3 startPoint,
         Vector3 targetPoint,
         Vector3 spinAxisNormalized,
-        float spinRateRPM,
+        float spinRateRpm,
         float liftCoefficient,
-        float desiredSpeed,
+        float targetSpeedMps,
         TrajectorySettings settings,
         BounceSettings bounceSettings)
     {
-        Debug.Log("[Å“K‰»] ŠJn");
+        Debug.Log("[æœ€é©åŒ–] é–‹å§‹");
 
-        Vector3 currentVelocity = EstimateInitialVelocityImproved(
+        Vector3 currentVelocityMps = EstimateInitialVelocityImproved(
             startPoint,
             targetPoint,
             spinAxisNormalized,
-            spinRateRPM,
+            spinRateRpm,
             liftCoefficient,
-            desiredSpeed
+            targetSpeedMps
         );
 
-        Vector3 bestVelocity = currentVelocity;
+        Vector3 bestVelocityMps = currentVelocityMps;
         float bestError = float.MaxValue;
 
         for (int i = 0; i < BallPhysicsConstants.MAX_OPTIMIZATION_ITERATIONS; i++)
@@ -35,23 +35,23 @@ internal static class PitchVelocitySolver
             var config = new BallPhysicsCalculator.SimulationConfig
             {
                 DeltaTime = settings?.DeltaTime ?? 0.01f,
-                MaxSimulationTime = settings?.MaxSimulationTime ?? 5f,
+                MaxSimulationTimeSeconds = settings?.MaxSimulationTime ?? 5f,
                 StopAtZ = settings?.StopAtTarget == true ? settings.StopPosition.z : (float?)null,
                 BounceSettings = bounceSettings
             };
 
             List<Vector3> testTrajectory = BallTrajectorySimulator.SimulateTrajectory(
                 startPoint,
-                currentVelocity,
+                currentVelocityMps,
                 spinAxisNormalized,
-                spinRateRPM,
+                spinRateRpm,
                 liftCoefficient,
                 config
             );
 
             if (testTrajectory.Count == 0)
             {
-                Debug.LogWarning("[Å“K‰»] ‹O“¹ŒvZ¸”s");
+                Debug.LogWarning("[æœ€é©åŒ–] è»Œé“è¨ˆç®—å¤±æ•—");
                 break;
             }
 
@@ -65,13 +65,13 @@ internal static class PitchVelocitySolver
             if (totalError < bestError)
             {
                 bestError = totalError;
-                bestVelocity = currentVelocity;
+                bestVelocityMps = currentVelocityMps;
             }
 
             if (errorZ < BallPhysicsConstants.POSITION_TOLERANCE * BallPhysicsConstants.Z_TOLERANCE_FACTOR &&
                 errorXY < BallPhysicsConstants.POSITION_TOLERANCE)
             {
-                return currentVelocity;
+                return currentVelocityMps;
             }
 
             float progress = (float)i / BallPhysicsConstants.MAX_OPTIMIZATION_ITERATIONS;
@@ -79,69 +79,69 @@ internal static class PitchVelocitySolver
             if (errorZ > BallPhysicsConstants.Z_POSITION_TOLERANCE)
             {
                 float zAdjustment = error.z * Mathf.Lerp(BallPhysicsConstants.Z_ADJUSTMENT_INITIAL, BallPhysicsConstants.Z_ADJUSTMENT_FINAL, progress);
-                currentVelocity.z += zAdjustment;
+                currentVelocityMps.z += zAdjustment;
             }
 
             Vector3 xyAdjustment = new Vector3(error.x, error.y, 0) *
                                    Mathf.Lerp(BallPhysicsConstants.XY_ADJUSTMENT_INITIAL, BallPhysicsConstants.XY_ADJUSTMENT_FINAL, progress);
-            currentVelocity += xyAdjustment;
+            currentVelocityMps += xyAdjustment;
 
-            float currentSpeed = currentVelocity.magnitude;
-            float speedError = desiredSpeed - currentSpeed;
+            float currentSpeedMps = currentVelocityMps.magnitude;
+            float speedErrorMps = targetSpeedMps - currentSpeedMps;
 
-            if (Mathf.Abs(speedError) > desiredSpeed * BallPhysicsConstants.SPEED_ERROR_THRESHOLD)
+            if (Mathf.Abs(speedErrorMps) > targetSpeedMps * BallPhysicsConstants.SPEED_ERROR_THRESHOLD)
             {
                 float speedAdjustmentFactor = Mathf.Lerp(BallPhysicsConstants.SPEED_ADJUSTMENT_INITIAL, BallPhysicsConstants.SPEED_ADJUSTMENT_FINAL, progress);
-                currentVelocity = currentVelocity.normalized *
-                                  Mathf.Lerp(currentSpeed, desiredSpeed, speedAdjustmentFactor);
+                currentVelocityMps = currentVelocityMps.normalized *
+                                  Mathf.Lerp(currentSpeedMps, targetSpeedMps, speedAdjustmentFactor);
             }
         }
 
-        return bestVelocity;
+        return bestVelocityMps;
     }
 
     /// <summary>
-    /// ƒ}ƒOƒkƒXŒø‰ÊA‹ó‹C’ïR‚ğl—¶‚µ‚ÄA–Ú•W‚É“’B‚·‚é‰‘¬‚ğ„’è
+    /// ãƒã‚°ãƒŒã‚¹åŠ¹æœã€ç©ºæ°—æŠµæŠ—ã‚’è€ƒæ…®ã—ã¦ã€ç›®æ¨™ã«åˆ°é”ã™ã‚‹åˆé€Ÿã‚’æ¨å®š
     /// </summary>
     private static Vector3 EstimateInitialVelocityImproved(
         Vector3 startPoint,
         Vector3 targetPoint,
         Vector3 spinAxisNormalized,
-        float spinRateRPM,
+        float spinRateRpm,
         float liftCoefficient,
-        float desiredSpeed)
+        float targetSpeedMps)
     {
         Vector3 displacement = targetPoint - startPoint;
-        float horizontalDist = new Vector2(displacement.x, displacement.z).magnitude;
-        float verticalDist = displacement.y;
+        float horizontalDistanceMeters = new Vector2(displacement.x, displacement.z).magnitude;
+        float verticalDistanceMeters = displacement.y;
 
         float dragFactor = BallPhysicsConstants.DRAG_FACTOR_BASE +
-                          (BallPhysicsConstants.DRAG_COEFFICIENT * BallPhysicsConstants.AIR_DENSITY * BallPhysicsConstants.CROSS_SECTION * desiredSpeed) /
+                          (BallPhysicsConstants.DRAG_COEFFICIENT * BallPhysicsConstants.AIR_DENSITY * BallPhysicsConstants.CROSS_SECTION * targetSpeedMps) /
                           (BallPhysicsConstants.DRAG_MASS_FACTOR * BallPhysicsConstants.BALL_MASS);
 
-        float estimatedTime = (horizontalDist / desiredSpeed) * dragFactor;
+        float estimatedTimeSeconds = (horizontalDistanceMeters / targetSpeedMps) * dragFactor;
 
-        float gravity = Mathf.Abs(Physics.gravity.y);
-        float gravityDrop = BallPhysicsConstants.GRAVITY_HALF * gravity * estimatedTime * estimatedTime;
+        float gravityMetersPerSecondSquared = Mathf.Abs(Physics.gravity.y);
+        float gravityDropMeters = BallPhysicsConstants.GRAVITY_HALF * gravityMetersPerSecondSquared * estimatedTimeSeconds * estimatedTimeSeconds;
 
-        float angularVelocity = spinRateRPM * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
+        float angularVelocityRadPerSec = spinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
         Vector3 forwardDir = displacement.normalized;
-        Vector3 spinVector = spinAxisNormalized * angularVelocity;
-        Vector3 magnusDir = Vector3.Cross(spinVector, forwardDir).normalized;
+        Vector3 angularVelocityVectorRadPerSec = spinAxisNormalized * angularVelocityRadPerSec;
+        Vector3 magnusDir = Vector3.Cross(angularVelocityVectorRadPerSec, forwardDir).normalized;
 
-        float magnusAccel = BallPhysicsConstants.MAGNUS_FORCE_HALF * BallPhysicsConstants.AIR_DENSITY * desiredSpeed * desiredSpeed
+        float magnusAccelerationMetersPerSecondSquared = BallPhysicsConstants.MAGNUS_FORCE_HALF * BallPhysicsConstants.AIR_DENSITY * targetSpeedMps * targetSpeedMps
                            * BallPhysicsConstants.CROSS_SECTION * liftCoefficient / BallPhysicsConstants.BALL_MASS;
-        float magnusDisplacement = BallPhysicsConstants.GRAVITY_HALF * magnusAccel * estimatedTime * estimatedTime;
+        float magnusDisplacementMeters = BallPhysicsConstants.GRAVITY_HALF * magnusAccelerationMetersPerSecondSquared * estimatedTimeSeconds * estimatedTimeSeconds;
 
-        float zSpeed = displacement.z / estimatedTime;
-        float xSpeed = displacement.x / estimatedTime;
-        float verticalSpeed = verticalDist / estimatedTime + gravity * estimatedTime * BallPhysicsConstants.GRAVITY_HALF;
+        float zSpeedMps = displacement.z / estimatedTimeSeconds;
+        float xSpeedMps = displacement.x / estimatedTimeSeconds;
+        float verticalSpeedMps = verticalDistanceMeters / estimatedTimeSeconds + gravityMetersPerSecondSquared * estimatedTimeSeconds * BallPhysicsConstants.GRAVITY_HALF;
 
-        float magnusVerticalEffect = magnusDir.y * magnusDisplacement / estimatedTime;
-        verticalSpeed -= magnusVerticalEffect * BallPhysicsConstants.MAGNUS_VERTICAL_CORRECTION_FACTOR;
+        float magnusVerticalEffectMps = magnusDir.y * magnusDisplacementMeters / estimatedTimeSeconds;
+        verticalSpeedMps -= magnusVerticalEffectMps * BallPhysicsConstants.MAGNUS_VERTICAL_CORRECTION_FACTOR;
 
-        Vector3 initialVelocity = new Vector3(xSpeed, verticalSpeed, zSpeed);
+        Vector3 initialVelocityMps = new Vector3(xSpeedMps, verticalSpeedMps, zSpeedMps);
 
-        return initialVelocity;
+        return initialVelocityMps;
     }
 }

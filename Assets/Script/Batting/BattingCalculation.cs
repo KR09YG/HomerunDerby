@@ -116,7 +116,7 @@ public class BattingCalculator : MonoBehaviour
             new BallPhysicsCalculator.SimulationConfig
             {
                 DeltaTime = 0.01f,
-                MaxSimulationTime = 10f,
+                MaxSimulationTimeSeconds = 10f,
                 StopAtZ = null,
                 BounceSettings = _bounceSettings
             };
