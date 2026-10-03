@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -49,20 +49,13 @@ public class BatterAnimationControl : MonoBehaviour
         _animator.SetTrigger("Reset");
         _isFinSwing = false;
         _isSwinging = false;
-        WaitForAnimationTransitionWrapper().Forget();
+        transform.position = _startPos;
+        transform.eulerAngles = _startRote;
     }
 
     public void FinishSwing()
     {
         _isFinSwing = true;
-    }
-
-    // unitaskを上記関数で呼ぶためのラッパー関数
-    private async UniTask WaitForAnimationTransitionWrapper()
-    {
-        await UniTask.WaitForSeconds(0.5f);
-        transform.position = _startPos;
-        transform.eulerAngles = _startRote;
     }
 
     /// <summary>

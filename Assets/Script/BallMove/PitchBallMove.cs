@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -52,6 +52,18 @@ public class PitchBallMove : BallMoveTrajectory
     }
 
     public void ResetIsReach() => IsReach = false;
+
+    // Animator events arrive on the frame crossing their timestamp. Rewind the
+    // trajectory clock as well as its visual position to match the exact bat pose.
+    public void RewindForContact(float gameSeconds)
+    {
+        if (!_isMoving || _trajectory == null || _trajectory.Count < 2 ||
+            _trajectoryDeltaTime <= 0f || gameSeconds <= 0f) return;
+        _elapsedTime = Mathf.Max(0f, _elapsedTime - gameSeconds * _visualSpeedMultiplier);
+        _index = Mathf.Clamp(Mathf.FloorToInt(_elapsedTime / _trajectoryDeltaTime), 0, _trajectory.Count - 2);
+        float t = (_elapsedTime - _index * _trajectoryDeltaTime) / _trajectoryDeltaTime;
+        transform.position = Vector3.Lerp(_trajectory[_index], _trajectory[_index + 1], t);
+    }
 
     public void StartMoving()
     {

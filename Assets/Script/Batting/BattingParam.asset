@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02ff38c3d1e969b4782a19e8420392b0, type: 3}
   m_Name: BattingParam
   m_EditorClassIdentifier: 
-  MaxImpactDistance: 2
-  SweetSpotRadius: 1.5
+  MaxImpactDistance: 1
+  SweetSpotRadius: 0.8
   BatSpeedKmh: 150
   BatMass: 0.9
   CoefficientOfRestitution: 0.6

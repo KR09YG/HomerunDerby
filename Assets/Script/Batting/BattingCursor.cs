@@ -8,6 +8,7 @@ public class BattingCursor : MonoBehaviour
     [SerializeField] private Image _cursorImage;         
     [SerializeField] private Canvas _canvas;     
     [SerializeField] private OnSwingEvent _swingEvent;
+    [SerializeField] private OnBattingInputEvent _battingInputEvent;
     [SerializeField] private OnAtBatResetEvent _atBatResetEvent;
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _moveRange = 0.5f;
@@ -22,6 +23,7 @@ public class BattingCursor : MonoBehaviour
     {
         if (_swingEvent != null) _swingEvent.RegisterListener(FinishInput);
         else Debug.LogWarning("_swingEvent is not assigned in BattingCursor.");
+        if (_battingInputEvent != null) _battingInputEvent.RegisterListener(FinishInput);
         if (_atBatResetEvent != null) _atBatResetEvent.RegisterListener(StartInput);
         else Debug.LogWarning("_atBatResetEvent is not assigned in BattingCursor.");
     }
@@ -37,6 +39,7 @@ public class BattingCursor : MonoBehaviour
     private void OnDestroy()
     {
         _swingEvent?.UnregisterListener(FinishInput);
+        _battingInputEvent?.UnregisterListener(FinishInput);
         _atBatResetEvent?.UnregisterListener(StartInput);
     }
 

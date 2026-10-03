@@ -1,11 +1,11 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 [CreateAssetMenu(fileName = "BattingParam", menuName = "Batting Param")]
 public class BattingParameters : ScriptableObject
 {
     [Header("=== 当たり判定 ===")]
     [Tooltip("最大インパクト距離(m)")]
-    public float MaxImpactDistance = 0.15f;
+    public float MaxImpactDistance = 0.3f;
 
     [Tooltip("スイートスポット半径(m)")]
     public float SweetSpotRadius = 0.02f;

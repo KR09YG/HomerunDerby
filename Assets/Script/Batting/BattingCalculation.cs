@@ -1,16 +1,12 @@
-﻿using Cysharp.Threading.Tasks;
 using KanKikuchi.AudioManager;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting;
-using UnityEditorInternal;
 using UnityEngine;
 
 public class BattingCalculator : MonoBehaviour
 {
     [Header("参照")]
     [SerializeField] private HomeRunDerbyManager _homeRunDerbyManager;
-    [SerializeField] private BattingCursor _cursor;
+    private BattingSystem _battingSystem;
     [SerializeField] private StrikeZone _strikeZone;
     [SerializeField] private BattingParameters _parameters;
     [SerializeField] private BounceSettings _bounceSettings;
@@ -27,6 +23,7 @@ public class BattingCalculator : MonoBehaviour
 
     private void Awake()
     {
+        _battingSystem = GetComponent<BattingSystem>();
         if (_hitEvent != null) _hitEvent.RegisterListener(OnHitAttempt);
         else Debug.LogError("[BattingCalculator] OnBattingHitEventが設定されていません");
     }
@@ -38,13 +35,26 @@ public class BattingCalculator : MonoBehaviour
 
     private void OnHitAttempt(PitchBallMove ball)
     {
-        Vector3 swingPos = _cursor.CurrentPos;
-        Vector3 ballPos = ball.transform.position;
+        // Both positions belong to the same contact frame, including after the debug pause.
+        if (_battingSystem == null || !_battingSystem.TryGetContact(ball, out Vector3 swingPos, out Vector3 ballPos))
+        {
+            Debug.LogWarning("[Batting/Result] MISS: no contact snapshot (ball reference or IK contact unavailable).", this);
+            RaiseMissEvent();
+            return;
+        }
+
+        if (_parameters == null)
+        {
+            Debug.LogError("[Batting/Result] MISS: BattingParameters is not assigned.", this);
+            RaiseMissEvent();
+            return;
+        }
 
         float distance = Vector3.Distance(swingPos, ballPos);
         bool isHit = distance <= _parameters.MaxImpactDistance;
 
-        Debug.Log($"[Batting] SwingPos={swingPos}, BallPos={ballPos}, Distance={distance:F2}, Hit={isHit}");
+        if (_parameters.EnableDebugLogs)
+            Debug.Log($"[Batting/Result] {(isHit ? "HIT" : "MISS")} distance={distance:F4} limit={_parameters.MaxImpactDistance:F4} deltaXYZ={(ballPos - swingPos).ToString("F4")}", this);
 
         if (isHit)
         {
@@ -62,8 +72,7 @@ public class BattingCalculator : MonoBehaviour
     {
         // 1. 基本パラメータ計算
         float pitchSpeed = GetPitchSpeed(ball);
-        float timing = CalculateTiming(ball);
-
+        float timing = CalculateTiming(ballPos);
         // 2. 効率計算(芯に近いほど高効率)
         float efficiency = BattingPhysics.CalculateImpactEfficiency(
             impactDistance,
@@ -100,7 +109,7 @@ public class BattingCalculator : MonoBehaviour
         Vector3 spinAxis = BattingPhysics.CalculateSpinAxis(direction);
         Vector3 initialVelocity = direction * exitVelocity;
 
-        // 7. 軌道シミュレーション（レイヤー情報付き）
+        // 7. 軌道シミュレーション
         float liftCoefficient = BattingPhysics.CalculateLiftCoefficient(spinRate, exitVelocity, _parameters);
 
         BallPhysicsCalculator.SimulationConfig simulateConfig =
@@ -159,15 +168,15 @@ public class BattingCalculator : MonoBehaviour
     private float GetPitchSpeed(PitchBallMove ball)
     {
         var traj = ball.Trajectory;
-        if (traj.Count < 2) return 30f;
+        if (traj == null || traj.Count < 2) return 30f;
 
         float totalTime = (traj.Count - 1) * 0.01f;
         return (traj[traj.Count - 1] - traj[0]).magnitude / totalTime;
     }
 
-    private float CalculateTiming(PitchBallMove ball)
+    private float CalculateTiming(Vector3 ballPosition)
     {
-        float distanceToZone = ball.transform.position.z - _strikeZone.CenterZ;
+        float distanceToZone = ballPosition.z - _strikeZone.CenterZ;
         // タイミングは-1（早すぎ）から1（遅すぎ）までの範囲で、距離が近いほど0に近づく
         return Mathf.Clamp(distanceToZone / 2f, -1f, 1f);
     }
@@ -256,7 +265,7 @@ public class BattingCalculator : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (!_parameters.ShowTrajectoryGizmos) return;
+        if (_parameters == null || !_parameters.ShowTrajectoryGizmos) return;
         if (_lastTrajectory == null || _lastTrajectory.Count == 0) return;
 
         // 軌道を色分け
