@@ -11,6 +11,7 @@ internal static class BallAerodynamics
         if (velocityMps.sqrMagnitude < BallPhysicsConstants.MIN_VELOCITY_SQUARED)
             return Vector3.zero;
 
+        // 呼び出し元の回転数はrpm。ここでは外積の向きを求めるために使う。
         Vector3 spinVectorRpm = spinAxisNorm * spinRateRpm;
         Vector3 magnusDirection = Vector3.Cross(spinVectorRpm, velocityMps);
 

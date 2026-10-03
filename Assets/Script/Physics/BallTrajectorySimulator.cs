@@ -14,11 +14,9 @@ public struct TrajectoryResult
 
 public static class BallTrajectorySimulator
 {
-    // ===== 物理定数 =====
     /// <summary>野球ボールの質量(kg)</summary>
     private const float BALL_MASS_KG = 0.145f;
 
-    // ===== レイヤー検出用定数 =====
     /// <summary>Raycast開始位置のオフセット(m)</summary>
     private const float RAYCAST_START_OFFSET = 5f;
 
@@ -28,7 +26,6 @@ public static class BallTrajectorySimulator
     /// <summary>OverlapSphereの検索半径(m)</summary>
     private const float GROUND_DETECTION_RADIUS = 0.5f;
 
-    // ===== レイヤー名定数 =====
     private const string LAYER_GROUND = "Ground";
     private const string LAYER_HOMERUN_ZONE = "HomerunZone";
     private const string LAYER_UNKNOWN = "Unknown";
@@ -60,7 +57,7 @@ public static class BallTrajectorySimulator
     }
 
     /// <summary>
-    /// 内部実装:軌道計算の共通ロジック
+    /// 投球と打球の軌道を計算し、必要に応じて最初の接地情報を記録する。
     /// </summary>
     private static TrajectoryResult SimulateTrajectoryInternal(
         Vector3 startPosition,
@@ -153,7 +150,7 @@ public static class BallTrajectorySimulator
     }
 
     /// <summary>
-    /// 投球用(シンプル版)
+    /// 接地情報を記録せず、軌道上の座標を返す。
     /// </summary>
     public static List<Vector3> SimulateTrajectory(
         Vector3 startPosition,
@@ -238,7 +235,7 @@ public static class BallTrajectorySimulator
             return layerName;
         }
 
-        // Raycastが当たらない場合の保険(OverlapSphere)
+        // 上下のRaycastで接地面が見つからなければ、周囲のコライダーを調べる。
         Collider[] colliders = Physics.OverlapSphere(
             center,
             GROUND_DETECTION_RADIUS,

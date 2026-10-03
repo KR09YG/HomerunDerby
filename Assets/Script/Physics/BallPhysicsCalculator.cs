@@ -16,6 +16,7 @@ public struct PitchRequest
 public struct BallData
 {
     public string Name;
+    // 球種の設定値は km/h、rpm、度で保持する。
     public float Speed;
     public float RotateSpeed;
     public float Control;
@@ -30,6 +31,7 @@ public static class BallPhysicsCalculator
 
     public struct SimulationConfig
     {
+        // 時間刻みは秒単位で指定する。
         public float DeltaTime;
         public float MaxSimulationTimeSeconds;
         public float? StopAtZ;
@@ -96,7 +98,7 @@ public static class BallPhysicsCalculator
     }
 
     /// <summary>
-    /// SpinTilt/SpinEfficiencyからSpinAxisを計算
+    /// 回転軸の傾きと有効回転の割合から、正規化した回転軸を求める。
     /// Tilt=0°   X+ → ストレート（上向きマグヌス力）
     /// Tilt=180° X- → カーブ（下向きマグヌス力）
     /// Tilt=90°  Y+ → シュート方向
@@ -112,7 +114,7 @@ public static class BallPhysicsCalculator
         return axis.magnitude > 1e-6f ? axis.normalized : Vector3.forward;
     }
 
-    /// <summary>有効回転数ベースでClを動的計算</summary>
+    /// <summary>有効回転数（rpm）と球速（m/s）から揚力係数を求める。</summary>
     public static float CalcCl(float speedMps, float effectiveSpinRateRpm)
     {
         float effectiveAngularVelocityRadPerSec = effectiveSpinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;

@@ -2,30 +2,30 @@ using UnityEngine;
 
 internal static class BallPhysicsConstants
 {
-    // === •¨—’è” ===
-    internal const float AIR_DENSITY = 1.225f;
-    internal const float BALL_MASS = 0.145f;
-    internal const float BALL_RADIUS = 0.0366f;
-    internal const float CROSS_SECTION = Mathf.PI * BALL_RADIUS * BALL_RADIUS;
+    // ç‰©ç†å®šæ•°
+    internal const float AIR_DENSITY = 1.225f; // kg/mÂ³
+    internal const float BALL_MASS = 0.145f; // kg
+    internal const float BALL_RADIUS = 0.0366f; // m
+    internal const float CROSS_SECTION = Mathf.PI * BALL_RADIUS * BALL_RADIUS; // mÂ²
     internal const float DRAG_COEFFICIENT = 0.3f;
     internal const float GRAVITY_HALF = 0.5f;
     internal const float MAGNUS_FORCE_HALF = 0.5f;
     internal const float DRAG_FORCE_HALF = 0.5f;
 
-    // === ’PˆÊ•ÏŠ·’è” ===
+    // å˜ä½å¤‰æ›å®šæ•°
     internal const float RPM_TO_RAD_PER_SEC = 2f * Mathf.PI / 60f;
 
-    // === ƒ}ƒOƒkƒXŒø‰Ê•â³ ===
+    // ãƒã‚°ãƒŒã‚¹åŠ¹æœè£œæ­£
     internal const float MAGNUS_VERTICAL_CORRECTION_FACTOR = 0.8f;
 
-    // === Å“K‰»ƒpƒ‰ƒ[ƒ^ ===
+    // æœ€é©åŒ–ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
     internal const int MAX_OPTIMIZATION_ITERATIONS = 20;
     internal const float POSITION_TOLERANCE = 0.02f;
     internal const float Z_POSITION_TOLERANCE = 0.01f;
     internal const float Z_TOLERANCE_FACTOR = 0.5f;
     internal const float Z_ERROR_WEIGHT = 2f;
 
-    // === ‘¬“x’²®ƒpƒ‰ƒ[ƒ^ ===
+    // é€Ÿåº¦èª¿æ•´ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
     internal const float Z_ADJUSTMENT_INITIAL = 0.8f;
     internal const float Z_ADJUSTMENT_FINAL = 0.3f;
     internal const float XY_ADJUSTMENT_INITIAL = 0.6f;
@@ -34,19 +34,19 @@ internal static class BallPhysicsConstants
     internal const float SPEED_ADJUSTMENT_INITIAL = 0.15f;
     internal const float SPEED_ADJUSTMENT_FINAL = 0.05f;
 
-    // === ‰‘¬„’èƒpƒ‰ƒ[ƒ^ ===
+    // åˆé€Ÿæ¨å®šãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
     internal const float DRAG_FACTOR_BASE = 1.0f;
     internal const float DRAG_MASS_FACTOR = 2f;
 
-    // === ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“I—¹ğŒ ===
+    // ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³çµ‚äº†æ¡ä»¶
     internal const float GROUND_LEVEL = -0.5f;
     internal const int MAX_TRAJECTORY_POINTS = 10000;
 
-    // === •¨—ŒvZ‚Ìè‡’l ===
+    // ç‰©ç†è¨ˆç®—ã®é–¾å€¤
     internal const float MIN_VELOCITY_SQUARED = 0.01f;
     internal const float MIN_MAGNUS_DIRECTION_SQUARED = 0.0001f;
     internal const float MIN_DRAG_VELOCITY = 0.001f;
 
-    // === Net”½ËF•Ç‚É“\‚è•t‚­‚Ì‚ğ–h‚®”÷¬‰Ÿ‚µ–ß‚µ ===
+    // ãƒãƒƒãƒˆã¸ã®åå°„å¾Œã«ã€å£ã‹ã‚‰é›¢ã™è·é›¢ã€‚
     internal const float NET_EPSILON = 0.001f;
 }

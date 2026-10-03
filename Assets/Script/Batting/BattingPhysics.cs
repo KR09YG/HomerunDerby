@@ -55,7 +55,7 @@ public static class BattingPhysics
         if (impactDistance <= sweetSpotRadius)
             return 1.0f;
 
-        // 空振りの場合（念のためクランプ）
+        // 判定範囲の外側ではカーブの終端値を使う。
         if (impactDistance >= maxImpactDistance)
             return efficiencyCurve.Evaluate(1.0f);
 
@@ -64,7 +64,7 @@ public static class BattingPhysics
         return efficiencyCurve.Evaluate(t);
     }
 
-    // ===== 打ち上げ角度計算用定数 =====
+    // 打ち上げ角度の補正に使う基準距離。
     // オフセットスケール
     private const float MAX_VERTICAL_OFFSET = 0.1f;
     /// <summary>
