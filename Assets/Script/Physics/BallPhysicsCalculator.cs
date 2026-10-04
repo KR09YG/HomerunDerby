@@ -101,12 +101,9 @@ public static class BallPhysicsCalculator
 
         float speedMps = request.BallData.Speed * BallPhysicsConstants.KPH_TO_MPS;
 
-        // PassPointを終点として最適化
+        // 目標平面はSolverへ直接渡し、呼び出し元の設定は書き換えない。
         var solverSettings = request.Settings ?? new TrajectorySettings();
-        solverSettings.StopPosition = request.PassPoint;
-        solverSettings.StopAtTarget = true;
-
-        Vector3 optimalVelocityMps = PitchVelocitySolver.FindOptimalVelocityAdvanced(
+        PitchSolveResult solveResult = PitchVelocitySolver.FindOptimalVelocityAdvanced(
             request.ReleasePoint,
             request.PassPoint,
             request.BallData,
@@ -115,14 +112,18 @@ public static class BallPhysicsCalculator
             request.BounceSettings
         );
 
+        if (!solveResult.Converged)
+            Debug.LogWarning($"[投球] {request.BallData.Name}は反復上限までに収束しませんでした。XY誤差={solveResult.ErrorMeters:F4}m, 反復={solveResult.Iterations}");
+        Vector3 optimalVelocityMps = solveResult.InitialVelocityMps;
+
         spin = SpinState.Create(optimalVelocityMps, request.BallData.RotateSpeed,
             request.BallData.SpinTilt, request.BallData.SpinEfficiency);
 
         // StopZまで軌道を計算（表示用）
         var config = new SimulationConfig
         {
-            DeltaTime = solverSettings.DeltaTime != 0 ? solverSettings.DeltaTime : 0.01f,
-            MaxSimulationTimeSeconds = solverSettings.MaxSimulationTime != 0 ? solverSettings.MaxSimulationTime : 5f,
+            DeltaTime = solverSettings.DeltaTime,
+            MaxSimulationTimeSeconds = solverSettings.MaxSimulationTime,
             StopAtZ = request.StopZ,
             BounceSettings = request.BounceSettings,
             PitchSpin = spin
@@ -136,12 +137,6 @@ public static class BallPhysicsCalculator
             0f,
             config
         );
-
-        if (trajectory.Count > 0)
-        {
-            Vector3 endPoint = trajectory[trajectory.Count - 1];
-            float error = Vector3.Distance(endPoint, request.PassPoint);
-        }
 
         Debug.Log("========== 軌道計算完了 ==========");
         return trajectory;
