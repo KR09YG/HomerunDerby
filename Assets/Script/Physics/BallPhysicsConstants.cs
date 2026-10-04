@@ -22,13 +22,8 @@ internal static class BallPhysicsConstants
     // 最適化パラメータ
     internal const int MAX_OPTIMIZATION_ITERATIONS = 20;
     internal const float POSITION_TOLERANCE = 0.02f;
-    internal const float Z_POSITION_TOLERANCE = 0.01f;
-    internal const float Z_TOLERANCE_FACTOR = 0.5f;
-    internal const float Z_ERROR_WEIGHT = 2f;
 
     // 速度調整パラメータ
-    internal const float Z_ADJUSTMENT_INITIAL = 0.8f;
-    internal const float Z_ADJUSTMENT_FINAL = 0.3f;
     internal const float XY_ADJUSTMENT_INITIAL = 0.6f;
     internal const float XY_ADJUSTMENT_FINAL = 0.2f;
     internal const float SPEED_ERROR_THRESHOLD = 0.2f;

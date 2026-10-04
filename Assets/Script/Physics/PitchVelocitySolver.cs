@@ -60,12 +60,15 @@ internal static class PitchVelocitySolver
                 break;
             }
 
-            Vector3 endPoint = testTrajectory[testTrajectory.Count - 1];
-            Vector3 error = targetPoint - endPoint;
+            if (!BallTrajectoryPredictor.TryGetCrossPointAtZ(testTrajectory, targetPoint.z, out Vector3 crossPoint))
+            {
+                Debug.LogWarning($"[最適化] 目標Z平面に到達しませんでした。Z={targetPoint.z:F3}, 試行={i + 1}");
+                break;
+            }
 
-            float errorZ = Mathf.Abs(error.z);
-            float errorXY = new Vector2(error.x, error.y).magnitude;
-            float totalError = errorZ * BallPhysicsConstants.Z_ERROR_WEIGHT + errorXY;
+            // 目標平面を通過した位置で左右・高さのずれを評価する。
+            Vector2 errorXY = new Vector2(targetPoint.x - crossPoint.x, targetPoint.y - crossPoint.y);
+            float totalError = errorXY.magnitude;
 
             if (totalError < bestError)
             {
@@ -73,21 +76,14 @@ internal static class PitchVelocitySolver
                 bestVelocityMps = currentVelocityMps;
             }
 
-            if (errorZ < BallPhysicsConstants.POSITION_TOLERANCE * BallPhysicsConstants.Z_TOLERANCE_FACTOR &&
-                errorXY < BallPhysicsConstants.POSITION_TOLERANCE)
+            if (totalError < BallPhysicsConstants.POSITION_TOLERANCE)
             {
                 return currentVelocityMps;
             }
 
             float progress = (float)i / BallPhysicsConstants.MAX_OPTIMIZATION_ITERATIONS;
 
-            if (errorZ > BallPhysicsConstants.Z_POSITION_TOLERANCE)
-            {
-                float zAdjustment = error.z * Mathf.Lerp(BallPhysicsConstants.Z_ADJUSTMENT_INITIAL, BallPhysicsConstants.Z_ADJUSTMENT_FINAL, progress);
-                currentVelocityMps.z += zAdjustment;
-            }
-
-            Vector3 xyAdjustment = new Vector3(error.x, error.y, 0) *
+            Vector3 xyAdjustment = new Vector3(errorXY.x, errorXY.y, 0f) *
                                    Mathf.Lerp(BallPhysicsConstants.XY_ADJUSTMENT_INITIAL, BallPhysicsConstants.XY_ADJUSTMENT_FINAL, progress);
             currentVelocityMps += xyAdjustment;
 
