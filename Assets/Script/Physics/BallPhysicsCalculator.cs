@@ -21,8 +21,60 @@ public struct BallData
     public float RotateSpeed;
     public float Control;
     public float SpinTilt;
+    // リリース時の総回転数に対する、進行方向と直交する回転成分の割合。
     [Range(0, 1)]
     public float SpinEfficiency;
+}
+
+/// <summary>
+/// リリース時の総角速度をワールド座標で保持する。飛翔中の回転減衰と空力トルクは省略する。
+/// </summary>
+public readonly struct SpinState
+{
+    public Vector3 AngularVelocityRadPerSec { get; }
+    public float TotalSpinRateRpm => AngularVelocityRadPerSec.magnitude / BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
+
+    private SpinState(Vector3 angularVelocityRadPerSec)
+    {
+        AngularVelocityRadPerSec = angularVelocityRadPerSec;
+    }
+
+    public static SpinState Create(Vector3 initialVelocityMps, float totalSpinRateRpm, float spinTiltDeg, float releaseSpinEfficiency)
+    {
+        if (initialVelocityMps.sqrMagnitude < 1e-12f)
+            throw new ArgumentException("回転軸の生成には初速が必要です。", nameof(initialVelocityMps));
+        if (float.IsNaN(releaseSpinEfficiency) || releaseSpinEfficiency < 0f || releaseSpinEfficiency > 1f)
+            throw new ArgumentOutOfRangeException(nameof(releaseSpinEfficiency), "回転効率は0から1で指定してください。");
+        if (float.IsNaN(totalSpinRateRpm) || float.IsInfinity(totalSpinRateRpm) || totalSpinRateRpm < 0f)
+            throw new ArgumentOutOfRangeException(nameof(totalSpinRateRpm));
+
+        Vector3 forward = initialVelocityMps.normalized;
+        Vector3 right = Vector3.ProjectOnPlane(Vector3.right, forward);
+        if (right.sqrMagnitude < 1e-6f)
+            right = Vector3.ProjectOnPlane(Vector3.up, forward);
+        right.Normalize();
+        Vector3 up = Vector3.Cross(forward, right).normalized;
+        float tiltRad = spinTiltDeg * Mathf.Deg2Rad;
+        Vector3 transverseAxis = (Mathf.Cos(tiltRad) * right + Mathf.Sin(tiltRad) * up).normalized;
+        float gyroRatio = Mathf.Sqrt(Mathf.Max(0f, 1f - releaseSpinEfficiency * releaseSpinEfficiency));
+        float angularSpeedRadPerSec = totalSpinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
+        // 現在の球種データにはジャイロ成分の符号がないため、初速と同じ向きにする。
+        return new SpinState(angularSpeedRadPerSec * (transverseAxis * releaseSpinEfficiency + forward * gyroRatio));
+    }
+
+    public Vector3 GetTransverseAngularVelocity(Vector3 velocityMps)
+    {
+        if (velocityMps.sqrMagnitude < 1e-12f) return Vector3.zero;
+        Vector3 forward = velocityMps.normalized;
+        return AngularVelocityRadPerSec - Vector3.Dot(AngularVelocityRadPerSec, forward) * forward;
+    }
+
+    public Quaternion RotationAfter(float seconds)
+    {
+        float angularSpeedRadPerSec = AngularVelocityRadPerSec.magnitude;
+        if (angularSpeedRadPerSec < 1e-8f) return Quaternion.identity;
+        return Quaternion.AngleAxis(angularSpeedRadPerSec * Mathf.Rad2Deg * seconds, AngularVelocityRadPerSec / angularSpeedRadPerSec);
+    }
 }
 
 public static class BallPhysicsCalculator
@@ -37,21 +89,19 @@ public static class BallPhysicsCalculator
         public float? StopAtZ;
         public BounceSettings BounceSettings;
         public string GroundLayer;
+        public SpinState? PitchSpin;
     }
 
     public static List<Vector3> CalculateTrajectory(PitchRequest request)
     {
+        return CalculateTrajectory(request, out _);
+    }
+
+    public static List<Vector3> CalculateTrajectory(PitchRequest request, out SpinState spin)
+    {
         Debug.Log("========== 軌道計算開始 ==========");
 
         float speedMps = request.BallData.Speed * KPH_TO_MPS;
-
-        Vector3 spinAxis = ToSpinAxis(
-            request.BallData.SpinTilt,
-            request.BallData.SpinEfficiency);
-
-        float liftCoefficient = CalcCl(
-            speedMps,
-            request.BallData.RotateSpeed * request.BallData.SpinEfficiency);
 
         // PassPointを終点として最適化
         var solverSettings = request.Settings ?? new TrajectorySettings();
@@ -61,13 +111,14 @@ public static class BallPhysicsCalculator
         Vector3 optimalVelocityMps = PitchVelocitySolver.FindOptimalVelocityAdvanced(
             request.ReleasePoint,
             request.PassPoint,
-            spinAxis,
-            request.BallData.RotateSpeed * request.BallData.SpinEfficiency,
-            liftCoefficient,
+            request.BallData,
             speedMps,
             solverSettings,
             request.BounceSettings
         );
+
+        spin = SpinState.Create(optimalVelocityMps, request.BallData.RotateSpeed,
+            request.BallData.SpinTilt, request.BallData.SpinEfficiency);
 
         // StopZまで軌道を計算（表示用）
         var config = new SimulationConfig
@@ -75,15 +126,16 @@ public static class BallPhysicsCalculator
             DeltaTime = solverSettings.DeltaTime != 0 ? solverSettings.DeltaTime : 0.01f,
             MaxSimulationTimeSeconds = solverSettings.MaxSimulationTime != 0 ? solverSettings.MaxSimulationTime : 5f,
             StopAtZ = request.StopZ,
-            BounceSettings = request.BounceSettings
+            BounceSettings = request.BounceSettings,
+            PitchSpin = spin
         };
 
         List<Vector3> trajectory = SimulateTrajectory(
             request.ReleasePoint,
             optimalVelocityMps,
-            spinAxis,
-            request.BallData.RotateSpeed * request.BallData.SpinEfficiency,
-            liftCoefficient,
+            Vector3.zero,
+            0f,
+            0f,
             config
         );
 
@@ -98,28 +150,20 @@ public static class BallPhysicsCalculator
     }
 
     /// <summary>
-    /// 回転軸の傾きと有効回転の割合から、正規化した回転軸を求める。
-    /// Tilt=0°   X+ → ストレート（上向きマグヌス力）
-    /// Tilt=180° X- → カーブ（下向きマグヌス力）
-    /// Tilt=90°  Y+ → シュート方向
-    /// Tilt=270° Y- → スライダー方向
+    /// ワールドXY平面上の有効回転軸を求める。0度は+X、90度は+Y方向。
     /// </summary>
-    public static Vector3 ToSpinAxis(float spinTiltDeg, float spinEfficiency)
+    public static Vector3 ToSpinAxis(float spinTiltDeg)
     {
         float spinTiltRad = spinTiltDeg * Mathf.Deg2Rad;
-        float x = Mathf.Cos(spinTiltRad) * spinEfficiency;
-        float y = Mathf.Sin(spinTiltRad) * spinEfficiency;
-        float z = 1.0f - spinEfficiency;
-        Vector3 axis = new Vector3(x, y, z);
-        return axis.magnitude > 1e-6f ? axis.normalized : Vector3.forward;
+        return new Vector3(Mathf.Cos(spinTiltRad), Mathf.Sin(spinTiltRad), 0f).normalized;
     }
 
-    /// <summary>有効回転数（rpm）と球速（m/s）から揚力係数を求める。</summary>
-    public static float CalcCl(float speedMps, float effectiveSpinRateRpm)
+    /// <summary>進行方向に直交する回転数（rpm）と球速（m/s）から揚力係数を求める。</summary>
+    public static float CalcCl(float speedMps, float transverseSpinRateRpm)
     {
-        float effectiveAngularVelocityRadPerSec = effectiveSpinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
+        float transverseAngularSpeedRadPerSec = transverseSpinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
         float spinParam = speedMps > 0f
-            ? (BallPhysicsConstants.BALL_RADIUS * effectiveAngularVelocityRadPerSec) / speedMps
+            ? (BallPhysicsConstants.BALL_RADIUS * transverseAngularSpeedRadPerSec) / speedMps
             : 0f;
         return Mathf.Clamp(
             1.5f * spinParam / (1f + 2.0f * spinParam),

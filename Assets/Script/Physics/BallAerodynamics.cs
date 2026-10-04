@@ -2,6 +2,15 @@ using UnityEngine;
 
 internal static class BallAerodynamics
 {
+    internal static Vector3 CalculateMagnusForce(Vector3 velocityMps, SpinState spin)
+    {
+        Vector3 transverseAngularVelocity = spin.GetTransverseAngularVelocity(velocityMps);
+        // 軸を速度へ追従させず、現在の進行方向に直交する成分を取り出す。
+        float transverseSpinRateRpm = transverseAngularVelocity.magnitude / BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
+        float liftCoeff = BallPhysicsCalculator.CalcCl(velocityMps.magnitude, transverseSpinRateRpm);
+        return CalculateMagnusForce(velocityMps, transverseAngularVelocity.normalized, transverseSpinRateRpm, liftCoeff);
+    }
+
     internal static Vector3 CalculateMagnusForce(
         Vector3 velocityMps,
         Vector3 spinAxisNorm,

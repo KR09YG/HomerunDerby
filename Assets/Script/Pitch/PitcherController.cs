@@ -1,4 +1,4 @@
-﻿namespace Homerunderby
+namespace Homerunderby
 {
     using Cysharp.Threading.Tasks;
     using System.Collections.Generic;
@@ -113,20 +113,16 @@
                 Debug.LogError("PitchBallMoveコンポーネントがアタッチされていません");
                 return;
             }
-            Vector3 spinAxis = BallPhysicsCalculator.ToSpinAxis(
-                _selectedBall.SpinTilt,
-                _selectedBall.SpinEfficiency
-            );
-
             _ballMove.gameObject.transform.parent = null;
 
             _ballMove.Setup(
                 trajectory: _ballTrajectory,
                 deltaTime: _trajectorySettings.DeltaTime,
-                spinAxis: spinAxis,
-                spinRate: _selectedBall.RotateSpeed
+                spin: _pitchSpin
             );
         }
+
+        private SpinState _pitchSpin;
 
         /// <summary>
         /// ボールの軌道を計算
@@ -143,7 +139,7 @@
                 StopZ = _stopZ,
                 Settings = _trajectorySettings,
                 BounceSettings = _bounceSettings,
-            });
+            }, out _pitchSpin);
         }
     }
 

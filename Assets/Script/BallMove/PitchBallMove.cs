@@ -11,8 +11,10 @@ public class PitchBallMove : BallMoveTrajectory
     public bool IsReach { get; private set; }
 
     private MeshRenderer _renderer;
-    private Vector3 _spinAxis;
-    private float _spinRate;
+    private SpinState _spin;
+    private Quaternion _releaseRotation;
+    [SerializeField, Tooltip("Sceneビューで総回転軸と進行方向を表示する。")]
+    private bool _showSpinAxes;
 
     private void Awake()
     {
@@ -29,11 +31,7 @@ public class PitchBallMove : BallMoveTrajectory
         }
     }
 
-    public void Setup(
-        List<Vector3> trajectory,
-        float deltaTime,
-        Vector3 spinAxis,
-        float spinRate)
+    public void Setup(List<Vector3> trajectory, float deltaTime, SpinState spin)
     {
         Debug.Log($"{trajectory.Count}点の軌道でボール移動を初期化します");
         _elapsedTime = 0f;
@@ -42,8 +40,8 @@ public class PitchBallMove : BallMoveTrajectory
         _isMoving = false;
         _trajectory = trajectory;
         _trajectoryDeltaTime = deltaTime;
-        _spinAxis = spinAxis;
-        _spinRate = spinRate;
+        _spin = spin;
+        _releaseRotation = transform.rotation;
         transform.position = trajectory[0];
         if (_renderer == null)
             _renderer = GetComponent<MeshRenderer>();
@@ -53,8 +51,7 @@ public class PitchBallMove : BallMoveTrajectory
 
     public void ResetIsReach() => IsReach = false;
 
-    // Animator events arrive on the frame crossing their timestamp. Rewind the
-    // trajectory clock as well as its visual position to match the exact bat pose.
+    // 打撃イベントの時刻に合わせ、軌道上の位置と回転を同じ時間まで戻す。
     public void RewindForContact(float gameSeconds)
     {
         if (!_isMoving || _trajectory == null || _trajectory.Count < 2 ||
@@ -63,6 +60,7 @@ public class PitchBallMove : BallMoveTrajectory
         _index = Mathf.Clamp(Mathf.FloorToInt(_elapsedTime / _trajectoryDeltaTime), 0, _trajectory.Count - 2);
         float t = (_elapsedTime - _index * _trajectoryDeltaTime) / _trajectoryDeltaTime;
         transform.position = Vector3.Lerp(_trajectory[_index], _trajectory[_index + 1], t);
+        if (_enableSpin) ApplySpin();
     }
 
     public void StartMoving()
@@ -78,17 +76,28 @@ public class PitchBallMove : BallMoveTrajectory
 
     protected override void ApplySpin()
     {
-        float deg = _spinRate * 360f / 60f * _spinSpeedMultiplier;
-        transform.Rotate(_spinAxis, deg * Time.deltaTime);
+        // 軌道と同じ時計を使い、スロー再生や打撃時の停止でも回転位相を揃える。
+        transform.rotation = _spin.RotationAfter(_elapsedTime * _spinSpeedMultiplier) * _releaseRotation;
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (!_showSpinAxes || _trajectory == null || _trajectory.Count < 2) return;
+        Gizmos.color = Color.cyan;
+        Vector3 axis = _spin.AngularVelocityRadPerSec.normalized;
+        Gizmos.DrawLine(transform.position - axis * .2f, transform.position + axis * .2f);
+        int index = Mathf.Clamp(_index, 0, _trajectory.Count - 2);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawRay(transform.position, (_trajectory[index + 1] - _trajectory[index]).normalized * .3f);
     }
 
     protected override void OnReachedEnd()
     {
+        _elapsedTime = (_trajectory.Count - 1) * _trajectoryDeltaTime;
         Debug.Log("PitchBallMove: ボールがターゲットに到達しました");
         _onBallReachedTarget?.RaiseEvent(this);
         _isMoving = false;
         _trajectory = null;
-        _elapsedTime = 0f;
         IsReach = true;
     }
 }

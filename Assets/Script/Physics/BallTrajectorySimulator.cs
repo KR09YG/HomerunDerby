@@ -39,11 +39,14 @@ public static class BallTrajectorySimulator
         Vector3 spinAxisNormalized,
         float spinRateRpm,
         float liftCoefficient,
-        float deltaTime)
+        float deltaTime,
+        SpinState? pitchSpin)
     {
         Vector3 gravityMetersPerSecondSquared = Physics.gravity;
         Vector3 dragForceNewtons = BallAerodynamics.CalculateDragForce(velocityMps);
-        Vector3 magnusForceNewtons = BallAerodynamics.CalculateMagnusForce(
+        Vector3 magnusForceNewtons = pitchSpin.HasValue
+            ? BallAerodynamics.CalculateMagnusForce(velocityMps, pitchSpin.Value)
+            : BallAerodynamics.CalculateMagnusForce(
             velocityMps,
             spinAxisNormalized,
             spinRateRpm,
@@ -85,7 +88,7 @@ public static class BallTrajectorySimulator
             Vector3 newVelocityMps = velocityMps;
 
             SimulatePhysicsStep(ref newPos, ref newVelocityMps, spinAxisNormalized,
-                               spinRateRpm, liftCoefficient, config.DeltaTime);
+                               spinRateRpm, liftCoefficient, config.DeltaTime, config.PitchSpin);
 
             // フェンス反射
             if (!isRolling && config.BounceSettings != null)

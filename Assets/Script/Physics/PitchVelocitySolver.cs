@@ -9,20 +9,24 @@ internal static class PitchVelocitySolver
     internal static Vector3 FindOptimalVelocityAdvanced(
         Vector3 startPoint,
         Vector3 targetPoint,
-        Vector3 spinAxisNormalized,
-        float spinRateRpm,
-        float liftCoefficient,
+        BallData ballData,
         float targetSpeedMps,
         TrajectorySettings settings,
         BounceSettings bounceSettings)
     {
         Debug.Log("[最適化] 開始");
 
+        Vector3 estimatedVelocityMps = (targetPoint - startPoint).normalized * targetSpeedMps;
+        SpinState estimateSpin = SpinState.Create(estimatedVelocityMps, ballData.RotateSpeed, ballData.SpinTilt, ballData.SpinEfficiency);
+        Vector3 transverseAxisNormalized = estimateSpin.GetTransverseAngularVelocity(estimatedVelocityMps).normalized;
+        float transverseSpinRateRpm = ballData.RotateSpeed * ballData.SpinEfficiency;
+        float liftCoefficient = BallPhysicsCalculator.CalcCl(targetSpeedMps, transverseSpinRateRpm);
+
         Vector3 currentVelocityMps = EstimateInitialVelocityImproved(
             startPoint,
             targetPoint,
-            spinAxisNormalized,
-            spinRateRpm,
+            transverseAxisNormalized,
+            transverseSpinRateRpm,
             liftCoefficient,
             targetSpeedMps
         );
@@ -37,14 +41,15 @@ internal static class PitchVelocitySolver
                 DeltaTime = settings?.DeltaTime ?? 0.01f,
                 MaxSimulationTimeSeconds = settings?.MaxSimulationTime ?? 5f,
                 StopAtZ = settings?.StopAtTarget == true ? settings.StopPosition.z : (float?)null,
-                BounceSettings = bounceSettings
+                BounceSettings = bounceSettings,
+                PitchSpin = SpinState.Create(currentVelocityMps, ballData.RotateSpeed, ballData.SpinTilt, ballData.SpinEfficiency)
             };
 
             List<Vector3> testTrajectory = BallTrajectorySimulator.SimulateTrajectory(
                 startPoint,
                 currentVelocityMps,
-                spinAxisNormalized,
-                spinRateRpm,
+                transverseAxisNormalized,
+                transverseSpinRateRpm,
                 liftCoefficient,
                 config
             );
@@ -106,8 +111,8 @@ internal static class PitchVelocitySolver
     private static Vector3 EstimateInitialVelocityImproved(
         Vector3 startPoint,
         Vector3 targetPoint,
-        Vector3 spinAxisNormalized,
-        float spinRateRpm,
+        Vector3 transverseAxisNormalized,
+        float transverseSpinRateRpm,
         float liftCoefficient,
         float targetSpeedMps)
     {
@@ -124,9 +129,9 @@ internal static class PitchVelocitySolver
         float gravityMetersPerSecondSquared = Mathf.Abs(Physics.gravity.y);
         float gravityDropMeters = BallPhysicsConstants.GRAVITY_HALF * gravityMetersPerSecondSquared * estimatedTimeSeconds * estimatedTimeSeconds;
 
-        float angularVelocityRadPerSec = spinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
+        float angularSpeedRadPerSec = transverseSpinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
         Vector3 forwardDir = displacement.normalized;
-        Vector3 angularVelocityVectorRadPerSec = spinAxisNormalized * angularVelocityRadPerSec;
+        Vector3 angularVelocityVectorRadPerSec = transverseAxisNormalized * angularSpeedRadPerSec;
         Vector3 magnusDir = Vector3.Cross(angularVelocityVectorRadPerSec, forwardDir).normalized;
 
         float magnusAccelerationMetersPerSecondSquared = BallPhysicsConstants.MAGNUS_FORCE_HALF * BallPhysicsConstants.AIR_DENSITY * targetSpeedMps * targetSpeedMps
