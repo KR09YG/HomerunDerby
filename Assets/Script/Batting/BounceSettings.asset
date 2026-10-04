@@ -23,4 +23,3 @@ MonoBehaviour:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 50, y: 25, z: 50}
   rollingDeceleration: 0.95
-  ballRadius: 0.00549

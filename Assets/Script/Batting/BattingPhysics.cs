@@ -2,11 +2,7 @@ using UnityEngine;
 
 public static class BattingPhysics
 {
-    private const float BALL_MASS_KG = 0.145f;
     private const float EFFECTIVE_BAT_MASS_FACTOR = 0.7f;
-    private const float KPH_TO_MPS = 1f / 3.6f;
-    private const float BALL_RADIUS_M = 0.0366f;
-    private const float RPM_TO_RAD_PER_SEC = 2f * Mathf.PI / 60f;
 
     /// <summary>
     /// 打球初速を計算
@@ -24,15 +20,15 @@ public static class BattingPhysics
         float efficiency)
     {
         // バット速度をm/sに変換
-        float batSpeedMps = batSpeedKmh * KPH_TO_MPS;
+        float batSpeedMps = batSpeedKmh * BallPhysicsConstants.KPH_TO_MPS;
         // 有効バット質量を計算
         float effectiveBatMass = batMass * EFFECTIVE_BAT_MASS_FACTOR;
         // 打球初速計算
         float numerator =
-            (BALL_MASS_KG - cor * effectiveBatMass) * pitchSpeedMps +
+            (BallPhysicsConstants.BALL_MASS_KG - cor * effectiveBatMass) * pitchSpeedMps +
             effectiveBatMass * (1f + cor) * batSpeedMps;
         // 分母計算
-        float denominator = BALL_MASS_KG + effectiveBatMass;
+        float denominator = BallPhysicsConstants.BALL_MASS_KG + effectiveBatMass;
         // 最終的な打球初速に効率を乗算
         float baseVelocityMps = numerator / denominator;
         return baseVelocityMps * efficiency;
@@ -128,8 +124,8 @@ public static class BattingPhysics
         float speedMps,
         BattingParameters param)
     {
-        float angularVelocityRadPerSec = spinRateRpm * RPM_TO_RAD_PER_SEC;
-        float spinRatio = (angularVelocityRadPerSec * BALL_RADIUS_M) / speedMps;
+        float angularVelocityRadPerSec = spinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
+        float spinRatio = (angularVelocityRadPerSec * BallPhysicsConstants.BALL_RADIUS_M) / speedMps;
 
         float cl = (param.LiftCoefficientA * spinRatio) / (param.LiftCoefficientB + spinRatio);
         return Mathf.Clamp(cl, 0f, param.MaxLiftCoefficient);

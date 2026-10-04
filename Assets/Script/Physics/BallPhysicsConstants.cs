@@ -2,17 +2,18 @@ using UnityEngine;
 
 internal static class BallPhysicsConstants
 {
-    // 物理定数
-    internal const float AIR_DENSITY = 1.225f; // kg/m³
-    internal const float BALL_MASS = 0.145f; // kg
-    internal const float BALL_RADIUS = 0.0366f; // m
-    internal const float CROSS_SECTION = Mathf.PI * BALL_RADIUS * BALL_RADIUS; // m²
+    // 投球・打球・衝突の計算で共通のボールと空気の値。
+    internal const float AIR_DENSITY_KG_PER_M3 = 1.225f; // kg/m³
+    internal const float BALL_MASS_KG = 0.145f; // kg
+    internal const float BALL_RADIUS_M = 0.0366f; // m
+    internal const float CROSS_SECTION_M2 = Mathf.PI * BALL_RADIUS_M * BALL_RADIUS_M; // m²
     internal const float DRAG_COEFFICIENT = 0.3f;
     internal const float GRAVITY_HALF = 0.5f;
     internal const float MAGNUS_FORCE_HALF = 0.5f;
     internal const float DRAG_FORCE_HALF = 0.5f;
 
-    // 単位変換定数
+    // 球種やバットの設定値を、物理計算に使う単位へ変換する。
+    internal const float KPH_TO_MPS = 1f / 3.6f;
     internal const float RPM_TO_RAD_PER_SEC = 2f * Mathf.PI / 60f;
 
     // マグヌス効果補正

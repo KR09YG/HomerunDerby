@@ -14,9 +14,6 @@ public struct TrajectoryResult
 
 public static class BallTrajectorySimulator
 {
-    /// <summary>野球ボールの質量(kg)</summary>
-    private const float BALL_MASS_KG = 0.145f;
-
     /// <summary>Raycast開始位置のオフセット(m)</summary>
     private const float RAYCAST_START_OFFSET = 5f;
 
@@ -53,7 +50,7 @@ public static class BallTrajectorySimulator
             liftCoefficient
         );
 
-        Vector3 accelerationMetersPerSecondSquared = gravityMetersPerSecondSquared + (dragForceNewtons + magnusForceNewtons) / BALL_MASS_KG;
+        Vector3 accelerationMetersPerSecondSquared = gravityMetersPerSecondSquared + (dragForceNewtons + magnusForceNewtons) / BallPhysicsConstants.BALL_MASS_KG;
 
         velocityMps += accelerationMetersPerSecondSquared * deltaTime;
         position += velocityMps * deltaTime;

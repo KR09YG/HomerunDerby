@@ -79,8 +79,6 @@ public readonly struct SpinState
 
 public static class BallPhysicsCalculator
 {
-    private const float KPH_TO_MPS = 1f / 3.6f;
-
     public struct SimulationConfig
     {
         // 時間刻みは秒単位で指定する。
@@ -101,7 +99,7 @@ public static class BallPhysicsCalculator
     {
         Debug.Log("========== 軌道計算開始 ==========");
 
-        float speedMps = request.BallData.Speed * KPH_TO_MPS;
+        float speedMps = request.BallData.Speed * BallPhysicsConstants.KPH_TO_MPS;
 
         // PassPointを終点として最適化
         var solverSettings = request.Settings ?? new TrajectorySettings();
@@ -163,7 +161,7 @@ public static class BallPhysicsCalculator
     {
         float transverseAngularSpeedRadPerSec = transverseSpinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
         float spinParam = speedMps > 0f
-            ? (BallPhysicsConstants.BALL_RADIUS * transverseAngularSpeedRadPerSec) / speedMps
+            ? (BallPhysicsConstants.BALL_RADIUS_M * transverseAngularSpeedRadPerSec) / speedMps
             : 0f;
         return Mathf.Clamp(
             1.5f * spinParam / (1f + 2.0f * spinParam),

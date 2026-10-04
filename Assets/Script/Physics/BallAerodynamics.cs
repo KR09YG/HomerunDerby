@@ -31,9 +31,9 @@ internal static class BallAerodynamics
 
         float speedMps = velocityMps.magnitude;
         float magnusForceNewtons = BallPhysicsConstants.MAGNUS_FORCE_HALF
-            * BallPhysicsConstants.AIR_DENSITY
+            * BallPhysicsConstants.AIR_DENSITY_KG_PER_M3
             * speedMps * speedMps
-            * BallPhysicsConstants.CROSS_SECTION
+            * BallPhysicsConstants.CROSS_SECTION_M2
             * liftCoeff;
 
         return magnusDirection * magnusForceNewtons;
@@ -46,9 +46,9 @@ internal static class BallAerodynamics
             return Vector3.zero;
 
         float dragForceNewtons = BallPhysicsConstants.DRAG_FORCE_HALF
-            * BallPhysicsConstants.AIR_DENSITY
+            * BallPhysicsConstants.AIR_DENSITY_KG_PER_M3
             * speedMps * speedMps
-            * BallPhysicsConstants.CROSS_SECTION
+            * BallPhysicsConstants.CROSS_SECTION_M2
             * BallPhysicsConstants.DRAG_COEFFICIENT;
 
         return -velocityMps.normalized * dragForceNewtons;

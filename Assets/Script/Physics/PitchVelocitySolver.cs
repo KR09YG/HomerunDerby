@@ -121,8 +121,8 @@ internal static class PitchVelocitySolver
         float verticalDistanceMeters = displacement.y;
 
         float dragFactor = BallPhysicsConstants.DRAG_FACTOR_BASE +
-                          (BallPhysicsConstants.DRAG_COEFFICIENT * BallPhysicsConstants.AIR_DENSITY * BallPhysicsConstants.CROSS_SECTION * targetSpeedMps) /
-                          (BallPhysicsConstants.DRAG_MASS_FACTOR * BallPhysicsConstants.BALL_MASS);
+                          (BallPhysicsConstants.DRAG_COEFFICIENT * BallPhysicsConstants.AIR_DENSITY_KG_PER_M3 * BallPhysicsConstants.CROSS_SECTION_M2 * targetSpeedMps) /
+                          (BallPhysicsConstants.DRAG_MASS_FACTOR * BallPhysicsConstants.BALL_MASS_KG);
 
         float estimatedTimeSeconds = (horizontalDistanceMeters / targetSpeedMps) * dragFactor;
 
@@ -134,8 +134,8 @@ internal static class PitchVelocitySolver
         Vector3 angularVelocityVectorRadPerSec = transverseAxisNormalized * angularSpeedRadPerSec;
         Vector3 magnusDir = Vector3.Cross(angularVelocityVectorRadPerSec, forwardDir).normalized;
 
-        float magnusAccelerationMetersPerSecondSquared = BallPhysicsConstants.MAGNUS_FORCE_HALF * BallPhysicsConstants.AIR_DENSITY * targetSpeedMps * targetSpeedMps
-                           * BallPhysicsConstants.CROSS_SECTION * liftCoefficient / BallPhysicsConstants.BALL_MASS;
+        float magnusAccelerationMetersPerSecondSquared = BallPhysicsConstants.MAGNUS_FORCE_HALF * BallPhysicsConstants.AIR_DENSITY_KG_PER_M3 * targetSpeedMps * targetSpeedMps
+                           * BallPhysicsConstants.CROSS_SECTION_M2 * liftCoefficient / BallPhysicsConstants.BALL_MASS_KG;
         float magnusDisplacementMeters = BallPhysicsConstants.GRAVITY_HALF * magnusAccelerationMetersPerSecondSquared * estimatedTimeSeconds * estimatedTimeSeconds;
 
         float zSpeedMps = displacement.z / estimatedTimeSeconds;

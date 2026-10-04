@@ -40,5 +40,4 @@ public class BounceSettings : ScriptableObject
     [Range(0f, 1f)]
     public float rollingDeceleration = 0.95f;
 
-    public float ballRadius = 0.00366f;
 }

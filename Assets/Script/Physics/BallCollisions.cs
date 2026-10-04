@@ -14,7 +14,6 @@ public struct GroundHitResult
 
 internal static class BallCollisions
 {
-    private const float BallRadius = 0.0366f;
     public static bool TryReflectOnFence(
     Vector3 from,
     ref Vector3 to,
@@ -30,7 +29,7 @@ internal static class BallCollisions
 
         dir /= dist;
 
-        float radius = BallRadius;
+        float radius = BallPhysicsConstants.BALL_RADIUS_M;
 
         // SphereCastで線分上の接触を取る
         if (Physics.SphereCast(from, radius, dir, out RaycastHit hit, dist, fenceMask, QueryTriggerInteraction.Ignore))
