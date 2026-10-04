@@ -103,7 +103,7 @@ public static class BallPhysicsCalculator
 
         // 目標平面はSolverへ直接渡し、呼び出し元の設定は書き換えない。
         var solverSettings = request.Settings ?? new TrajectorySettings();
-        PitchSolveResult solveResult = PitchVelocitySolver.FindOptimalVelocityAdvanced(
+        PitchSolveResult solveResult = PitchVelocitySolver.SolveInitialVelocity(
             request.ReleasePoint,
             request.PassPoint,
             request.BallData,

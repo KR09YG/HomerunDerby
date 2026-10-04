@@ -8,7 +8,7 @@ public readonly struct PitchSolveResult
     public bool Converged { get; }
     /// <summary>目標Z平面上での左右・高さの誤差の大きさ（m）。</summary>
     public float ErrorMeters { get; }
-    /// <summary>外側の反復ループを実行した回数。初期候補の評価は含めない。</summary>
+    /// <summary>外側ループの実行回数。初期評価は含めず、収束確認だけのループも数える。</summary>
     public int Iterations { get; }
 
     internal PitchSolveResult(Vector3 initialVelocityMps, bool converged, float errorMeters, int iterations)
@@ -26,11 +26,12 @@ internal static class PitchVelocitySolver
     private const float MAX_DIRECTION_STEP = 0.25f;
     private const float MIN_JACOBIAN_DETERMINANT = 0.000001f;
     private const int MAX_BACKTRACK_STEPS = 6;
+    private const float MIN_TARGET_Z_SEPARATION = 0.000001f;
 
     /// <summary>
     /// 設定球速を保ち、目標Z平面での左右・高さのずれが小さくなる投球方向を探す。
     /// </summary>
-    internal static PitchSolveResult FindOptimalVelocityAdvanced(
+    internal static PitchSolveResult SolveInitialVelocity(
         Vector3 startPoint,
         Vector3 targetPoint,
         BallData ballData,
@@ -60,6 +61,9 @@ internal static class PitchVelocitySolver
             throw new ArgumentException("リリース位置と目標位置の距離が計算可能な範囲を超えています。", nameof(targetPoint));
         if (displacement.sqrMagnitude < 1e-12f)
             throw new ArgumentException("投球方向を求めるには、リリース位置と目標位置を離してください。", nameof(targetPoint));
+        // 開始点自身を目標平面の交点として評価しないよう、同じZ平面を除外する。
+        if (Mathf.Abs(displacement.z) < MIN_TARGET_Z_SEPARATION)
+            throw new ArgumentException("目標Z平面はリリース位置のZから離してください。", nameof(targetPoint));
 
         Vector3 forward = displacement.normalized;
         Vector3 right = Vector3.Cross(Vector3.up, forward);
