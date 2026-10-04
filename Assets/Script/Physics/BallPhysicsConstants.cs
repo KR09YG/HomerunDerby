@@ -16,23 +16,9 @@ internal static class BallPhysicsConstants
     internal const float KPH_TO_MPS = 1f / 3.6f;
     internal const float RPM_TO_RAD_PER_SEC = 2f * Mathf.PI / 60f;
 
-    // マグヌス効果補正
-    internal const float MAGNUS_VERTICAL_CORRECTION_FACTOR = 0.8f;
-
     // 最適化パラメータ
     internal const int MAX_OPTIMIZATION_ITERATIONS = 20;
     internal const float POSITION_TOLERANCE = 0.02f;
-
-    // 速度調整パラメータ
-    internal const float XY_ADJUSTMENT_INITIAL = 0.6f;
-    internal const float XY_ADJUSTMENT_FINAL = 0.2f;
-    internal const float SPEED_ERROR_THRESHOLD = 0.2f;
-    internal const float SPEED_ADJUSTMENT_INITIAL = 0.15f;
-    internal const float SPEED_ADJUSTMENT_FINAL = 0.05f;
-
-    // 初速推定パラメータ
-    internal const float DRAG_FACTOR_BASE = 1.0f;
-    internal const float DRAG_MASS_FACTOR = 2f;
 
     // シミュレーション終了条件
     internal const float GROUND_LEVEL = -0.5f;

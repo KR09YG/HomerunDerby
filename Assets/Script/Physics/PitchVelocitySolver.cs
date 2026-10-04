@@ -1,10 +1,15 @@
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 internal static class PitchVelocitySolver
 {
+    private const float DIRECTION_PROBE_STEP = 0.001f;
+    private const float MAX_DIRECTION_STEP = 0.25f;
+    private const float MIN_JACOBIAN_DETERMINANT = 0.000001f;
+    private const int MAX_BACKTRACK_STEPS = 6;
+
     /// <summary>
-    /// 終点に到達する最適な初速を探索
+    /// 設定球速を保ち、目標Z平面での左右・高さのずれが小さくなる投球方向を探す。
     /// </summary>
     internal static Vector3 FindOptimalVelocityAdvanced(
         Vector3 startPoint,
@@ -14,135 +19,111 @@ internal static class PitchVelocitySolver
         TrajectorySettings settings,
         BounceSettings bounceSettings)
     {
-        Debug.Log("[最適化] 開始");
+        if (float.IsNaN(targetSpeedMps) || float.IsInfinity(targetSpeedMps) || targetSpeedMps <= 0f)
+            throw new ArgumentOutOfRangeException(nameof(targetSpeedMps));
 
-        Vector3 estimatedVelocityMps = (targetPoint - startPoint).normalized * targetSpeedMps;
-        SpinState estimateSpin = SpinState.Create(estimatedVelocityMps, ballData.RotateSpeed, ballData.SpinTilt, ballData.SpinEfficiency);
-        Vector3 transverseAxisNormalized = estimateSpin.GetTransverseAngularVelocity(estimatedVelocityMps).normalized;
-        float transverseSpinRateRpm = ballData.RotateSpeed * ballData.SpinEfficiency;
-        float liftCoefficient = BallPhysicsCalculator.CalcCl(targetSpeedMps, transverseSpinRateRpm);
+        Vector3 displacement = targetPoint - startPoint;
+        if (displacement.sqrMagnitude < 1e-12f)
+            throw new ArgumentException("投球方向を求めるには、リリース位置と目標位置を離してください。", nameof(targetPoint));
 
-        Vector3 currentVelocityMps = EstimateInitialVelocityImproved(
-            startPoint,
-            targetPoint,
-            transverseAxisNormalized,
-            transverseSpinRateRpm,
-            liftCoefficient,
-            targetSpeedMps
-        );
+        Vector3 forward = displacement.normalized;
+        Vector3 right = Vector3.Cross(Vector3.up, forward);
+        if (right.sqrMagnitude < 1e-6f)
+            right = Vector3.Cross(Vector3.right, forward);
+        right.Normalize();
+        Vector3 up = Vector3.Cross(forward, right).normalized;
 
-        Vector3 bestVelocityMps = currentVelocityMps;
-        float bestError = float.MaxValue;
+        // 最初の方向だけ落下分を見込む。空気力によるずれは軌道を評価して補正する。
+        float estimatedTimeSeconds = displacement.magnitude / targetSpeedMps;
+        Vector3 initialAim = displacement - Physics.gravity * (0.5f * estimatedTimeSeconds * estimatedTimeSeconds);
+        float forwardComponent = Vector3.Dot(initialAim, forward);
+        Vector2 directionOffset = forwardComponent > 1e-6f
+            ? new Vector2(Vector3.Dot(initialAim, right), Vector3.Dot(initialAim, up)) / forwardComponent
+            : Vector2.zero;
 
-        for (int i = 0; i < BallPhysicsConstants.MAX_OPTIMIZATION_ITERATIONS; i++)
+        bool TryEvaluate(Vector2 offset, out Vector3 candidateVelocityMps, out Vector2 errorXY)
         {
+            Vector3 candidateDirection = forward + right * offset.x + up * offset.y;
+            candidateVelocityMps = candidateDirection.normalized * targetSpeedMps;
+            SpinState candidateSpin = SpinState.Create(candidateVelocityMps,
+                ballData.RotateSpeed, ballData.SpinTilt, ballData.SpinEfficiency);
             var config = new BallPhysicsCalculator.SimulationConfig
             {
                 DeltaTime = settings?.DeltaTime ?? 0.01f,
                 MaxSimulationTimeSeconds = settings?.MaxSimulationTime ?? 5f,
                 StopAtZ = settings?.StopAtTarget == true ? settings.StopPosition.z : (float?)null,
                 BounceSettings = bounceSettings,
-                PitchSpin = SpinState.Create(currentVelocityMps, ballData.RotateSpeed, ballData.SpinTilt, ballData.SpinEfficiency)
+                PitchSpin = candidateSpin
             };
+            var trajectory = BallTrajectorySimulator.SimulateTrajectory(
+                startPoint, candidateVelocityMps, Vector3.zero, 0f, 0f, config);
+            errorXY = default;
+            if (!BallTrajectoryPredictor.TryGetCrossPointAtZ(trajectory, targetPoint.z, out Vector3 crossPoint))
+                return false;
 
-            List<Vector3> testTrajectory = BallTrajectorySimulator.SimulateTrajectory(
-                startPoint,
-                currentVelocityMps,
-                transverseAxisNormalized,
-                transverseSpinRateRpm,
-                liftCoefficient,
-                config
-            );
+            errorXY = new Vector2(targetPoint.x - crossPoint.x, targetPoint.y - crossPoint.y);
+            return !float.IsNaN(errorXY.sqrMagnitude) && !float.IsInfinity(errorXY.sqrMagnitude);
+        }
 
-            if (testTrajectory.Count == 0)
+        if (!TryEvaluate(directionOffset, out Vector3 bestVelocityMps, out Vector2 currentError))
+        {
+            Debug.LogWarning($"[最適化] 初期候補を目標Z平面で評価できませんでした。Z={targetPoint.z:F3}");
+            return bestVelocityMps;
+        }
+
+        for (int i = 0; i < BallPhysicsConstants.MAX_OPTIMIZATION_ITERATIONS; i++)
+        {
+            if (currentError.magnitude < BallPhysicsConstants.POSITION_TOLERANCE)
+                return bestVelocityMps;
+
+            // 左右・上下へ少し向きを変え、平面上の誤差がどう変わるかを測る。
+            if (!TryEvaluate(directionOffset + Vector2.right * DIRECTION_PROBE_STEP, out _, out Vector2 rightError) ||
+                !TryEvaluate(directionOffset + Vector2.up * DIRECTION_PROBE_STEP, out _, out Vector2 upError))
             {
-                Debug.LogWarning("[最適化] 軌道計算失敗");
-                break;
+                Debug.LogWarning("[最適化] 方向補正用の候補を目標Z平面で評価できませんでした。");
+                return bestVelocityMps;
             }
 
-            if (!BallTrajectoryPredictor.TryGetCrossPointAtZ(testTrajectory, targetPoint.z, out Vector3 crossPoint))
+            Vector2 rightDerivative = (rightError - currentError) / DIRECTION_PROBE_STEP;
+            Vector2 upDerivative = (upError - currentError) / DIRECTION_PROBE_STEP;
+            float determinant = rightDerivative.x * upDerivative.y - upDerivative.x * rightDerivative.y;
+            if (float.IsNaN(determinant) || float.IsInfinity(determinant) || Mathf.Abs(determinant) < MIN_JACOBIAN_DETERMINANT)
             {
-                Debug.LogWarning($"[最適化] 目標Z平面に到達しませんでした。Z={targetPoint.z:F3}, 試行={i + 1}");
-                break;
+                Debug.LogWarning("[最適化] 目標平面上の誤差から投球方向の補正量を求められませんでした。");
+                return bestVelocityMps;
             }
 
-            // 目標平面を通過した位置で左右・高さのずれを評価する。
-            Vector2 errorXY = new Vector2(targetPoint.x - crossPoint.x, targetPoint.y - crossPoint.y);
-            float totalError = errorXY.magnitude;
+            Vector2 directionStep = new Vector2(
+                (upDerivative.x * currentError.y - upDerivative.y * currentError.x) / determinant,
+                (rightDerivative.y * currentError.x - rightDerivative.x * currentError.y) / determinant);
+            directionStep = Vector2.ClampMagnitude(directionStep, MAX_DIRECTION_STEP);
 
-            if (totalError < bestError)
+            bool improved = false;
+            for (int backtrack = 0; backtrack < MAX_BACKTRACK_STEPS; backtrack++)
             {
-                bestError = totalError;
-                bestVelocityMps = currentVelocityMps;
+                Vector2 candidateOffset = directionOffset + directionStep;
+                if (TryEvaluate(candidateOffset, out Vector3 candidateVelocityMps, out Vector2 candidateError) &&
+                    candidateError.sqrMagnitude < currentError.sqrMagnitude)
+                {
+                    directionOffset = candidateOffset;
+                    bestVelocityMps = candidateVelocityMps;
+                    currentError = candidateError;
+                    improved = true;
+                    break;
+                }
+                // 補正が大きすぎる場合は、同じ方向で幅を半分にして試す。
+                directionStep *= 0.5f;
             }
 
-            if (totalError < BallPhysicsConstants.POSITION_TOLERANCE)
+            if (!improved)
             {
-                return currentVelocityMps;
-            }
-
-            float progress = (float)i / BallPhysicsConstants.MAX_OPTIMIZATION_ITERATIONS;
-
-            Vector3 xyAdjustment = new Vector3(errorXY.x, errorXY.y, 0f) *
-                                   Mathf.Lerp(BallPhysicsConstants.XY_ADJUSTMENT_INITIAL, BallPhysicsConstants.XY_ADJUSTMENT_FINAL, progress);
-            currentVelocityMps += xyAdjustment;
-
-            float currentSpeedMps = currentVelocityMps.magnitude;
-            float speedErrorMps = targetSpeedMps - currentSpeedMps;
-
-            if (Mathf.Abs(speedErrorMps) > targetSpeedMps * BallPhysicsConstants.SPEED_ERROR_THRESHOLD)
-            {
-                float speedAdjustmentFactor = Mathf.Lerp(BallPhysicsConstants.SPEED_ADJUSTMENT_INITIAL, BallPhysicsConstants.SPEED_ADJUSTMENT_FINAL, progress);
-                currentVelocityMps = currentVelocityMps.normalized *
-                                  Mathf.Lerp(currentSpeedMps, targetSpeedMps, speedAdjustmentFactor);
+                Debug.LogWarning("[最適化] 投球方向を補正しても誤差が改善しないため、探索を終了しました。");
+                return bestVelocityMps;
             }
         }
 
+        if (currentError.magnitude >= BallPhysicsConstants.POSITION_TOLERANCE)
+            Debug.LogWarning($"[最適化] 探索上限に達しました。XY誤差={currentError.magnitude:F4}m");
         return bestVelocityMps;
-    }
-
-    /// <summary>
-    /// マグヌス効果、空気抵抗を考慮して、目標に到達する初速を推定
-    /// </summary>
-    private static Vector3 EstimateInitialVelocityImproved(
-        Vector3 startPoint,
-        Vector3 targetPoint,
-        Vector3 transverseAxisNormalized,
-        float transverseSpinRateRpm,
-        float liftCoefficient,
-        float targetSpeedMps)
-    {
-        Vector3 displacement = targetPoint - startPoint;
-        float horizontalDistanceMeters = new Vector2(displacement.x, displacement.z).magnitude;
-        float verticalDistanceMeters = displacement.y;
-
-        float dragFactor = BallPhysicsConstants.DRAG_FACTOR_BASE +
-                          (BallPhysicsConstants.DRAG_COEFFICIENT * BallPhysicsConstants.AIR_DENSITY_KG_PER_M3 * BallPhysicsConstants.CROSS_SECTION_M2 * targetSpeedMps) /
-                          (BallPhysicsConstants.DRAG_MASS_FACTOR * BallPhysicsConstants.BALL_MASS_KG);
-
-        float estimatedTimeSeconds = (horizontalDistanceMeters / targetSpeedMps) * dragFactor;
-
-        float gravityMetersPerSecondSquared = Mathf.Abs(Physics.gravity.y);
-        float gravityDropMeters = BallPhysicsConstants.GRAVITY_HALF * gravityMetersPerSecondSquared * estimatedTimeSeconds * estimatedTimeSeconds;
-
-        float angularSpeedRadPerSec = transverseSpinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
-        Vector3 forwardDir = displacement.normalized;
-        Vector3 angularVelocityVectorRadPerSec = transverseAxisNormalized * angularSpeedRadPerSec;
-        Vector3 magnusDir = Vector3.Cross(angularVelocityVectorRadPerSec, forwardDir).normalized;
-
-        float magnusAccelerationMetersPerSecondSquared = BallPhysicsConstants.MAGNUS_FORCE_HALF * BallPhysicsConstants.AIR_DENSITY_KG_PER_M3 * targetSpeedMps * targetSpeedMps
-                           * BallPhysicsConstants.CROSS_SECTION_M2 * liftCoefficient / BallPhysicsConstants.BALL_MASS_KG;
-        float magnusDisplacementMeters = BallPhysicsConstants.GRAVITY_HALF * magnusAccelerationMetersPerSecondSquared * estimatedTimeSeconds * estimatedTimeSeconds;
-
-        float zSpeedMps = displacement.z / estimatedTimeSeconds;
-        float xSpeedMps = displacement.x / estimatedTimeSeconds;
-        float verticalSpeedMps = verticalDistanceMeters / estimatedTimeSeconds + gravityMetersPerSecondSquared * estimatedTimeSeconds * BallPhysicsConstants.GRAVITY_HALF;
-
-        float magnusVerticalEffectMps = magnusDir.y * magnusDisplacementMeters / estimatedTimeSeconds;
-        verticalSpeedMps -= magnusVerticalEffectMps * BallPhysicsConstants.MAGNUS_VERTICAL_CORRECTION_FACTOR;
-
-        Vector3 initialVelocityMps = new Vector3(xSpeedMps, verticalSpeedMps, zSpeedMps);
-
-        return initialVelocityMps;
     }
 }
