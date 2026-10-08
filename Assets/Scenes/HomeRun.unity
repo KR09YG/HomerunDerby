@@ -6085,48 +6085,13 @@ MonoBehaviour:
   _passPoint: {fileID: 2131704642}
   _stopZ: 2.07
   _ballList:
-  - Name: "\u30B9\u30C8\u30EC\u30FC\u30C8"
-    Speed: 150
-    RotateSpeed: 3000
-    Control: 0
-    SpinTilt: 180
-    SpinEfficiency: 1
-  - Name: "\u30AB\u30FC\u30D6"
-    Speed: 100
-    RotateSpeed: 2500
-    Control: 0
-    SpinTilt: 270
-    SpinEfficiency: 1
-  - Name: "\u30D5\u30A9\u30FC\u30AF"
-    Speed: 130
-    RotateSpeed: 1000
-    Control: 0
-    SpinTilt: 180
-    SpinEfficiency: 1
-  - Name: "\u30CA\u30C3\u30AF\u30EB\u30AB\u30FC\u30D6"
-    Speed: 120
-    RotateSpeed: 2700
-    Control: 0
-    SpinTilt: 290
-    SpinEfficiency: 1
-  - Name: "\u30C4\u30FC\u30B7\u30FC\u30E0"
-    Speed: 145
-    RotateSpeed: 2200
-    Control: 0
-    SpinTilt: 90
-    SpinEfficiency: 1
-  - Name: "\u30B9\u30E9\u30A4\u30C0\u30FC"
-    Speed: 135
-    RotateSpeed: 2200
-    Control: 0
-    SpinTilt: 250
-    SpinEfficiency: 1
-  - Name: "\u30AB\u30C3\u30C8"
-    Speed: 140
-    RotateSpeed: 2200
-    Control: 0
-    SpinTilt: 250
-    SpinEfficiency: 1
+  - {fileID: 11400000, guid: a4f18af1d49148dfbe92173705aa928c, type: 2}
+  - {fileID: 11400000, guid: 406167f6de7941779d4b97359e9c9151, type: 2}
+  - {fileID: 11400000, guid: 60d553d8d72d47709638eb4f0095eaaf, type: 2}
+  - {fileID: 11400000, guid: fec10dc603464dc999eacd0c1c639390, type: 2}
+  - {fileID: 11400000, guid: 875fd413b8b84a6087a24647ccf159aa, type: 2}
+  - {fileID: 11400000, guid: ddd3c0cdfdc24a0c96d84c991b7c21db, type: 2}
+  - {fileID: 11400000, guid: c01612877dab46778ae17bd88b6bb7e6, type: 2}
   _nodAnimTime: 0
   _delayFirstPitchTime: 5000
   _selectedBall:

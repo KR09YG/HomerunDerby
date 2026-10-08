@@ -21,7 +21,7 @@ namespace Homerunderby
         [SerializeField] private Transform _releasePoint;
         [SerializeField] private Transform _passPoint;
         [SerializeField] private float _stopZ;
-        [SerializeField] private List<BallData> _ballList;
+        [SerializeField] private List<PitchTypeData> _ballList;
         [SerializeField] private float _nodAnimTime;
         [SerializeField] private int _delayFirstPitchTime = 5000;
 
@@ -30,7 +30,7 @@ namespace Homerunderby
         public BallData _selectedBall;
         private List<Vector3> _ballTrajectory = new List<Vector3>();
         public bool _isPlaying = false;
-        public List<BallData> BallList => _ballList;
+        public List<PitchTypeData> BallList => _ballList;
 
         public void Awake()
         {
@@ -78,9 +78,9 @@ namespace Homerunderby
 
         public void PitchCalculate()
         {
-            int index = Random.Range( 0, _ballList.Count );
+            PitchTypeData pitch = PitchTypeSelector.Select(_ballList, Random.value);
             _passPoint.position = GetRandomPositionInCollider();
-            _selectedBall = _ballList[index];
+            _selectedBall = pitch.Data;
             Debug.Log($"Ball decided: {_selectedBall.Name}");
         }
 
