@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 
-// Deforms the authored arc once per swing; never chases the cursor with the moving bat.
+// 入力時に補正量を決め、元のスイングに腰・腕・手首の調整を加える。
 [DefaultExecutionOrder(1000)]
 public class BatSwingAimIK : MonoBehaviour
 {
@@ -87,8 +87,7 @@ public class BatSwingAimIK : MonoBehaviour
             Debug.LogError("BatSwingAimIK: sweet spot must belong to the hand holding the bat.", this);
             return;
         }
-        // The prefab attaches the bat to LEFT hand. Always solve that hand as the
-        // rigid grip; locking it as the support hand changes the bat after planning.
+        // バットを取り付けた手を基準に解く。反対の手はグリップに追従させる。
         _gripHand = heldInLeftHand ? left : right;
         _supportHand = heldInLeftHand ? right : left;
         Transform ru = _animator.GetBoneTransform(heldInLeftHand ? HumanBodyBones.LeftUpperArm : HumanBodyBones.RightUpperArm);
@@ -108,7 +107,7 @@ public class BatSwingAimIK : MonoBehaviour
             return;
         }
 
-        // Bone-only replica: no renderers, gameplay behaviours or animation events.
+        // 接触姿勢の計算には骨だけを複製し、描画やゲームの処理を持ち込まない。
         var map = new Dictionary<Transform, Transform>();
         _reference = CopyHierarchy(_animator.transform, null, map).gameObject;
         _reference.name = "Swing contact reference";
@@ -148,8 +147,7 @@ public class BatSwingAimIK : MonoBehaviour
     {
         if (!_ready || _cursor == null) return;
         RestorePose();
-        // Keep the support hand on the handle, not at its independently animated wrist.
-        // Sample the clip's load pose so input/Animator update order cannot change the grip.
+        // クリップ冒頭から両手の位置関係を取得し、入力時の再生姿勢に依存させない。
         _clipPlayable.SetTime(0);
         _graph.Evaluate(0);
         _supportHandLocalPosition = _referenceGripHand.InverseTransformPoint(_referenceSupportHand.position);
@@ -165,8 +163,7 @@ public class BatSwingAimIK : MonoBehaviour
         _swinging = true;
     }
 
-    // Plan ONCE on the unmodified contact pose. A direction-only aim can leave one arm
-    // unreachable; choose a small torso/wrist adjustment that both arms can actually hold.
+    // 元の接触姿勢から、両腕が届く範囲で腰・手首・手の移動量を決める。
     private void PlanContact(Vector3 pivot, Vector3 sweet, Vector3 hand, Vector3 target)
     {
         Quaternion aim = LimitedRotation(sweet - pivot, target - pivot, _maxTorsoAngle);
@@ -219,8 +216,7 @@ public class BatSwingAimIK : MonoBehaviour
         return Quaternion.RotateTowards(Quaternion.identity, Quaternion.FromToRotation(from, to), degrees);
     }
 
-    // Remove last frame's additive pose BEFORE Animator evaluates. This also prevents drift
-    // when the animation-event pause stops Animator at the same time for many rendered frames.
+    // 再生前に前フレームの補正を外し、停止中も補正が積み重ならないようにする。
     private void Update() => RestorePose();
 
     private void LateUpdate()
@@ -230,8 +226,7 @@ public class BatSwingAimIK : MonoBehaviour
         if (!state.IsName(_swingStateName) || state.normalizedTime >= 1f) return;
         if (_contactRequested)
         {
-            // Animation events are delivered on the frame that crosses their time.
-            // Evaluate the exact contact pose once so a low frame rate cannot skip it.
+            // イベント時刻を跨いだ分を戻し、低いフレームレートでも同じ接触姿勢に揃える。
             bool fireEvents = _animator.fireEvents;
             _animator.fireEvents = false;
             try
@@ -248,11 +243,11 @@ public class BatSwingAimIK : MonoBehaviour
         for (int i = 0; i < _modifiedBones.Length; i++)
             _authoredRotations[i] = _modifiedBones[i].localRotation;
         _poseApplied = true;
-        // Spine pivot changes the swing plane without moving the pelvis, planted feet or root.
+        // 足とルートの位置を保ち、背骨の回転でスイング面を調整する。
         _spine.rotation = Quaternion.Slerp(Quaternion.identity, _torsoCorrection, weight) * _spine.rotation;
         Quaternion wrist = Quaternion.Slerp(Quaternion.identity, _wristCorrection, weight);
         Vector3 right = _gripHand.position;
-        // Retain the grip through impact, then let the authored hand release in follow-through.
+        // 接触までは両手で握り、振り終わりでは元のアニメーションに沿って手を離す。
         float gripWeight = 1f - Mathf.SmoothStep(0f, 1f,
             Mathf.InverseLerp(_contactTime + .04f, _contactTime + .14f,
                 state.normalizedTime * _swingClip.length));
@@ -262,7 +257,7 @@ public class BatSwingAimIK : MonoBehaviour
             _gripHand.rotation * _supportHandLocalRotation, gripWeight);
 
         Vector3 offset = _handOffset * weight;
-        // Reduce the shared correction if either arm would have to stretch. Never move a bat alone.
+        // 片方の腕でも届かなくなる場合は、両手に加える補正を一緒に減らす。
         float amount = 1f;
         if (!CanApplyHands(right, supportPosition, wrist, offset, amount))
         {
@@ -311,8 +306,7 @@ public class BatSwingAimIK : MonoBehaviour
 
     private static float Envelope(float time, float contact)
     {
-        // Keep aiming out of the load pose near the head. The support-hand grip is
-        // still solved at zero aim weight, and correction reaches full weight before impact.
+        // 頭に近い構えの間は狙いの補正を抑え、接触直前までに補正量を上げる。
         float rise = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(contact * .6f, contact * .95f, time));
         float fall = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(contact + 0.15f, 1f, time));
         return rise * fall;
