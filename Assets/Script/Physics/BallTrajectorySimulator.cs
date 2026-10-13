@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 軌道シミュレーション結果
-/// </summary>
 public struct TrajectoryResult
 {
     public List<Vector3> Points;
@@ -27,9 +24,6 @@ public static class BallTrajectorySimulator
     private const string LAYER_HOMERUN_ZONE = "HomerunZone";
     private const string LAYER_UNKNOWN = "Unknown";
 
-    /// <summary>
-    /// 物理ステップ計算(重力・抗力・マグヌス力)
-    /// </summary>
     private static void SimulatePhysicsStep(
         ref Vector3 position,
         ref Vector3 velocityMps,
@@ -56,9 +50,7 @@ public static class BallTrajectorySimulator
         position += velocityMps * deltaTime;
     }
 
-    /// <summary>
-    /// 投球と打球の軌道を計算し、必要に応じて最初の接地情報を記録する。
-    /// </summary>
+    // 接地情報が必要な場合だけ、最初の着地点を調べる。
     private static TrajectoryResult SimulateTrajectoryInternal(
         Vector3 startPosition,
         Vector3 initialVelocityMps,
@@ -118,7 +110,6 @@ public static class BallTrajectorySimulator
 
             elapsedSeconds += config.DeltaTime;
 
-            // 転がり処理
             if (isRolling && config.BounceSettings != null)
             {
                 position = BallCollisions.SimulateRolling(
@@ -129,7 +120,6 @@ public static class BallTrajectorySimulator
                     break;
             }
 
-            // 指定Z座標で停止
             if (config.StopAtZ.HasValue)
             {
                 float stopZ = config.StopAtZ.Value;
@@ -149,9 +139,7 @@ public static class BallTrajectorySimulator
         };
     }
 
-    /// <summary>
-    /// 接地情報を記録せず、軌道上の座標を返す。
-    /// </summary>
+    /// <summary>接地レイヤーの検出を省き、軌道上の位置だけを返す。</summary>
     public static List<Vector3> SimulateTrajectory(
         Vector3 startPosition,
         Vector3 initialVelocityMps,
@@ -168,9 +156,6 @@ public static class BallTrajectorySimulator
         return result.Points;
     }
 
-    /// <summary>
-    /// 打球用
-    /// </summary>
     public static TrajectoryResult SimulateTrajectoryWithMetadata(
         Vector3 startPosition,
         Vector3 initialVelocityMps,
@@ -185,23 +170,17 @@ public static class BallTrajectorySimulator
             trackGroundLayer: true);
     }
 
-    /// <summary>
-    /// 地面に接地した際のレイヤーを判定
-    /// ホームラン判定やフェア/ファール判定に使用
-    /// </summary>
     private static string DetectGroundLayer(Vector3 position, BounceSettings settings)
     {
         if (settings == null)
             return LAYER_UNKNOWN;
 
-        // 判定中心点(地面レベルに固定)
         Vector3 center = new Vector3(
             position.x,
             settings.groundLevel,
             position.z
         );
 
-        // 判定対象レイヤー
         int mask = LayerMask.GetMask(LAYER_GROUND, LAYER_HOMERUN_ZONE);
         if (mask == 0)
         {
@@ -209,7 +188,6 @@ public static class BallTrajectorySimulator
             mask = ~0; // すべてのレイヤーを対象
         }
 
-        // 上から下へのRaycast
         if (Physics.Raycast(
             center + Vector3.up * RAYCAST_START_OFFSET,
             Vector3.down,
@@ -222,7 +200,7 @@ public static class BallTrajectorySimulator
             return layerName;
         }
 
-        // 下から上へのRaycast(ボールが地面に埋まっている場合)
+        // 地面に埋まった場合は下からも探す。
         if (Physics.Raycast(
             center + Vector3.down * RAYCAST_START_OFFSET,
             Vector3.up,
@@ -244,7 +222,6 @@ public static class BallTrajectorySimulator
 
         if (colliders != null && colliders.Length > 0)
         {
-            // 最も近いコライダーを採用
             Collider nearest = colliders[0];
             float bestDistanceSqr = (nearest.ClosestPoint(center) - center).sqrMagnitude;
 

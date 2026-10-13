@@ -52,9 +52,6 @@ public class BattingBallMove : BallMoveTrajectory
         }
     }
 
-    /// <summary>
-    /// 打撃結果受信
-    /// </summary>
     private void OnResultReceived(BattingBallResult result)
     {
         _result = result;
@@ -94,9 +91,6 @@ public class BattingBallMove : BallMoveTrajectory
         _scoreCalculator.Initialize(transform.position);
     }
 
-    /// <summary>
-    /// 見た目速度変更
-    /// </summary>
     public void SetVisualSpeed(float multiplier)
     {
         _visualSpeedMultiplier = Mathf.Max(MinVisualSpeed, multiplier);
@@ -108,9 +102,6 @@ public class BattingBallMove : BallMoveTrajectory
         float deg = _result.SpinRate * BallPhysicsConstants.RPM_TO_DEGREES_PER_SEC * _spinSpeedMultiplier;
     }
 
-    /// <summary>
-    /// 軌道終了到達
-    /// </summary>
     protected override void OnReachedEnd()
     {
 

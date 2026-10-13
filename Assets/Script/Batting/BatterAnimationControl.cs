@@ -40,9 +40,6 @@ public class BatterAnimationControl : MonoBehaviour
         _atBatReset?.UnregisterListener(ResetAtBat);
     }
 
-    /// <summary>
-    /// 打席をリセットする
-    /// </summary>
     private void ResetAtBat()
     {
         Debug.Log("打席をリセット");
@@ -58,18 +55,11 @@ public class BatterAnimationControl : MonoBehaviour
         _isFinSwing = true;
     }
 
-    /// <summary>
-    /// ピッチャーがボールをリリースしたときに呼ばれる
-    /// </summary>
-    /// <param name="ball"></param>
     private void OnRelease(PitchBallMove ball)
     {
         _animator.SetTrigger("Prepare");
     }
 
-    /// <summary>
-    /// バッティングの入力を受けたときに呼ばれる
-    /// </summary>
     private void OnInput()
     {
         _animator.SetTrigger("Swing");

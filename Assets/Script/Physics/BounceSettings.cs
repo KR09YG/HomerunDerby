@@ -1,8 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// バウンド（地面/壁）の物理パラメータ
-/// </summary>
 [CreateAssetMenu(fileName = "BounceSettings", menuName = "Baseball/Bounce Settings")]
 public class BounceSettings : ScriptableObject
 {

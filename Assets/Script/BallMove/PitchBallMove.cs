@@ -24,7 +24,6 @@ public class PitchBallMove : BallMoveTrajectory
 
     private void BattingResultReceive(BattingBallResult result)
     {
-        // ボールが打たれた場合の処理
         if (result.BallType != BattingBallType.Miss)
         {
             _isMoving = false;

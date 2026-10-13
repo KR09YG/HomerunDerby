@@ -48,16 +48,13 @@ public class ScoreCalculator : MonoBehaviour
         float scoreDistance = 0f;
         if (!isFoul && !isMiss)
         {
-            // 距離スコアを小数第二位まで
             scoreDistance = Mathf.Round(_scoreDistance * ScoreRoundingFactor) / ScoreRoundingFactor;
         }
         else
         {
-            // ファウルとストライクの場合はスコアを0にする
             scoreDistance = 0f;
         }
 
-        // 連続ホームランボーナスの計算
         float finalScore;
         if (consecutiveHomeRunCount > 1)
         {

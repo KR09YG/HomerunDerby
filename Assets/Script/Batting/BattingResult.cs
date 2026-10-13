@@ -1,9 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// 打球結果
-/// </summary>
 public class BattingBallResult
 {
     // 物理パラメータ
@@ -26,10 +23,6 @@ public class BattingBallResult
     public int LandingIndex;
     public float Distance;
 
-    /// <summary>
-    /// 空振りなどで強制的に結果を設定する場合に使用するコンストラクタ
-    /// </summary>
-    /// <param name="type"></param>
     public BattingBallResult(BattingBallType type   )
     {
         BallType = BattingBallType.Miss;

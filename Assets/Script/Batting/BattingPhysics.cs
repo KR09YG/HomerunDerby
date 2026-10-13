@@ -15,6 +15,7 @@ public static class BattingPhysics
     /// <param name="batMass">バット質量(kg)</param>
     /// <param name="cor">反発係数</param>
     /// <param name="efficiency">インパクト効率</param>
+    /// <returns>打球初速（m/s）</returns>
     public static float CalculateExitVelocity(
         float pitchSpeedMps,
         float batSpeedKmh,
@@ -22,17 +23,13 @@ public static class BattingPhysics
         float cor,
         float efficiency)
     {
-        // バット速度をm/sに変換
         float batSpeedMps = batSpeedKmh * BallPhysicsConstants.KPH_TO_MPS;
-        // 有効バット質量を計算
         float effectiveBatMass = batMass * EffectiveBatMassFactor;
         // 打球初速計算
         float numerator =
             (BallPhysicsConstants.BALL_MASS_KG - cor * effectiveBatMass) * pitchSpeedMps +
             effectiveBatMass * (1f + cor) * batSpeedMps;
-        // 分母計算
         float denominator = BallPhysicsConstants.BALL_MASS_KG + effectiveBatMass;
-        // 最終的な打球初速に効率を乗算
         float baseVelocityMps = numerator / denominator;
         return baseVelocityMps * efficiency;
     }
@@ -50,7 +47,6 @@ public static class BattingPhysics
         float maxImpactDistance,
         AnimationCurve efficiencyCurve)
     {
-        // スイートスポット内かどうか
         if (impactDistance <= sweetSpotRadius)
             return 1.0f;
 
@@ -58,7 +54,6 @@ public static class BattingPhysics
         if (impactDistance >= maxImpactDistance)
             return efficiencyCurve.Evaluate(1.0f);
 
-        // スイートスポット外の効率をカーブで計算
         float t = Mathf.InverseLerp(sweetSpotRadius, maxImpactDistance, impactDistance);
         return efficiencyCurve.Evaluate(t);
     }
@@ -84,12 +79,9 @@ public static class BattingPhysics
         return Mathf.Clamp(launchAngleDeg, param.MinLaunchAngle, param.MaxLaunchAngle);
     }
 
-    /// <summary>
-    /// 水平角度を計算
-    /// </summary>
+    /// <summary>接触タイミングから左右の打球角度を求める。</summary>
     public static float CalculateHorizontalAngle(float timing, BattingParameters param)
     {
-        // タイミングがファウル閾値を超える場合はファウル角度を計算
         if (Mathf.Abs(timing) > param.FoulThreshold)
         {
             float excessTiming = (Mathf.Abs(timing) - param.FoulThreshold) / (1f - param.FoulThreshold);
@@ -103,9 +95,7 @@ public static class BattingPhysics
         return normalizedTiming * param.MaxFairAngle;
     }
 
-    /// <summary>
-    /// スピン量を計算
-    /// </summary>
+    /// <summary>打球初速と打ち上げ角度から回転数を求める。</summary>
     public static float CalculateSpinRate(
         float exitVelocityMps,
         float launchAngleDeg,
@@ -119,9 +109,7 @@ public static class BattingPhysics
         return Mathf.Clamp(calculatedSpinRateRpm, param.MinSpinRate, param.MaxSpinRate);
     }
 
-    /// <summary>
-    /// 揚力係数を計算
-    /// </summary>
+    /// <summary>回転数と球速から打球の揚力係数を求める。</summary>
     public static float CalculateLiftCoefficient(
         float spinRateRpm,
         float speedMps,
@@ -134,12 +122,9 @@ public static class BattingPhysics
         return Mathf.Clamp(cl, 0f, param.MaxLiftCoefficient);
     }
 
-    /// <summary>
-    /// 打球方向ベクトルを計算
-    /// </summary>
+    /// <summary>打ち上げ角度と水平角度をワールド座標の打球方向に変換する。</summary>
     public static Vector3 CalculateBattedBallDirection(float launchAngleDeg, float horizontalAngleDeg)
     {
-        // 打ち上げ角度と水平角度から方向ベクトルを計算
         float launchAngleRad = launchAngleDeg * Mathf.Deg2Rad;
         float horizontalAngleRad = horizontalAngleDeg * Mathf.Deg2Rad;
 

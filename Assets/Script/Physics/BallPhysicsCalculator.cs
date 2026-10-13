@@ -119,7 +119,6 @@ public static class BallPhysicsCalculator
         spin = SpinState.Create(optimalVelocityMps, request.BallData.RotateSpeed,
             request.BallData.SpinTilt, request.BallData.SpinEfficiency);
 
-        // StopZまで軌道を計算（表示用）
         var config = new SimulationConfig
         {
             DeltaTime = solverSettings.DeltaTime,

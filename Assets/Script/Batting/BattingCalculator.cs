@@ -14,13 +14,11 @@ public class BattingCalculator : MonoBehaviour
     [Header("イベント")]
     [SerializeField] private OnBattingHitEvent _hitEvent;
     [SerializeField] private OnBattingResultEvent _battedBallResultEvent;
-    // 打ち上げ角がこの値以下ならゴロと判定
     private const float GroundBallAngleDegrees = 10f;
     private const float FlightStepSeconds = 0.01f;
     private const float MaxFlightSeconds = 10f;
     private const float MinFoulDirectionSquared = 0.001f;
 
-    // デバッグ用
     private List<Vector3> _lastTrajectory;
     private string _lastGroundLayer;
 
@@ -38,7 +36,7 @@ public class BattingCalculator : MonoBehaviour
 
     private void OnHitAttempt(PitchBallMove ball)
     {
-        // Both positions belong to the same contact frame, including after the debug pause.
+        // 停止中に座標が変わっても、判定には打撃イベント時の記録を使う。
         if (_battingSystem == null || !_battingSystem.TryGetContact(ball, out Vector3 swingPos, out Vector3 ballPos))
         {
             Debug.LogWarning("[Batting/Result] MISS: no contact snapshot (ball reference or IK contact unavailable).", this);
@@ -101,13 +99,10 @@ public class BattingCalculator : MonoBehaviour
         float verticalOffset = swingPos.y - ballPos.y;
         // 打ち上げ角度を計算
         float launchAngle = BattingPhysics.CalculateLaunchAngle(verticalOffset, _parameters);
-        // 水平角度を計算
         float horizontalAngle = BattingPhysics.CalculateHorizontalAngle(timing, _parameters);
 
-        // 5. スピン計算
         float spinRate = BattingPhysics.CalculateSpinRate(exitVelocity, launchAngle, efficiency, _parameters);
 
-        // 6. 方向計算
         Vector3 direction = BattingPhysics.CalculateBattedBallDirection(launchAngle, horizontalAngle);
         Vector3 spinAxis = BattingPhysics.CalculateSpinAxis(direction);
         Vector3 initialVelocity = direction * exitVelocity;
@@ -130,16 +125,13 @@ public class BattingCalculator : MonoBehaviour
             spinAxis, spinRate,
             liftCoefficient, simulateConfig);
 
-        // 弾道を保存
         _lastTrajectory = trajectory;
 
-        // 8. 結果判定
         float distance = CalculateDistance(ballPos, trajectory[landingIndex]);
 
         BattingBallType ballType = DetermineBallType(
             trajectory, ballPos, distance, launchAngle, horizontalAngle, firstGroundLayer, landingIndex);
 
-        // 9. 結果オブジェクト作成
         BattingBallResult result = new BattingBallResult(ballType)
         {
             InitialVelocity = initialVelocity,
@@ -164,7 +156,6 @@ public class BattingCalculator : MonoBehaviour
             Debug.Log($"[Batting] ExitVel={exitVelocity * BallPhysicsConstants.MPS_TO_KPH:F0}km/h, Angle={launchAngle:F1}°, Distance={distance:F1}m, Type={ballType}, Layer={firstGroundLayer}");
         }
 
-        // 10. イベント発火
         _battedBallResultEvent?.RaiseEvent(result);
     }
 
@@ -192,9 +183,6 @@ public class BattingCalculator : MonoBehaviour
         );
     }
 
-    /// <summary>
-    /// ファール判定
-    /// </summary>
     private bool IsFoulBallByTrajectory(List<Vector3> trajectory, Vector3 startPosition, int landingIndex)
     {
         if (trajectory == null)
@@ -221,9 +209,6 @@ public class BattingCalculator : MonoBehaviour
         return isFoul;
     }
 
-    /// <summary>
-    /// 打球タイプ判定
-    /// </summary>
     private BattingBallType DetermineBallType(
         List<Vector3> trajectory,
         Vector3 startPosition,
@@ -236,11 +221,9 @@ public class BattingCalculator : MonoBehaviour
         if (trajectory == null || trajectory.Count == 0)
             return BattingBallType.Miss;
 
-        // 1. ファール判定
         if (IsFoulBallByTrajectory(trajectory, startPosition, landingIndex))
             return BattingBallType.Foul;
 
-        // 2. ホームラン判定
         if (firstGroundLayer != "Ground" && firstGroundLayer != "Net")
         {
             if (_parameters.EnableDebugLogs)
@@ -250,11 +233,9 @@ public class BattingCalculator : MonoBehaviour
             return BattingBallType.HomeRun;
         }
 
-        // 3. ゴロ判定
         if (launchAngle < GroundBallAngleDegrees)
             return BattingBallType.GroundBall;
 
-        // 4. ヒット判定
         if (distance >= _parameters.HitDistance)
             return BattingBallType.Hit;
 
@@ -271,7 +252,6 @@ public class BattingCalculator : MonoBehaviour
         if (_parameters == null || !_parameters.ShowTrajectoryGizmos) return;
         if (_lastTrajectory == null || _lastTrajectory.Count == 0) return;
 
-        // 軌道を色分け
         Color trajectoryColor = _lastGroundLayer == "HomerunZone" ? Color.yellow : Color.green;
         Gizmos.color = trajectoryColor;
 
@@ -280,7 +260,6 @@ public class BattingCalculator : MonoBehaviour
             Gizmos.DrawLine(_lastTrajectory[i], _lastTrajectory[i + 1]);
         }
 
-        // 着地点を強調
         if (_lastTrajectory.Count > 0)
         {
             Gizmos.DrawWireSphere(_lastTrajectory[_lastTrajectory.Count - 1], 1f);

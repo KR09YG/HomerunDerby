@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
 
-/// <summary>
-/// シミュレーション設定
-/// </summary>
 [System.Serializable]
 public class TrajectorySettings
 {

@@ -172,9 +172,6 @@ public class BattingSystem : MonoBehaviour
         _pauseApplied = false;
     }
 
-    /// <summary>
-    /// ボールがリリースされたときの処理
-    /// </summary>
     private void ReleasedBall(PitchBallMove ball)
     {
         Debug.Log("[BattingSystem] Ball Released - Swing is now allowed.");

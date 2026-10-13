@@ -116,7 +116,6 @@ public class HomeRunDerbyManager : MonoBehaviour
         if (_currentResult.BallType == BattingBallType.Hit || _currentResult.BallType == BattingBallType.HomeRun)
         {
             _isResultDisplaying = true;
-            // リザルト表示
             _cts = new CancellationTokenSource();
             await _resultDisplay.DisplayResult(resultData, _cts.Token);
             _cts = null;
@@ -157,7 +156,6 @@ public class HomeRunDerbyManager : MonoBehaviour
 
     public void Restart()
     {
-        // Sceneをリロードしてゲームを再開する
         UnityEngine.SceneManagement.
             SceneManager.LoadScene(UnityEngine.SceneManagement.
             SceneManager.GetActiveScene().name);

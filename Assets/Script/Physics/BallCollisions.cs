@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
 
-/// <summary>
-/// 地面衝突結果
-/// </summary>
 public struct GroundHitResult
 {
     public bool DidHitGround;
@@ -31,7 +28,6 @@ internal static class BallCollisions
 
         float radius = BallPhysicsConstants.BALL_RADIUS_M;
 
-        // SphereCastで線分上の接触を取る
         if (Physics.SphereCast(from, radius, dir, out RaycastHit hit, dist, fenceMask, QueryTriggerInteraction.Ignore))
         {
             // 接触点の少し手前に戻す（めり込み防止）
@@ -42,7 +38,6 @@ internal static class BallCollisions
             Vector3 n = hit.normal.normalized;
             float vn = Vector3.Dot(velocity, n);
 
-            // フェンスに向かっているときだけ反射
             if (vn < 0f)
             {
                 Vector3 reflected = velocity - 2f * vn * n;

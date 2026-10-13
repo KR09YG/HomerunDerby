@@ -35,21 +35,14 @@ public class ResultDisplay : MonoBehaviour
     [Tooltip("次の項目表示までの待機時間(ms)")]
     [SerializeField] private int _toNextResult = 500;
 
-    // ボーナスを表示する最小の連続ホームラン数
     private const int BonusThreshold = 2;
 
-    /// <summary>
-    /// 結果を非表示にする
-    /// </summary>
     public void ResultHide()
     {
         _resultPanel.SetActive(false);
     }
 
-    /// <summary>
-    /// 表示前のリセット。LayoutGroupのレイアウト崩れを避けるため、
-    /// SetActiveではなくTextの描画(enabled)で表示/非表示を制御する
-    /// </summary>
+    // LayoutGroupを維持するため、パネルではなく子テキストの描画を切り替える。
     private void ResetDisplay()
     {
         _distanceText.text = "0";
@@ -63,9 +56,6 @@ public class ResultDisplay : MonoBehaviour
         SetTextVisible(_totalScorePanel, false);
     }
 
-    /// <summary>
-    /// パネルの子にあるTextMeshProUGUIの描画をまとめて切り替える
-    /// </summary>
     private void SetTextVisible(GameObject panel, bool visible)
     {
         if (panel == null) return;
@@ -86,12 +76,10 @@ public class ResultDisplay : MonoBehaviour
 
         try
         {
-            // 距離
             SetTextVisible(_distancePanel, true);
             await CountUpAsync(_distanceText, data.Distance, cancellationToken);
             await UniTask.Delay(_toNextResult, cancellationToken: cancellationToken);
 
-            // 連続ホームランボーナス(2以上のときのみ)
             if (showBonus)
             {
                 SetTextVisible(_bonusPanel, true);
@@ -99,25 +87,20 @@ public class ResultDisplay : MonoBehaviour
                 await UniTask.Delay(_toNextResult, cancellationToken: cancellationToken);
             }
 
-            // 今回のスコア
             SetTextVisible(_finalScorePanel, true);
             await CountUpAsync(_finalScoreText, data.FinalScore, cancellationToken);
             await UniTask.Delay(_toNextResult, cancellationToken: cancellationToken);
 
-            // 合計スコア
             SetTextVisible(_totalScorePanel, true);
             await CountUpAsync(_totalScoreText, data.TotalScore, cancellationToken);
         }
         catch (OperationCanceledException)
         {
-            // キャンセルされたら全項目を最終値で即表示
+            // 演出を飛ばした場合も、表示値は最終スコアに揃える。
             ShowFinalValues(data, showBonus);
         }
     }
 
-    /// <summary>
-    /// テキストの数値を0から目標値までアニメーションをする
-    /// </summary>
     private async UniTask CountUpAsync(
         TextMeshProUGUI text,
         float targetValue,
@@ -142,16 +125,13 @@ public class ResultDisplay : MonoBehaviour
         }
         catch (OperationCanceledException)
         {
-            // このTweenを止めて最終値に確定してから例外を再送出
+            // キャンセル後にTweenがテキストを更新しないよう停止する。
             tween.Kill();
             text.text = Mathf.FloorToInt(targetValue).ToString() + suffix;
             throw;
         }
     }
 
-    /// <summary>
-    /// 全項目を最終値で即座に表示
-    /// </summary>
     private void ShowFinalValues(ResultDisplayData data, bool showBonus)
     {
         SetTextVisible(_distancePanel, true);

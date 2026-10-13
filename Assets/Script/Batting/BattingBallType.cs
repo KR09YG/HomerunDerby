@@ -1,7 +1,4 @@
 ﻿
-    /// <summary>
-/// 打球結果タイプ
-/// </summary>
 public enum BattingBallType
 {
     Miss,      // 空振り

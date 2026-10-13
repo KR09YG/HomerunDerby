@@ -63,13 +63,9 @@ public class BattingCursor : MonoBehaviour
 
         _currentPos = Vector3.Lerp(_currentPos, clampedPosition, Time.deltaTime * _moveSpeed);
 
-        // --- UI座標の更新（World → Screen → UI）---
         UpdateCursorUI();
     }
 
-    /// <summary>
-    /// World座標をスクリーン座標に変換してUIカーソルを動かす
-    /// </summary>
     private void UpdateCursorUI()
     {
         Vector2 screenPoint = Camera.main.WorldToScreenPoint(_currentPos);

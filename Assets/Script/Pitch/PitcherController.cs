@@ -84,12 +84,10 @@ namespace Homerunderby
             Debug.Log($"Ball decided: {_selectedBall.Name}");
         }
 
-        // 投球位置をコライダー内のランダムな位置に設定
         private Vector3 GetRandomPositionInCollider()
         {
             BoxCollider box = _collider as BoxCollider;
 
-            // ローカル空間でのランダム座標(X, Y)
             Vector3 localCenter = box.center;
             Vector3 localSize = box.size;
 
@@ -99,7 +97,6 @@ namespace Homerunderby
 
             Vector3 localPos = new Vector3(randomX, randomY, localZ);
 
-            // ローカル → ワールドへ変換(回転・スケール・位置を反映)
             return box.transform.TransformPoint(localPos);
         }
 
@@ -124,11 +121,6 @@ namespace Homerunderby
 
         private SpinState _pitchSpin;
 
-        /// <summary>
-        /// ボールの軌道を計算
-        /// </summary>
-        /// <param name="ball"></param>
-        /// <returns></returns>
         public List<Vector3> CalculateTrajectory(BallData ball)
         {
             return BallPhysicsCalculator.CalculateTrajectory(new PitchRequest()

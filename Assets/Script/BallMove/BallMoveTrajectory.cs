@@ -28,10 +28,8 @@ public abstract class BallMoveTrajectory : MonoBehaviour
 
     protected virtual void MoveAlongTrajectory()
     {
-        // 実時間での経過時間を加算
         _elapsedTime += Time.deltaTime * _visualSpeedMultiplier;
 
-        // 軌道データのインデックスを計算（0.01秒刻み）
         _index = Mathf.FloorToInt(_elapsedTime / _trajectoryDeltaTime);
 
         if (_index >= _trajectory.Count - 1)

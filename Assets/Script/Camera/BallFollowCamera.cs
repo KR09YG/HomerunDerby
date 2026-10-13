@@ -48,7 +48,6 @@ public class BallFollowCamera : MonoBehaviour
     {
         if (result.BallType == BattingBallType.Miss) return;
 
-        // ComposerのLookAtにボールをセット
         _ballFollowCamera.LookAt = _ball;
 
         _batterCamera.Priority = 0;
