@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class TiteManager : MonoBehaviour
+public class TitleManager : MonoBehaviour
 {
     [SerializeField] private float _fadeDuration = 0.5f; // フェードの時間(s)
     [SerializeField] private string _gameSceneName = "Homerun"; // ゲームシーンの名前

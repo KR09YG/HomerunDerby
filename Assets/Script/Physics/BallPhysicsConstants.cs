@@ -14,7 +14,9 @@ internal static class BallPhysicsConstants
 
     // 球種やバットの設定値を、物理計算に使う単位へ変換する。
     internal const float KPH_TO_MPS = 1f / 3.6f;
+    internal const float MPS_TO_KPH = 3.6f;
     internal const float RPM_TO_RAD_PER_SEC = 2f * Mathf.PI / 60f;
+    internal const float RPM_TO_DEGREES_PER_SEC = 360f / 60f;
 
     // 最適化パラメータ
     internal const int MAX_OPTIMIZATION_ITERATIONS = 20;

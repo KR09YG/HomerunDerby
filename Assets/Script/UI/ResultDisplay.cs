@@ -169,7 +169,7 @@ public class ResultDisplay : MonoBehaviour
         }
     }
 
-    public async UniTaskVoid DisPlayFinalResult(int homerunCount, Action action)
+    public async UniTaskVoid DisplayFinalResult(int homerunCount, Action action)
     {
         _finalResultPanel.SetActive(true);
         await CountUpAsync(_homerunCountText, homerunCount, CancellationToken.None);

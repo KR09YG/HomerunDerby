@@ -8,7 +8,7 @@ public class PitchBallMove : BallMoveTrajectory
     [SerializeField] private OnBallReachedTargetEvent _onBallReachedTarget;
     public List<Vector3> Trajectory => _trajectory;
     public bool IsMoving => _isMoving;
-    public bool IsReach { get; private set; }
+    public bool HasReachedTarget { get; private set; }
 
     private MeshRenderer _renderer;
     private SpinState _spin;
@@ -36,7 +36,7 @@ public class PitchBallMove : BallMoveTrajectory
         Debug.Log($"{trajectory.Count}点の軌道でボール移動を初期化します");
         _elapsedTime = 0f;
         _trajectoryProgress = 0f;
-        IsReach = false;
+        HasReachedTarget = false;
         _isMoving = false;
         _trajectory = trajectory;
         _trajectoryDeltaTime = deltaTime;
@@ -49,7 +49,7 @@ public class PitchBallMove : BallMoveTrajectory
         StartMoving();
     }
 
-    public void ResetIsReach() => IsReach = false;
+    public void ResetReachedTarget() => HasReachedTarget = false;
 
     // 打撃イベントの時刻に合わせ、軌道上の位置と回転を同じ時間まで戻す。
     public void RewindForContact(float gameSeconds)
@@ -98,6 +98,6 @@ public class PitchBallMove : BallMoveTrajectory
         _onBallReachedTarget?.RaiseEvent(this);
         _isMoving = false;
         _trajectory = null;
-        IsReach = true;
+        HasReachedTarget = true;
     }
 }

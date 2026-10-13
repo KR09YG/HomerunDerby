@@ -2,7 +2,10 @@ using UnityEngine;
 
 public static class BattingPhysics
 {
-    private const float EFFECTIVE_BAT_MASS_FACTOR = 0.7f;
+    private const float EffectiveBatMassFactor = 0.7f;
+    private const float SpinSpeedReferenceMps = 40f;
+    private const float SpinAngleReferenceDegrees = 30f;
+    private const float SpinAngleScale = 0.3f;
 
     /// <summary>
     /// 打球初速を計算
@@ -22,7 +25,7 @@ public static class BattingPhysics
         // バット速度をm/sに変換
         float batSpeedMps = batSpeedKmh * BallPhysicsConstants.KPH_TO_MPS;
         // 有効バット質量を計算
-        float effectiveBatMass = batMass * EFFECTIVE_BAT_MASS_FACTOR;
+        float effectiveBatMass = batMass * EffectiveBatMassFactor;
         // 打球初速計算
         float numerator =
             (BallPhysicsConstants.BALL_MASS_KG - cor * effectiveBatMass) * pitchSpeedMps +
@@ -109,8 +112,8 @@ public static class BattingPhysics
         float efficiency,
         BattingParameters param)
     {
-        float velocityFactor = exitVelocityMps / 40f;
-        float angleFactor = 1f + (launchAngleDeg / 30f) * 0.3f;
+        float velocityFactor = exitVelocityMps / SpinSpeedReferenceMps;
+        float angleFactor = 1f + (launchAngleDeg / SpinAngleReferenceDegrees) * SpinAngleScale;
         float calculatedSpinRateRpm = param.BaseBackspinRPM * velocityFactor * angleFactor * efficiency;
 
         return Mathf.Clamp(calculatedSpinRateRpm, param.MinSpinRate, param.MaxSpinRate);

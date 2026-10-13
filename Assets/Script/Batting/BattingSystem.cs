@@ -3,13 +3,14 @@ using UnityEngine;
 [DefaultExecutionOrder(1100)]
 public class BattingSystem : MonoBehaviour
 {
+    private const float MillisecondsPerSecond = 1000f;
     [SerializeField] private OnBattingInputEvent _inputEvent;
     [SerializeField] private OnSwingEvent _swingEvent;
     [SerializeField] private OnBallReachedTargetEvent _ballReachedTargetEvent;
-    [SerializeField] private OnPitchBallReleaseEvent _releseEvent;
+    [SerializeField] private OnPitchBallReleaseEvent _releaseEvent;
     [SerializeField] private OnBattingHitEvent _hitEvent;
     [SerializeField] private BattingParameters _parameters;
-    [SerializeField] private PitchBallMove _ballmove;
+    [SerializeField] private PitchBallMove _ballMove;
     [Tooltip("打撃イベントでヒット・空振りの両方を停止する実時間。0で停止なし。")]
     [SerializeField, Min(0f)] private float _hitPauseSeconds = 3f;
     private bool _impactSent;
@@ -29,10 +30,10 @@ public class BattingSystem : MonoBehaviour
     private void Awake()
     {
         _swingIK = GetComponent<BatSwingAimIK>();
-        if (_releseEvent == null) Debug.LogError("[BattingSystem] _releseEvent is not assigned!");
-        else _releseEvent.RegisterListener(ReleasedBall);
+        if (_releaseEvent == null) Debug.LogError("[BattingSystem] _releaseEvent is not assigned!");
+        else _releaseEvent.RegisterListener(ReleasedBall);
         if (_ballReachedTargetEvent == null) Debug.LogError("[BattingSystem] _ballReachedTargetEvent is not assigned!");
-        else _ballReachedTargetEvent.RegisterListener(OnRiacheTarget);
+        else _ballReachedTargetEvent.RegisterListener(OnBallReachedTarget);
 
         _canSwing = false;
         _isSwinging = false;
@@ -40,8 +41,8 @@ public class BattingSystem : MonoBehaviour
 
     private void OnDestroy()
     {
-        _releseEvent?.UnregisterListener(ReleasedBall);
-        _ballReachedTargetEvent?.UnregisterListener(OnRiacheTarget);
+        _releaseEvent?.UnregisterListener(ReleasedBall);
+        _ballReachedTargetEvent?.UnregisterListener(OnBallReachedTarget);
         EndHitPause();
 
     }
@@ -56,13 +57,13 @@ public class BattingSystem : MonoBehaviour
             _canSwing = false;
             _swingStartedTime = Time.time;
             if (_parameters == null || _parameters.EnableDebugLogs)
-                Debug.Log($"[Batting/Input] time={Time.time:F4} ball={(_ballmove != null ? _ballmove.transform.position.ToString("F4") : "null")}", this);
+                Debug.Log($"[Batting/Input] time={Time.time:F4} ball={(_ballMove != null ? _ballMove.transform.position.ToString("F4") : "null")}", this);
             _inputEvent.RaiseEvent();
         }
 
     }
 
-    private void OnRiacheTarget(PitchBallMove ball)
+    private void OnBallReachedTarget(PitchBallMove ball)
     {
         _canSwing = false;
         _isSwinging = true;
@@ -81,8 +82,8 @@ public class BattingSystem : MonoBehaviour
         _contactRewindSeconds = _swingIK != null ? _swingIK.ContactRewindSeconds : 0f;
         bool poseRequested = _swingIK != null && _swingIK.RequestContactPose();
         if (!poseRequested) _contactRewindSeconds = 0f;
-        if (_ballmove != null) _ballmove.RewindForContact(_contactRewindSeconds);
-        _contactBallPosition = _ballmove != null ? _ballmove.transform.position : Vector3.zero;
+        if (_ballMove != null) _ballMove.RewindForContact(_contactRewindSeconds);
+        _contactBallPosition = _ballMove != null ? _ballMove.transform.position : Vector3.zero;
         // Freeze inside the event, but capture the bat only after this frame's IK.
         _timeScaleBeforePause = Time.timeScale;
         Time.timeScale = 0f;
@@ -94,7 +95,7 @@ public class BattingSystem : MonoBehaviour
     {
         if (!_contactPending) return;
         _contactPending = false;
-        _contactCaptured = _ballmove != null && _swingIK != null && _swingIK.TryGetSweetSpot(out _contactSweetSpot);
+        _contactCaptured = _ballMove != null && _swingIK != null && _swingIK.TryGetSweetSpot(out _contactSweetSpot);
         LogContact();
         // The pause is diagnostic: misses and missing-contact cases must remain visible too.
         if (_hitPauseSeconds > 0f)
@@ -112,15 +113,15 @@ public class BattingSystem : MonoBehaviour
         Vector3 delta = _contactBallPosition - _contactSweetSpot;
         float limit = _parameters != null ? _parameters.MaxImpactDistance : 0f;
         float distance = delta.magnitude;
-        string reason = _ballmove == null ? "NO_BALL" : !_contactCaptured ? "NO_IK_CONTACT" :
+        string reason = _ballMove == null ? "NO_BALL" : !_contactCaptured ? "NO_IK_CONTACT" :
             _parameters == null ? "NO_PARAMETERS" : distance <= limit ? "HIT" :
             Mathf.Abs(delta.z) > limit ? "MISS_DEPTH_TIMING" :
             new Vector2(delta.x, delta.y).magnitude > limit ? "MISS_XY_AIM" : "MISS_COMBINED_DISTANCE";
         Debug.Log($"[Batting/Contact] result={reason} clipFrame={(_swingIK != null ? _swingIK.ContactClipFrame : -1f):F2} " +
-            $"inputToEvent={Time.time - _swingStartedTime:F4}s rewind={_contactRewindSeconds * 1000f:F2}ms " +
-            $"bat={(_contactCaptured ? _contactSweetSpot.ToString("F4") : "unavailable")} ball={(_ballmove != null ? _contactBallPosition.ToString("F4") : "null")} " +
+            $"inputToEvent={Time.time - _swingStartedTime:F4}s rewind={_contactRewindSeconds * MillisecondsPerSecond:F2}ms " +
+            $"bat={(_contactCaptured ? _contactSweetSpot.ToString("F4") : "unavailable")} ball={(_ballMove != null ? _contactBallPosition.ToString("F4") : "null")} " +
             $"deltaXYZ={(_contactCaptured ? delta.ToString("F4") : "unavailable")} distance={(_contactCaptured ? distance.ToString("F4") : "unavailable")} limit={limit:F4} " +
-            $"ballMoving={(_ballmove != null && _ballmove.IsMoving)} pause={_hitPauseSeconds:F2}s", this);
+            $"ballMoving={(_ballMove != null && _ballMove.IsMoving)} pause={_hitPauseSeconds:F2}s", this);
     }
 
     private void OnDrawGizmos()
@@ -138,13 +139,13 @@ public class BattingSystem : MonoBehaviour
     {
         sweetSpot = _contactSweetSpot;
         ballPosition = _contactBallPosition;
-        return _contactCaptured && ball != null && ball == _ballmove;
+        return _contactCaptured && ball != null && ball == _ballMove;
     }
 
     private void CalculateNow()
     {
         Debug.Log("[BattingSystem] Batting calculation started.");
-        _hitEvent?.RaiseEvent(_ballmove);
+        _hitEvent?.RaiseEvent(_ballMove);
         _swingEvent?.RaiseEvent();
     }
 
@@ -181,6 +182,6 @@ public class BattingSystem : MonoBehaviour
         _canSwing = true;
         _isSwinging = false;
         _impactSent = false;
-        _ballmove = ball;
+        _ballMove = ball;
     }
 }

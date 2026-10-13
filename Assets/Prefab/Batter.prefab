@@ -259,12 +259,12 @@ MonoBehaviour:
   _inputEvent: {fileID: 11400000, guid: b8cc9a8f3949806449afb7840b9453c4, type: 2}
   _swingEvent: {fileID: 11400000, guid: 8fa0298ac5f57be4a81bb47339fda11e, type: 2}
   _ballReachedTargetEvent: {fileID: 11400000, guid: af9d1e81c6600174f82bf253913b743c, type: 2}
-  _releseEvent: {fileID: 11400000, guid: 27ccf486de0d16740a1ec35c89e8f8fe, type: 2}
+  _releaseEvent: {fileID: 11400000, guid: 27ccf486de0d16740a1ec35c89e8f8fe, type: 2}
   _hitEvent: {fileID: 11400000, guid: d3d37fd7ce6b4354ebbe390628720fe2, type: 2}
   _cursor: {fileID: 0}
   _parameters: {fileID: 11400000, guid: 0217ad7c9f953874895c58743f78ad29, type: 2}
   _hitPauseSeconds: 3
-  _ballmove: {fileID: 0}
+  _ballMove: {fileID: 0}
 --- !u!114 &6208319828464467918
 MonoBehaviour:
   m_ObjectHideFlags: 0

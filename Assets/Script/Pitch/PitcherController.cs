@@ -23,7 +23,7 @@ namespace Homerunderby
         [SerializeField] private float _stopZ;
         [SerializeField] private List<PitchTypeData> _ballList;
         [SerializeField] private float _nodAnimTime;
-        [SerializeField] private int _delayFirstPitchTime = 5000;
+        [SerializeField] private int _firstPitchDelayMs = 5000;
 
         private Vector3 _startPos;
         private Vector3 _startRota;
@@ -52,7 +52,7 @@ namespace Homerunderby
 
         private async UniTaskVoid WaitForFirstPitch()
         {
-            await UniTask.Delay(_delayFirstPitchTime);
+            await UniTask.Delay(_firstPitchDelayMs);
             WaitPitch().Forget();
         }
 
@@ -76,7 +76,7 @@ namespace Homerunderby
             _animationController.SetTrigger(PitcherAnimationState.Throw);
         }
 
-        public void PitchCalculate()
+        public void SelectPitch()
         {
             PitchTypeData pitch = PitchTypeSelector.Select(_ballList, Random.value);
             _passPoint.position = GetRandomPositionInCollider();
@@ -106,8 +106,8 @@ namespace Homerunderby
         public void ReleasedBall()
         {
             _releaseEvent?.RaiseEvent(_ballMove);
-            PitchCalculate();
-            _ballTrajectory = CalculatedBallTrajectry(_selectedBall);
+            SelectPitch();
+            _ballTrajectory = CalculateTrajectory(_selectedBall);
             if (!_ballMove)
             {
                 Debug.LogError("PitchBallMoveコンポーネントがアタッチされていません");
@@ -129,7 +129,7 @@ namespace Homerunderby
         /// </summary>
         /// <param name="ball"></param>
         /// <returns></returns>
-        public List<Vector3> CalculatedBallTrajectry(BallData ball)
+        public List<Vector3> CalculateTrajectory(BallData ball)
         {
             return BallPhysicsCalculator.CalculateTrajectory(new PitchRequest()
             {

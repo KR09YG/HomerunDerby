@@ -579,7 +579,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 344458341}
-        m_TargetAssemblyTypeName: TiteManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: TitleManager, Assembly-CSharp
         m_MethodName: StartGame
         m_Mode: 1
         m_Arguments:

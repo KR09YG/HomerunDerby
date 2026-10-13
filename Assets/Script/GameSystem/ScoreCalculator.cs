@@ -5,6 +5,7 @@ public class ScoreCalculator : MonoBehaviour
 {
     [SerializeField] private OnAtBatResetEvent _onAtBatResetEvent;
     [SerializeField] private TextMeshProUGUI _scoreText;
+    private const float ScoreRoundingFactor = 100f;
     private Vector3 _startPos;
     public float ScoreDistance => _scoreDistance;
     private float _scoreDistance;
@@ -27,7 +28,7 @@ public class ScoreCalculator : MonoBehaviour
         _scoreText.text = "";
     }
 
-    public void Initialized(Vector3 startPos)
+    public void Initialize(Vector3 startPos)
     {
         _startPos = startPos;
         _scoreDistance = 0;
@@ -48,7 +49,7 @@ public class ScoreCalculator : MonoBehaviour
         if (!isFoul && !isMiss)
         {
             // ãóó£ÉXÉRÉAÇè¨êîëÊìÒà Ç‹Ç≈
-            scoreDistance = Mathf.Round(_scoreDistance * 100f) / 100f;
+            scoreDistance = Mathf.Round(_scoreDistance * ScoreRoundingFactor) / ScoreRoundingFactor;
         }
         else
         {

@@ -5452,7 +5452,7 @@ MonoBehaviour:
   _battingResultEvent: {fileID: 11400000, guid: be4eb26a82e1d234d9bc7e4c40fc97e7, type: 2}
   _ballLandedEvent: {fileID: 11400000, guid: 00e0564e7319c3846aefb0ae29b6bee1, type: 2}
   _batterAnimationControl: {fileID: 915868959}
-  _startDirection: {fileID: 2102252759}
+  _countdownDisplay: {fileID: 2102252759}
   _scoreCalculator: {fileID: 2102252757}
   _resultDisplay: {fileID: 2102252758}
   _ballCountText: {fileID: 1423553246}
@@ -5527,10 +5527,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 459691c9311b2614cbc6a261b172d07a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _delayTime: 1000
-  _animationTime: 0.5
+  _startDelayMs: 1000
+  _pulseDuration: 0.5
   _scaleFactor: 1.5
-  _directionText: {fileID: 1054235929}
+  _countdownText: {fileID: 1054235929}
 --- !u!1 &2115914829
 GameObject:
   m_ObjectHideFlags: 0
@@ -5851,7 +5851,7 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1745728683}
     - target: {fileID: 1346004664807123674, guid: b22482da6396cd342ba779d79834a89c, type: 3}
-      propertyPath: _ballmove
+      propertyPath: _ballMove
       value: 
       objectReference: {fileID: 1916383626}
     - target: {fileID: 2526928602765213909, guid: b22482da6396cd342ba779d79834a89c, type: 3}
@@ -6093,7 +6093,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ddd3c0cdfdc24a0c96d84c991b7c21db, type: 2}
   - {fileID: 11400000, guid: c01612877dab46778ae17bd88b6bb7e6, type: 2}
   _nodAnimTime: 0
-  _delayFirstPitchTime: 5000
+  _firstPitchDelayMs: 5000
   _selectedBall:
     Name: 
     Speed: 0

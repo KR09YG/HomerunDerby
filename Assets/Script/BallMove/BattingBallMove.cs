@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class BattingBallMove : BallMoveTrajectory
 {
+    private const float MinVisualSpeed = 0.1f;
     [Header("イベント")]
     [SerializeField] private OnBattingResultEvent _resultEvent;
     [SerializeField] private OnBallLandedEvent _onBallLanded;
@@ -90,7 +91,7 @@ public class BattingBallMove : BallMoveTrajectory
         _elapsedTime = 0f;
         _isMoving = true;
         _hasLanded = false;
-        _scoreCalculator.Initialized(transform.position);
+        _scoreCalculator.Initialize(transform.position);
     }
 
     /// <summary>
@@ -98,13 +99,13 @@ public class BattingBallMove : BallMoveTrajectory
     /// </summary>
     public void SetVisualSpeed(float multiplier)
     {
-        _visualSpeedMultiplier = Mathf.Max(0.1f, multiplier);
+        _visualSpeedMultiplier = Mathf.Max(MinVisualSpeed, multiplier);
     }
 
     protected override void ApplySpin()
     {
         _result.SpinAxis.Normalize();
-        float deg = _result.SpinRate * 360f / 60f * _spinSpeedMultiplier;
+        float deg = _result.SpinRate * BallPhysicsConstants.RPM_TO_DEGREES_PER_SEC * _spinSpeedMultiplier;
     }
 
     /// <summary>

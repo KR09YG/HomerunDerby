@@ -15,7 +15,10 @@ public class BattingCalculator : MonoBehaviour
     [SerializeField] private OnBattingHitEvent _hitEvent;
     [SerializeField] private OnBattingResultEvent _battedBallResultEvent;
     // 打ち上げ角がこの値以下ならゴロと判定
-    private const float GROUNDER_ANGLE_THRESHOLD = 10f;
+    private const float GroundBallAngleDegrees = 10f;
+    private const float FlightStepSeconds = 0.01f;
+    private const float MaxFlightSeconds = 10f;
+    private const float MinFoulDirectionSquared = 0.001f;
 
     // デバッグ用
     private List<Vector3> _lastTrajectory;
@@ -115,8 +118,8 @@ public class BattingCalculator : MonoBehaviour
         BallPhysicsCalculator.SimulationConfig simulateConfig =
             new BallPhysicsCalculator.SimulationConfig
             {
-                DeltaTime = 0.01f,
-                MaxSimulationTimeSeconds = 10f,
+                DeltaTime = FlightStepSeconds,
+                MaxSimulationTimeSeconds = MaxFlightSeconds,
                 StopAtZ = null,
                 BounceSettings = _bounceSettings
             };
@@ -158,7 +161,7 @@ public class BattingCalculator : MonoBehaviour
 
         if (_parameters.EnableDebugLogs)
         {
-            Debug.Log($"[Batting] ExitVel={exitVelocity * 3.6f:F0}km/h, Angle={launchAngle:F1}°, Distance={distance:F1}m, Type={ballType}, Layer={firstGroundLayer}");
+            Debug.Log($"[Batting] ExitVel={exitVelocity * BallPhysicsConstants.MPS_TO_KPH:F0}km/h, Angle={launchAngle:F1}°, Distance={distance:F1}m, Type={ballType}, Layer={firstGroundLayer}");
         }
 
         // 10. イベント発火
@@ -170,7 +173,7 @@ public class BattingCalculator : MonoBehaviour
         var traj = ball.Trajectory;
         if (traj == null || traj.Count < 2) return 30f;
 
-        float totalTime = (traj.Count - 1) * 0.01f;
+        float totalTime = (traj.Count - 1) * FlightStepSeconds;
         return (traj[traj.Count - 1] - traj[0]).magnitude / totalTime;
     }
 
@@ -202,7 +205,7 @@ public class BattingCalculator : MonoBehaviour
         Vector3 direction = earlyPoint - startPosition;
         direction.y = 0;
 
-        if (direction.sqrMagnitude < 0.001f)
+        if (direction.sqrMagnitude < MinFoulDirectionSquared)
             return false;
 
         direction.Normalize();
@@ -248,7 +251,7 @@ public class BattingCalculator : MonoBehaviour
         }
 
         // 3. ゴロ判定
-        if (launchAngle < 10f)
+        if (launchAngle < GroundBallAngleDegrees)
             return BattingBallType.GroundBall;
 
         // 4. ヒット判定

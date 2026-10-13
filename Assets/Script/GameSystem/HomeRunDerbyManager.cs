@@ -15,7 +15,7 @@ public class HomeRunDerbyManager : MonoBehaviour
     [SerializeField] private OnBallLandedEvent _ballLandedEvent;
 
     [SerializeField] private BatterAnimationControl _batterAnimationControl;
-    [SerializeField] private StartDirection _startDirection;
+    [SerializeField] private CountdownDisplay _countdownDisplay;
     [SerializeField] private ScoreCalculator _scoreCalculator;
     [SerializeField] private ResultDisplay _resultDisplay;
     [SerializeField] private TextMeshProUGUI _ballCountText;
@@ -52,7 +52,7 @@ public class HomeRunDerbyManager : MonoBehaviour
         Fade.FadeImage(_fadeDuration, false);
         BGMManager.Instance.Play(
             BGMPath.SPORTS_SEASON, 0.3f, 0, 1, true, false);
-        _startDirection.Direction(null).Forget();
+        _countdownDisplay.PlayCountdown(null).Forget();
     }
 
     private void OnBattingResultReceived(BattingBallResult result)
@@ -140,7 +140,7 @@ public class HomeRunDerbyManager : MonoBehaviour
         if (_ballCount <= 0)
         {
             Debug.Log("全ての打席が終了しました");
-            _resultDisplay.DisPlayFinalResult(_homeRunCount, ShowRestartButton).Forget();
+            _resultDisplay.DisplayFinalResult(_homeRunCount, ShowRestartButton).Forget();
             return;
         }
         Debug.Log("次の打席を開始");

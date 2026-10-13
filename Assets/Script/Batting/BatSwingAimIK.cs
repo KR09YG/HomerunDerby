@@ -8,6 +8,23 @@ using UnityEngine.Playables;
 [DefaultExecutionOrder(1000)]
 public class BatSwingAimIK : MonoBehaviour
 {
+    private const int TorsoSearchSteps = 2;
+    private const float TorsoStepDegrees = 6f;
+    private const float WristStep = 0.5f;
+    private const int WristSearchMin = -1;
+    private const int WristSearchMax = 2;
+    private const float TorsoCostWeight = 0.0003f;
+    private const float WristCostWeight = 0.0002f;
+    private const float ArmReachRatio = 0.99f;
+    private const float ArmReachMargin = 0.01f;
+    private const float MinAimVectorSquared = 0.000001f;
+    private const float IkReachMargin = 0.0001f;
+    private const int ReachSearchIterations = 14;
+    private const float GripReleaseStartSeconds = 0.04f;
+    private const float GripReleaseEndSeconds = 0.14f;
+    private const float AimRiseStart = 0.6f;
+    private const float AimRiseEnd = 0.95f;
+    private const float AimFallSeconds = 0.15f;
     [SerializeField] private Animator _animator;
     [SerializeField] private BattingCursor _cursor;
     [SerializeField] private Transform _batSweetSpot;
@@ -169,12 +186,12 @@ public class BatSwingAimIK : MonoBehaviour
         Quaternion aim = LimitedRotation(sweet - pivot, target - pivot, _maxTorsoAngle);
         float bestCost = float.PositiveInfinity;
         bool found = false;
-        for (int x = -2; x <= 2; x++)
-        for (int y = -2; y <= 2; y++)
-        for (int z = -2; z <= 2; z++)
+        for (int x = -TorsoSearchSteps; x <= TorsoSearchSteps; x++)
+        for (int y = -TorsoSearchSteps; y <= TorsoSearchSteps; y++)
+        for (int z = -TorsoSearchSteps; z <= TorsoSearchSteps; z++)
         {
             Quaternion torso = Quaternion.RotateTowards(Quaternion.identity,
-                Quaternion.Euler(x * 6f, y * 6f, z * 6f) * aim, _maxTorsoAngle);
+                Quaternion.Euler(x * TorsoStepDegrees, y * TorsoStepDegrees, z * TorsoStepDegrees) * aim, _maxTorsoAngle);
             Vector3 rh = pivot + torso * (hand - pivot);
             Vector3 support = _referenceGripHand.TransformPoint(_supportHandLocalPosition);
             Vector3 lh = pivot + torso * (support - pivot);
@@ -182,15 +199,15 @@ public class BatSwingAimIK : MonoBehaviour
             Vector3 ls = pivot + torso * (_referenceSupportShoulder.position - pivot);
             Vector3 barrel = pivot + torso * (sweet - pivot);
             Quaternion wristAim = LimitedRotation(barrel - rh, target - rh, _maxWristAngle);
-            for (int w = -1; w <= 2; w++)
+            for (int w = WristSearchMin; w <= WristSearchMax; w++)
             {
-                Quaternion wrist = Quaternion.SlerpUnclamped(Quaternion.identity, wristAim, w * .5f);
+                Quaternion wrist = Quaternion.SlerpUnclamped(Quaternion.identity, wristAim, w * WristStep);
                 Vector3 offset = target - (rh + wrist * (barrel - rh));
                 Vector3 leftTarget = rh + wrist * (lh - rh) + offset;
                 bool feasible = offset.magnitude <= _maxHandOffset &&
                     WithinReach(_gripArm, rs, rh + offset) && WithinReach(_supportArm, ls, leftTarget);
-                float cost = offset.sqrMagnitude + .0003f * Mathf.Pow(Quaternion.Angle(Quaternion.identity, torso), 2f)
-                    + .0002f * Mathf.Pow(Quaternion.Angle(Quaternion.identity, wrist), 2f);
+                float cost = offset.sqrMagnitude + TorsoCostWeight * Mathf.Pow(Quaternion.Angle(Quaternion.identity, torso), 2f)
+                    + WristCostWeight * Mathf.Pow(Quaternion.Angle(Quaternion.identity, wrist), 2f);
                 if ((found && !feasible) || (feasible == found && cost >= bestCost)) continue;
                 found = feasible;
                 bestCost = cost;
@@ -207,12 +224,12 @@ public class BatSwingAimIK : MonoBehaviour
         float a = Vector3.Distance(arm.bone1.transform.position, arm.bone2.transform.position);
         float b = Vector3.Distance(arm.bone2.transform.position, arm.bone3.transform.position);
         float distance = Vector3.Distance(shoulder, target);
-        return distance < (a + b) * .99f && distance > Mathf.Abs(a - b) + .01f;
+        return distance < (a + b) * ArmReachRatio && distance > Mathf.Abs(a - b) + ArmReachMargin;
     }
 
     private static Quaternion LimitedRotation(Vector3 from, Vector3 to, float degrees)
     {
-        if (from.sqrMagnitude < 0.000001f || to.sqrMagnitude < 0.000001f) return Quaternion.identity;
+        if (from.sqrMagnitude < MinAimVectorSquared || to.sqrMagnitude < MinAimVectorSquared) return Quaternion.identity;
         return Quaternion.RotateTowards(Quaternion.identity, Quaternion.FromToRotation(from, to), degrees);
     }
 
@@ -249,7 +266,7 @@ public class BatSwingAimIK : MonoBehaviour
         Vector3 right = _gripHand.position;
         // 接触までは両手で握り、振り終わりでは元のアニメーションに沿って手を離す。
         float gripWeight = 1f - Mathf.SmoothStep(0f, 1f,
-            Mathf.InverseLerp(_contactTime + .04f, _contactTime + .14f,
+            Mathf.InverseLerp(_contactTime + GripReleaseStartSeconds, _contactTime + GripReleaseEndSeconds,
                 state.normalizedTime * _swingClip.length));
         Vector3 supportPosition = Vector3.Lerp(_supportHand.position,
             _gripHand.TransformPoint(_supportHandLocalPosition), gripWeight);
@@ -262,7 +279,7 @@ public class BatSwingAimIK : MonoBehaviour
         if (!CanApplyHands(right, supportPosition, wrist, offset, amount))
         {
             float low = 0f, high = 1f;
-            for (int i = 0; i < 14; i++)
+            for (int i = 0; i < ReachSearchIterations; i++)
             {
                 float middle = (low + high) * 0.5f;
                 if (CanApplyHands(right, supportPosition, wrist, offset, middle)) low = middle;
@@ -291,7 +308,7 @@ public class BatSwingAimIK : MonoBehaviour
         float a = Vector3.Distance(arm.bone1.transform.position, arm.bone2.transform.position);
         float b = Vector3.Distance(arm.bone2.transform.position, arm.bone3.transform.position);
         float d = Vector3.Distance(arm.bone1.transform.position, point);
-        return d <= a + b - 0.0001f && d >= Mathf.Abs(a - b) + 0.0001f;
+        return d <= a + b - IkReachMargin && d >= Mathf.Abs(a - b) + IkReachMargin;
     }
 
     private static void Solve(IKSolverTrigonometric arm, Vector3 position, Quaternion rotation)
@@ -307,8 +324,8 @@ public class BatSwingAimIK : MonoBehaviour
     private static float Envelope(float time, float contact)
     {
         // 頭に近い構えの間は狙いの補正を抑え、接触直前までに補正量を上げる。
-        float rise = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(contact * .6f, contact * .95f, time));
-        float fall = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(contact + 0.15f, 1f, time));
+        float rise = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(contact * AimRiseStart, contact * AimRiseEnd, time));
+        float fall = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(contact + AimFallSeconds, 1f, time));
         return rise * fall;
     }
 
