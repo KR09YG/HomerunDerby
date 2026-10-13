@@ -7,6 +7,7 @@ using DG.Tweening;
 
 public struct ResultDisplayData
 {
+    public BattingBallType BallType;
     public float Distance;
     public int ConsecutiveHomeRunCount;
     public bool IsFoul;
@@ -17,6 +18,7 @@ public struct ResultDisplayData
 public class ResultDisplay : MonoBehaviour
 {
     [Header("Œ‹‰Ê•\Ž¦")]
+    [SerializeField] private TextMeshProUGUI _ballType;
     [SerializeField] private GameObject _resultPanel;
     [SerializeField] private GameObject _distancePanel;
     [SerializeField] private TextMeshProUGUI _distanceText;
@@ -71,6 +73,8 @@ public class ResultDisplay : MonoBehaviour
     {
         _resultPanel.SetActive(true);
         ResetDisplay();
+
+        if (_ballType != null) _ballType.text = data.BallType.ToString();
 
         bool showBonus = data.ConsecutiveHomeRunCount >= BonusThreshold;
 
@@ -149,11 +153,11 @@ public class ResultDisplay : MonoBehaviour
         }
     }
 
-    public async UniTaskVoid DisplayFinalResult(int homerunCount, Action action)
+    public async UniTaskVoid DisplayFinalResult(int homerunCount, float totalScore, Action action = null)
     {
         _finalResultPanel.SetActive(true);
         await CountUpAsync(_homerunCountText, homerunCount, CancellationToken.None);
-        await CountUpAsync(_finalTotalScoreText, float.Parse(_totalScoreText.text), CancellationToken.None);
+        await CountUpAsync(_finalTotalScoreText, totalScore, CancellationToken.None);
         action?.Invoke();
     }
 }

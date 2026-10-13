@@ -39,13 +39,14 @@ public class BattingBallMove : BallMoveTrajectory
         if (_hasLanded) return;
         _scoreCalculator.CalculateDistance(transform.position);
 
-        if (_result.LandingIndex < _index)
+        if (_index >= _result.LandingIndex)
         {
-            Debug.Log($"ボールが着地しました: {_index} > {_result.LandingIndex}");
+            Debug.Log($"ボールが着地しました: {_index} >= {_result.LandingIndex}");
             if (!_hasLanded)
             {
                 Debug.Log("ボールが着地しました");
                 _hasLanded = true;
+                _scoreCalculator.CalculateDistance(_trajectory[_result.LandingIndex]);
                 _onBallLanded?.RaiseEvent();
                 WaitStopBallAsync().Forget();
             }
@@ -67,7 +68,11 @@ public class BattingBallMove : BallMoveTrajectory
             return;
         }
 
-        float distance = Vector3.Distance(_trajectory[0], _trajectory[result.LandingIndex]);
+        if (result.LandingIndex < 0 || result.LandingIndex >= _trajectory.Count)
+        {
+            Debug.LogError($"[BattingBall] 着地点のインデックスが軌道の範囲外です: {result.LandingIndex}", this);
+            return;
+        }
 
         _elapsedTime = 0f;
         _isMoving = false;
@@ -104,6 +109,6 @@ public class BattingBallMove : BallMoveTrajectory
 
     protected override void OnReachedEnd()
     {
-
+        _isMoving = false;
     }
 }

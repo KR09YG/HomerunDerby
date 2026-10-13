@@ -1,4 +1,4 @@
-namespace Homerunderby
+﻿namespace Homerunderby
 {
     using Cysharp.Threading.Tasks;
     using System.Collections.Generic;
@@ -10,26 +10,25 @@ namespace Homerunderby
         [SerializeField] private OnStartPitchEvent _startPitchEvent;
         [SerializeField] private OnPitchBallReleaseEvent _releaseEvent;
 
+        [SerializeField] private float _delayToNextPitch;
         [SerializeField] private PitcherAnimationController _animationController;
         [SerializeField] private BoxCollider _collider;
         [SerializeField] LineRenderer _lineRenderer;
         [SerializeField] private PitchBallMove _ballMove;
-        [SerializeField] private int _updateInterval = 5; // 何フレームに1回更新するか
         [SerializeField] private TrajectorySettings _trajectorySettings;
         [SerializeField] private BounceSettings _bounceSettings;
-        [SerializeField] private int _ballIndex = -1;
         [SerializeField] private Transform _releasePoint;
         [SerializeField] private Transform _passPoint;
         [SerializeField] private float _stopZ;
         [SerializeField] private List<PitchTypeData> _ballList;
         [SerializeField] private float _nodAnimTime;
-        [SerializeField] private int _firstPitchDelayMs = 5000;
 
         private Vector3 _startPos;
         private Vector3 _startRota;
         public BallData _selectedBall;
         private List<Vector3> _ballTrajectory = new List<Vector3>();
         public bool _isPlaying = false;
+        private bool _pitchPending;
         public List<PitchTypeData> BallList => _ballList;
 
         public void Awake()
@@ -45,20 +44,10 @@ namespace Homerunderby
             _startPitchEvent?.UnregisterListener(ToNextPitch);
         }
 
-        private void Start()
-        {
-            WaitForFirstPitch().Forget();
-        }
-
-        private async UniTaskVoid WaitForFirstPitch()
-        {
-            await UniTask.Delay(_firstPitchDelayMs);
-            WaitPitch().Forget();
-        }
-
         private void ToNextPitch()
         {
-            _animationController.SetTrigger(PitcherAnimationState.ToIdle);
+            if (_pitchPending) return;
+            _pitchPending = true;
             WaitPitch().Forget();
         }
 
@@ -68,12 +57,22 @@ namespace Homerunderby
             transform.eulerAngles = _startRota; 
         }
 
-        private async UniTaskVoid WaitPitch()
+        private async UniTask WaitPitch()
         {
-            await UniTask.Delay(2000);
-            ResetPos();
-            _animationController.SetTrigger(PitcherAnimationState.ToThrow);
-            _animationController.SetTrigger(PitcherAnimationState.Throw);
+            try
+            {
+                await UniTask.WaitForSeconds(Mathf.Max(0f, _delayToNextPitch),
+                    cancellationToken: this.GetCancellationTokenOnDestroy());
+                ResetPos();
+                _animationController.PlayPitch();
+            }
+            catch (System.OperationCanceledException)
+            {
+            }
+            finally
+            {
+                _pitchPending = false;
+            }
         }
 
         public void SelectPitch()
@@ -102,12 +101,17 @@ namespace Homerunderby
 
         public void ReleasedBall()
         {
-            _releaseEvent?.RaiseEvent(_ballMove);
+            if (_ballMove == null)
+            {
+                Debug.LogError("PitchBallMoveコンポーネントがアタッチされていません", this);
+                return;
+            }
+
             SelectPitch();
             _ballTrajectory = CalculateTrajectory(_selectedBall);
-            if (!_ballMove)
+            if (_ballTrajectory == null || _ballTrajectory.Count < 2)
             {
-                Debug.LogError("PitchBallMoveコンポーネントがアタッチされていません");
+                Debug.LogError("投球軌道を計算できませんでした。", this);
                 return;
             }
             _ballMove.gameObject.transform.parent = null;
@@ -117,6 +121,7 @@ namespace Homerunderby
                 deltaTime: _trajectorySettings.DeltaTime,
                 spin: _pitchSpin
             );
+            _releaseEvent?.RaiseEvent(_ballMove);
         }
 
         private SpinState _pitchSpin;

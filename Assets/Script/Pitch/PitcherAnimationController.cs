@@ -24,6 +24,12 @@ namespace Homerunderby
             _animator.SetTrigger(animState.ToString());
         }
 
+        public void PlayPitch()
+        {
+            _animator.Rebind();
+            _animator.Play("Base Layer.Throwing", 0, 0f);
+        }
+
         public void Log()
         {
             Debug.Log(_ballReleasePoint.position);

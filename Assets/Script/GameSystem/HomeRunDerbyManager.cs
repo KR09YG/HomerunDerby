@@ -1,62 +1,83 @@
 ﻿using Cysharp.Threading.Tasks;
 using KanKikuchi.AudioManager;
-using System.Linq;
+using System;
 using System.Threading;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class HomeRunDerbyManager : MonoBehaviour
 {
+    [Header("Events")]
     [SerializeField] private OnStartPitchEvent _startPitchEvent;
     [SerializeField] private OnAtBatResetEvent _atBatResetEvent;
     [SerializeField] private OnBallReachedTargetEvent _ballReachedTargetEvent;
     [SerializeField] private OnBattingResultEvent _battingResultEvent;
     [SerializeField] private OnBallLandedEvent _ballLandedEvent;
 
-    [SerializeField] private BatterAnimationControl _batterAnimationControl;
-    [SerializeField] private CountdownDisplay _countdownDisplay;
+    [Header("Components")]
+    [SerializeField] private CountdownDisplay _countdownDisplay; // 投球開始のカウントダウン表示
     [SerializeField] private ScoreCalculator _scoreCalculator;
     [SerializeField] private ResultDisplay _resultDisplay;
     [SerializeField] private TextMeshProUGUI _ballCountText;
-    [SerializeField] private Button _restartButton;
+    [Header("Game Settings")]
     [SerializeField] private int _ballCount = 10;
     [SerializeField] private float _resultDisplayDelay = 1f; // 結果表示までの待機時間(s)
     [SerializeField] private float _fadeDuration = 0.5f; // フェードの時間(s)
+    [Header("Audio Settings")]
+    [SerializeField] private float _bgmVolume = 0.3f; // BGMの音量
+    [SerializeField] private float _delayBGMStartTime = 0f; // BGM再生開始までの遅延時間(s)
+    [SerializeField] private float _pitchBGMVolume = 0.3f; // ピッチBGMの音量
     private BattingBallResult _currentResult;
-    private CancellationTokenSource _cts;
+    private CancellationTokenSource _lifetimeCts;
+    private CancellationTokenSource _displayCts;
     private int _consecutiveHomeRunCount = 0;
     private int _homeRunCount = 0;
-    private bool _isResultDisplaying = false;
+    private bool _isResultDisplaying;
+    private bool _pitchRequested;
+    private bool _resultQueued;
+    private bool _resultCommitted;
+    private bool _isShuttingDown;
 
     private void Awake()
     {
+        _lifetimeCts = new CancellationTokenSource();
+        if (_startPitchEvent == null || _atBatResetEvent == null ||
+            _ballReachedTargetEvent == null || _battingResultEvent == null || _ballLandedEvent == null ||
+            _countdownDisplay == null || _scoreCalculator == null || _resultDisplay == null || _ballCountText == null)
+        {
+            Debug.LogError("[HomeRunDerbyManager] イベントまたは画面表示の参照が未設定です。", this);
+            enabled = false;
+            return;
+        }
+
         _ballCountText.text = $"×{_ballCount}";
-        if (_battingResultEvent != null) _battingResultEvent.RegisterListener(OnBattingResultReceived);
-        else Debug.LogError("BattingResultEvent が設定されていません");
-        if (_ballLandedEvent != null) _ballLandedEvent.RegisterListener(OnBallLanded);
-        else Debug.LogError("BallLandedEvent が設定されていません");
-        if (_ballReachedTargetEvent != null) _ballReachedTargetEvent.RegisterListener(ResetAtBat);
-        else Debug.LogError("BallReachedTargetEvent が設定されていません");
+        _battingResultEvent.RegisterListener(OnBattingResultReceived);
+        _ballLandedEvent.RegisterListener(OnBallLanded);
+        _ballReachedTargetEvent.RegisterListener(OnPitchReachedTarget);
     }
 
     private void OnDestroy()
     {
+        _isShuttingDown = true;
+        _lifetimeCts?.Cancel();
+        _displayCts?.Cancel();
         _battingResultEvent?.UnregisterListener(OnBattingResultReceived);
         _ballLandedEvent?.UnregisterListener(OnBallLanded);
-        _ballReachedTargetEvent?.UnregisterListener(ResetAtBat);
+        _ballReachedTargetEvent?.UnregisterListener(OnPitchReachedTarget);
+        _lifetimeCts?.Dispose();
     }
 
     private void Start()
     {
         Fade.FadeImage(_fadeDuration, false);
         BGMManager.Instance.Play(
-            BGMPath.SPORTS_SEASON, 0.3f, 0, 1, true, false);
-        _countdownDisplay.PlayCountdown(null).Forget();
+            BGMPath.SPORTS_SEASON, _bgmVolume, _delayBGMStartTime, 1, true, false);
+        _countdownDisplay.PlayCountdown(StartPitch, _lifetimeCts.Token).Forget();
     }
 
     private void OnBattingResultReceived(BattingBallResult result)
     {
+        if (!_pitchRequested || _resultCommitted || _currentResult != null || result == null) return;
         _currentResult = result;
         if (result.BallType == BattingBallType.HomeRun)
         {
@@ -69,89 +90,99 @@ public class HomeRunDerbyManager : MonoBehaviour
         }
     }
 
-    private void ResetAtBat(PitchBallMove ball)
+    private void OnPitchReachedTarget(PitchBallMove ball)
     {
-        _currentResult = new BattingBallResult(BattingBallType.Miss);
-        WaitResultDisplay().Forget();
+        if (ball == null) return;
+        QueueResult(_resultDisplayDelay);
     }
 
     private void OnBallLanded()
     {
-        if (_currentResult.BallType != BattingBallType.HomeRun)
-        {
-            WaitResultDisplay().Forget();
-        }
-        else
-        {
-            ResultDisplay().Forget();
-        }
+        if (_currentResult == null || _currentResult.BallType == BattingBallType.Miss) return;
+        QueueResult(_currentResult.BallType == BattingBallType.HomeRun ? 0f : _resultDisplayDelay);
     }
 
-    private async UniTaskVoid WaitResultDisplay()
+    private void QueueResult(float delaySeconds)
     {
-        await UniTask.WaitForSeconds(_resultDisplayDelay);
-        ResultDisplay().Forget();
+        if (_isShuttingDown || !_pitchRequested || _resultQueued) return;
+        _resultQueued = true;
+        ShowAtBatResultAsync(delaySeconds, _lifetimeCts.Token).Forget();
     }
 
-    private async UniTaskVoid ResultDisplay()
+    private async UniTask ShowAtBatResultAsync(float delaySeconds, CancellationToken cancellationToken)
     {
-        ResultDisplayData resultData;
-        if (_currentResult == null)
+        try
         {
-            // 結果がない場合は見逃し
-            resultData = _scoreCalculator.CalculateScore(_consecutiveHomeRunCount, false, true);
-        }
-        else
-        {
-            // ファウル判定
+            if (delaySeconds > 0f)
+                await UniTask.WaitForSeconds(delaySeconds, cancellationToken: cancellationToken);
+
+            _resultCommitted = true;
+            // 見送りでは打撃結果イベントが来ないため、ここで空振りとして扱う。
+            if (_currentResult == null)
+            {
+                _currentResult = new BattingBallResult(BattingBallType.Miss);
+                _consecutiveHomeRunCount = 0;
+            }
+
             bool isFoul = _currentResult.BallType == BattingBallType.Foul;
-            // ミス判定
             bool isMiss = _currentResult.BallType == BattingBallType.Miss;
-            // スコア計算
-            resultData = _scoreCalculator.CalculateScore(_consecutiveHomeRunCount, isFoul, isMiss);
+            ResultDisplayData resultData = _scoreCalculator.CalculateScore(_consecutiveHomeRunCount, isFoul, isMiss);
+            resultData.BallType = _currentResult.BallType;
+
+            if (!isFoul && !isMiss)
+            {
+                _isResultDisplaying = true;
+                var displayCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                _displayCts = displayCts;
+                try
+                {
+                    await _resultDisplay.DisplayResult(resultData, displayCts.Token);
+                }
+                finally
+                {
+                    _isResultDisplaying = false;
+                    _displayCts = null;
+                    displayCts.Dispose();
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+                float closeAt = Time.time + Mathf.Max(0f, _resultDisplayDelay);
+                await UniTask.WaitUntil(
+                    () => Input.GetMouseButtonDown(0) || Time.time >= closeAt,
+                    cancellationToken: cancellationToken);
+            }
+
+            _resultDisplay.ResultHide();
+            await UniTask.WaitForSeconds(_fadeDuration, cancellationToken: cancellationToken);
+            StartNextAtBat();
         }
-
-
-        // スコアに加算された時のみ結果表示
-        if (_currentResult.BallType == BattingBallType.Hit || _currentResult.BallType == BattingBallType.HomeRun)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            _isResultDisplaying = true;
-            _cts = new CancellationTokenSource();
-            await _resultDisplay.DisplayResult(resultData, _cts.Token);
-            _cts = null;
-            _isResultDisplaying = false;
-            await UniTask.WhenAny(UniTask.WaitUntil(
-                () => Input.GetMouseButtonDown(0)),
-                UniTask.WaitForSeconds(_resultDisplayDelay));
         }
-
-        Fade.FadeImage(_fadeDuration, true);
-        _atBatResetEvent?.RaiseEvent();
-        _resultDisplay.ResultHide();
-        await UniTask.WaitForSeconds(_fadeDuration);
-        Fade.FadeImage(_fadeDuration, false);
-        StartNextAtBat();
     }
 
     private void StartNextAtBat()
     {
+        _pitchRequested = false;
         _ballCount--;
         if (_ballCount <= 0)
         {
             Debug.Log("全ての打席が終了しました");
-            _resultDisplay.DisplayFinalResult(_homeRunCount, ShowRestartButton).Forget();
+            _resultDisplay.DisplayFinalResult(_homeRunCount, _scoreCalculator.TotalScore).Forget();
             return;
         }
-        Debug.Log("次の打席を開始");
-        _ballCountText.text = $"×{_ballCount}";
-        _currentResult = null;
-        StartPitch();
-    }
 
-    private void ShowRestartButton()
-    {
-        Cursor.visible = true;
-        _restartButton.gameObject.SetActive(true);
+        Fade.FadeImage(_fadeDuration, true, () =>
+        {
+            if (_isShuttingDown) return;
+            _atBatResetEvent?.RaiseEvent();
+            Fade.FadeImage(_fadeDuration, false, () =>
+            {
+                if (_isShuttingDown) return;
+                _ballCountText.text = $"×{_ballCount}";
+                StartPitch();
+            });
+        });
     }
 
     public void Restart()
@@ -163,9 +194,12 @@ public class HomeRunDerbyManager : MonoBehaviour
 
     private void StartPitch()
     {
-        Debug.Log("投球を開始");
+        if (_isShuttingDown || _pitchRequested || _ballCount <= 0) return;
+        _currentResult = null;
+        _resultQueued = false;
+        _resultCommitted = false;
+        _pitchRequested = true;
         _startPitchEvent.RaiseEvent();
-
     }
 
     private void Update()
@@ -174,7 +208,7 @@ public class HomeRunDerbyManager : MonoBehaviour
         {
             if (_isResultDisplaying)
             {
-                _cts?.Cancel();
+                _displayCts?.Cancel();
             }
         }
     }

@@ -22,6 +22,11 @@ public class PitchBallMove : BallMoveTrajectory
         else Debug.LogWarning("OnBattingResultEvent が未設定です");
     }
 
+    private void OnDestroy()
+    {
+        _onBattingResult?.UnregisterListener(BattingResultReceive);
+    }
+
     private void BattingResultReceive(BattingBallResult result)
     {
         if (result.BallType != BattingBallType.Miss)
@@ -93,10 +98,10 @@ public class PitchBallMove : BallMoveTrajectory
     protected override void OnReachedEnd()
     {
         _elapsedTime = (_trajectory.Count - 1) * _trajectoryDeltaTime;
+        _isMoving = false;
+        HasReachedTarget = true;
         Debug.Log("PitchBallMove: ボールがターゲットに到達しました");
         _onBallReachedTarget?.RaiseEvent(this);
-        _isMoving = false;
         _trajectory = null;
-        HasReachedTarget = true;
     }
 }
