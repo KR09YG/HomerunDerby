@@ -10,72 +10,12 @@ public struct PitchRequest
     public float StopZ;
     public TrajectorySettings Settings;
     public BounceSettings BounceSettings;
+    public PitchLaunchMode LaunchMode;
+    // Directionではワールド座標の方向を指定する。大きさは球速の設定値から決まる。
+    public Vector3 LaunchDirection;
 }
 
-[Serializable]
-public struct BallData
-{
-    public string Name;
-    // 球種の設定値は km/h、rpm、度で保持する。
-    public float Speed;
-    public float RotateSpeed;
-    public float Control;
-    public float SpinTilt;
-    // リリース時の総回転数に対する、進行方向と直交する回転成分の割合。
-    [Range(0, 1)]
-    public float SpinEfficiency;
-}
-
-/// <summary>
-/// リリース時の総角速度をワールド座標で保持する。飛翔中の回転減衰と空力トルクは省略する。
-/// </summary>
-public readonly struct SpinState
-{
-    public Vector3 AngularVelocityRadPerSec { get; }
-    public float TotalSpinRateRpm => AngularVelocityRadPerSec.magnitude / BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
-
-    private SpinState(Vector3 angularVelocityRadPerSec)
-    {
-        AngularVelocityRadPerSec = angularVelocityRadPerSec;
-    }
-
-    public static SpinState Create(Vector3 initialVelocityMps, float totalSpinRateRpm, float spinTiltDeg, float releaseSpinEfficiency)
-    {
-        if (initialVelocityMps.sqrMagnitude < 1e-12f)
-            throw new ArgumentException("回転軸の生成には初速が必要です。", nameof(initialVelocityMps));
-        if (float.IsNaN(releaseSpinEfficiency) || releaseSpinEfficiency < 0f || releaseSpinEfficiency > 1f)
-            throw new ArgumentOutOfRangeException(nameof(releaseSpinEfficiency), "回転効率は0から1で指定してください。");
-        if (float.IsNaN(totalSpinRateRpm) || float.IsInfinity(totalSpinRateRpm) || totalSpinRateRpm < 0f)
-            throw new ArgumentOutOfRangeException(nameof(totalSpinRateRpm));
-
-        Vector3 forward = initialVelocityMps.normalized;
-        Vector3 right = Vector3.ProjectOnPlane(Vector3.right, forward);
-        if (right.sqrMagnitude < 1e-6f)
-            right = Vector3.ProjectOnPlane(Vector3.up, forward);
-        right.Normalize();
-        Vector3 up = Vector3.Cross(forward, right).normalized;
-        float tiltRad = spinTiltDeg * Mathf.Deg2Rad;
-        Vector3 transverseAxis = (Mathf.Cos(tiltRad) * right + Mathf.Sin(tiltRad) * up).normalized;
-        float gyroRatio = Mathf.Sqrt(Mathf.Max(0f, 1f - releaseSpinEfficiency * releaseSpinEfficiency));
-        float angularSpeedRadPerSec = totalSpinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
-        // 現在の球種データにはジャイロ成分の符号がないため、初速と同じ向きにする。
-        return new SpinState(angularSpeedRadPerSec * (transverseAxis * releaseSpinEfficiency + forward * gyroRatio));
-    }
-
-    public Vector3 GetTransverseAngularVelocity(Vector3 velocityMps)
-    {
-        if (velocityMps.sqrMagnitude < 1e-12f) return Vector3.zero;
-        Vector3 forward = velocityMps.normalized;
-        return AngularVelocityRadPerSec - Vector3.Dot(AngularVelocityRadPerSec, forward) * forward;
-    }
-
-    public Quaternion RotationAfter(float seconds)
-    {
-        float angularSpeedRadPerSec = AngularVelocityRadPerSec.magnitude;
-        if (angularSpeedRadPerSec < 1e-8f) return Quaternion.identity;
-        return Quaternion.AngleAxis(angularSpeedRadPerSec * Mathf.Rad2Deg * seconds, AngularVelocityRadPerSec / angularSpeedRadPerSec);
-    }
-}
+public enum PitchLaunchMode { TargetPoint, Direction }
 
 public static class BallPhysicsCalculator
 {
@@ -86,8 +26,9 @@ public static class BallPhysicsCalculator
         public float MaxSimulationTimeSeconds;
         public float? StopAtZ;
         public BounceSettings BounceSettings;
-        public string GroundLayer;
         public SpinState? PitchSpin;
+        // 打球では、現在の球速と有効回転数から各ステップの揚力係数を求める。
+        public BattingParameters BattingParameters;
     }
 
     public static List<Vector3> CalculateTrajectory(PitchRequest request)
@@ -97,27 +38,41 @@ public static class BallPhysicsCalculator
 
     public static List<Vector3> CalculateTrajectory(PitchRequest request, out SpinState spin)
     {
-        Debug.Log("========== 軌道計算開始 ==========");
+        return CalculateTrajectory(request, out spin, out _);
+    }
 
+    public static List<Vector3> CalculateTrajectory(PitchRequest request, out SpinState spin, out Vector3 initialVelocityMps)
+    {
         float speedMps = request.BallData.Speed * BallPhysicsConstants.KPH_TO_MPS;
+        if (!IsFinite(speedMps) || speedMps <= 0f)
+            throw new ArgumentOutOfRangeException(nameof(request), "球速は有限値かつ正の値で指定してください。");
+        if (!IsFinite(request.ReleasePoint.sqrMagnitude) || !IsFinite(request.StopZ))
+            throw new ArgumentException("リリース位置と終了Zには有限値を指定してください。", nameof(request));
 
         // 目標平面はSolverへ直接渡し、呼び出し元の設定は書き換えない。
         var solverSettings = request.Settings ?? new TrajectorySettings();
-        PitchSolveResult solveResult = PitchVelocitySolver.SolveInitialVelocity(
-            request.ReleasePoint,
-            request.PassPoint,
-            request.BallData,
-            speedMps,
-            solverSettings,
-            request.BounceSettings
-        );
+        if (!IsFinite(solverSettings.DeltaTime) || solverSettings.DeltaTime <= 0f ||
+            !IsFinite(solverSettings.MaxSimulationTime) || solverSettings.MaxSimulationTime <= 0f)
+            throw new ArgumentException("時間刻みと最大計算時間は有限値かつ正の値で指定してください。", nameof(request));
 
-        if (!solveResult.Converged)
-            Debug.LogWarning($"[投球] {request.BallData.Name}は反復上限までに収束しませんでした。XY誤差={solveResult.ErrorMeters:F4}m, 反復={solveResult.Iterations}");
-        Vector3 optimalVelocityMps = solveResult.InitialVelocityMps;
-
-        spin = SpinState.Create(optimalVelocityMps, request.BallData.RotateSpeed,
-            request.BallData.SpinTilt, request.BallData.SpinEfficiency);
+        spin = SpinState.Create(request.BallData.SpinAxis, request.BallData.RotateSpeed);
+        switch (request.LaunchMode)
+        {
+            case PitchLaunchMode.TargetPoint:
+                var solved = PitchVelocitySolver.SolveInitialVelocity(request.ReleasePoint, request.PassPoint,
+                    request.BallData, speedMps, solverSettings, request.BounceSettings);
+                if (!solved.Converged)
+                    Debug.LogWarning($"[投球] {request.BallData.Name}のXY誤差={solved.ErrorMeters:F4}m、反復={solved.Iterations}");
+                initialVelocityMps = solved.InitialVelocityMps;
+                break;
+            case PitchLaunchMode.Direction:
+                if (!IsFinite(request.LaunchDirection.sqrMagnitude) || request.LaunchDirection.sqrMagnitude < 1e-12f)
+                    throw new ArgumentException("投球方向は有限値の非ゼロベクトルで指定してください。", nameof(request));
+                initialVelocityMps = (request.LaunchDirection / Mathf.Sqrt(request.LaunchDirection.sqrMagnitude)) * speedMps;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(request), "未対応の投球方式です。");
+        }
 
         var config = new SimulationConfig
         {
@@ -130,37 +85,17 @@ public static class BallPhysicsCalculator
 
         List<Vector3> trajectory = SimulateTrajectory(
             request.ReleasePoint,
-            optimalVelocityMps,
+            initialVelocityMps,
             Vector3.zero,
             0f,
             0f,
             config
         );
 
-        Debug.Log("========== 軌道計算完了 ==========");
         return trajectory;
     }
 
-    /// <summary>
-    /// ワールドXY平面上の有効回転軸を求める。0度は+X、90度は+Y方向。
-    /// </summary>
-    public static Vector3 ToSpinAxis(float spinTiltDeg)
-    {
-        float spinTiltRad = spinTiltDeg * Mathf.Deg2Rad;
-        return new Vector3(Mathf.Cos(spinTiltRad), Mathf.Sin(spinTiltRad), 0f).normalized;
-    }
-
-    /// <summary>進行方向に直交する回転数（rpm）と球速（m/s）から揚力係数を求める。</summary>
-    public static float CalcCl(float speedMps, float transverseSpinRateRpm)
-    {
-        float transverseAngularSpeedRadPerSec = transverseSpinRateRpm * BallPhysicsConstants.RPM_TO_RAD_PER_SEC;
-        float spinParam = speedMps > 0f
-            ? (BallPhysicsConstants.BALL_RADIUS_M * transverseAngularSpeedRadPerSec) / speedMps
-            : 0f;
-        return Mathf.Clamp(
-            1.5f * spinParam / (1f + 2.0f * spinParam),
-            0f, 0.6f);
-    }
+    private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
     public static List<Vector3> SimulateTrajectory(
         Vector3 startPosition,
@@ -173,23 +108,6 @@ public static class BallPhysicsCalculator
         return BallTrajectorySimulator.SimulateTrajectory(
             startPosition, initialVelocityMps, spinAxisNormalized,
             spinRateRpm, liftCoefficient, config);
-    }
-
-    public static Vector3 FindPointAtZ(List<Vector3> trajectory, float targetZ)
-    {
-        if (trajectory == null || trajectory.Count == 0) Debug.Log("tarajectory is none");
-        for (int i = 0; i < trajectory.Count - 1; i++)
-        {
-            Vector3 p1 = trajectory[i];
-            Vector3 p2 = trajectory[i + 1];
-            if ((p1.z <= targetZ && p2.z >= targetZ) ||
-                (p1.z >= targetZ && p2.z <= targetZ))
-            {
-                float t = Mathf.InverseLerp(p1.z, p2.z, targetZ);
-                return Vector3.Lerp(p1, p2, t);
-            }
-        }
-        return trajectory.Count > 0 ? trajectory[trajectory.Count - 1] : Vector3.zero;
     }
 
     public static (List<Vector3> trajectory, string firstGroundLayer, int landingIndex) SimulateTrajectoryWithGroundInfo(

@@ -11,6 +11,8 @@ public struct GroundHitResult
 
 internal static class BallCollisions
 {
+    // 既存アセットの減速率は、0.01秒ごとの速度の残り割合として扱う。
+    private const float ROLLING_REFERENCE_SECONDS = 0.01f;
     public static bool TryReflectOnFence(
     Vector3 from,
     ref Vector3 to,
@@ -26,12 +28,12 @@ internal static class BallCollisions
 
         dir /= dist;
 
-        float radius = BallPhysicsConstants.BALL_RADIUS_M;
+        float radius = BaseballWorldScale.ToWorldUnits(BallPhysicsConstants.BALL_RADIUS_M);
 
         if (Physics.SphereCast(from, radius, dir, out RaycastHit hit, dist, fenceMask, QueryTriggerInteraction.Ignore))
         {
             // 接触点の少し手前に戻す（めり込み防止）
-            float backOff = 0.001f;
+            float backOff = BaseballWorldScale.ToWorldUnits(BallPhysicsConstants.NET_EPSILON);
             to = hit.point + hit.normal * (radius + backOff);
 
             // 速度反射：v' = v - 2*(v·n)*n
@@ -66,7 +68,7 @@ internal static class BallCollisions
             velocity.z = horizontalDir.z * newHorizontalSpeed;
         }
 
-        bool shouldRoll = velocity.y < 2f && bounceCount >= 2;
+        bool shouldRoll = velocity.y < 2f && bounceCount >= settings.maxBounces;
         return shouldRoll;
     }
 
@@ -101,10 +103,28 @@ internal static class BallCollisions
                                          BounceSettings settings, float deltaTime)
     {
         velocity.y = 0f;
-        velocity.x *= settings.rollingDeceleration;
-        velocity.z *= settings.rollingDeceleration;
-
-        Vector3 nextPosition = position + velocity * deltaTime;
+        float retention = Mathf.Clamp01(settings.rollingDeceleration);
+        float moveSeconds;
+        float decay;
+        if (retention <= 0f)
+        {
+            moveSeconds = 0f;
+            decay = 0f;
+        }
+        else if (retention >= 1f)
+        {
+            moveSeconds = deltaTime;
+            decay = 1f;
+        }
+        else
+        {
+            float decayRate = Mathf.Log(retention) / ROLLING_REFERENCE_SECONDS;
+            decay = Mathf.Exp(decayRate * deltaTime);
+            // 減速中の移動距離も積分し、時間刻みで転がる距離が変わらないようにする。
+            moveSeconds = (decay - 1f) / decayRate;
+        }
+        Vector3 nextPosition = position + BaseballWorldScale.ToWorldUnits(velocity * moveSeconds);
+        velocity *= decay;
         nextPosition.y = settings.groundLevel;
         return nextPosition;
     }

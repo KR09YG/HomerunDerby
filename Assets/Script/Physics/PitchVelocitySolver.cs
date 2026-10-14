@@ -46,8 +46,8 @@ internal static class PitchVelocitySolver
             throw new ArgumentException("リリース位置には有限値を指定してください。", nameof(startPoint));
         if (!IsFinite(targetPoint))
             throw new ArgumentException("目標位置には有限値を指定してください。", nameof(targetPoint));
-        if (!IsFinite(ballData.SpinTilt))
-            throw new ArgumentException("回転軸の角度には有限値を指定してください。", nameof(ballData));
+        // Solverが変更するのは投球方向だけ。回転ベクトルは全候補で共通にする。
+        SpinState spin = SpinState.Create(ballData.SpinAxis, ballData.RotateSpeed);
 
         float deltaTime = settings?.DeltaTime ?? 0.01f;
         float maxSimulationTime = settings?.MaxSimulationTime ?? 5f;
@@ -73,8 +73,8 @@ internal static class PitchVelocitySolver
         Vector3 up = Vector3.Cross(forward, right).normalized;
 
         // 最初の方向だけ落下分を見込む。空気力によるずれは軌道を評価して補正する。
-        float estimatedTimeSeconds = displacement.magnitude / targetSpeedMps;
-        Vector3 initialAim = displacement - Physics.gravity * (0.5f * estimatedTimeSeconds * estimatedTimeSeconds);
+        float estimatedTimeSeconds = BaseballWorldScale.ToMeters(displacement.magnitude) / targetSpeedMps;
+        Vector3 initialAim = displacement - BaseballWorldScale.ToWorldUnits(Physics.gravity * (0.5f * estimatedTimeSeconds * estimatedTimeSeconds));
         if (!IsFinite(initialAim))
             throw new InvalidOperationException("投球の初期方向を計算中に数値異常が発生しました。");
         float forwardComponent = Vector3.Dot(initialAim, forward);
@@ -94,17 +94,13 @@ internal static class PitchVelocitySolver
             candidateVelocityMps = candidateDirection.normalized * targetSpeedMps;
             if (!IsFinite(candidateVelocityMps) || !IsFinite(candidateVelocityMps.magnitude) || candidateVelocityMps.sqrMagnitude == 0f)
                 throw new InvalidOperationException($"候補の初速に数値異常が発生しました。{context}");
-            SpinState candidateSpin = SpinState.Create(candidateVelocityMps,
-                ballData.RotateSpeed, ballData.SpinTilt, ballData.SpinEfficiency);
-            if (!IsFinite(candidateSpin.AngularVelocityRadPerSec))
-                throw new InvalidOperationException($"候補の回転に数値異常が発生しました。{context}");
             var config = new BallPhysicsCalculator.SimulationConfig
             {
                 DeltaTime = deltaTime,
                 MaxSimulationTimeSeconds = maxSimulationTime,
                 StopAtZ = targetPoint.z,
                 BounceSettings = bounceSettings,
-                PitchSpin = candidateSpin
+                PitchSpin = spin
             };
             var trajectory = BallTrajectorySimulator.SimulateTrajectory(
                 startPoint, candidateVelocityMps, Vector3.zero, 0f, 0f, config);
@@ -117,7 +113,7 @@ internal static class PitchVelocitySolver
 
             if (!IsFinite(crossPoint))
                 throw new InvalidOperationException($"目標平面の交点に数値異常が発生しました。{context}");
-            errorXY = new Vector2(targetPoint.x - crossPoint.x, targetPoint.y - crossPoint.y);
+            errorXY = BaseballWorldScale.ToMeters(new Vector2(targetPoint.x - crossPoint.x, targetPoint.y - crossPoint.y));
             if (!IsFinite(errorXY) || !IsFinite(errorXY.sqrMagnitude))
                 throw new InvalidOperationException($"目標平面上の誤差に数値異常が発生しました。{context}");
             return true;

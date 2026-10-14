@@ -38,8 +38,8 @@ public class ScoreCalculator : MonoBehaviour
     {
         float xDistance = Mathf.Abs(ballPos.x - _startPos.x);
         float zDistance = Mathf.Abs(ballPos.z - _startPos.z);
-        // スコアの距離を計算
-        _scoreDistance = Mathf.Sqrt(xDistance * xDistance + zDistance * zDistance);
+        // 球場の縮尺を戻して、水平距離をm単位で表示する。
+        _scoreDistance = BaseballWorldScale.ToMeters(Mathf.Sqrt(xDistance * xDistance + zDistance * zDistance));
         _scoreText.text = $"{_scoreDistance:F2} m";
     }
 

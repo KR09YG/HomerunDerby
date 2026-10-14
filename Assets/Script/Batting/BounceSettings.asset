@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: BounceSettings
   m_EditorClassIdentifier: 
   groundLevel: 0
-  groundRestitution: 0.5
-  groundFriction: 0.4
-  maxBounces: 5
-  stopVelocityThreshold: 1
-  enableWallBounce: 0
+  groundRestitution: 0.4
+  groundFriction: 0.2
+  maxBounces: 2
+  stopVelocityThreshold: 0.5
+  enableWallBounce: 1
   wallRestitution: 0.3
   fieldBounds:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 50, y: 25, z: 50}
-  rollingDeceleration: 0.95
+  rollingDeceleration: 0.995

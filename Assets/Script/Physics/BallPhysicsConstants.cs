@@ -7,7 +7,8 @@ internal static class BallPhysicsConstants
     internal const float BALL_MASS_KG = 0.145f; // kg
     internal const float BALL_RADIUS_M = 0.0366f; // m
     internal const float CROSS_SECTION_M2 = Mathf.PI * BALL_RADIUS_M * BALL_RADIUS_M; // m²
-    internal const float DRAG_COEFFICIENT = 0.3f;
+    // 回転する野球ボールの代表値。速度・縫い目による変動は固定値で近似する。
+    internal const float DRAG_COEFFICIENT = 0.35f;
     internal const float GRAVITY_HALF = 0.5f;
     internal const float MAGNUS_FORCE_HALF = 0.5f;
     internal const float DRAG_FORCE_HALF = 0.5f;

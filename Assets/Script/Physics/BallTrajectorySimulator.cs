@@ -5,6 +5,7 @@ public struct TrajectoryResult
 {
     public List<Vector3> Points;
     public string FirstGroundLayer;
+    /// <summary>地面の反射処理を実行した回数。</summary>
     public int BounceCount;
     public int LandingIndex;
 }
@@ -20,6 +21,9 @@ public static class BallTrajectorySimulator
     /// <summary>OverlapSphereの検索半径(m)</summary>
     private const float GROUND_DETECTION_RADIUS = 0.5f;
 
+    // 接地直前の高さに生じる小さな丸め誤差を許容する（m）。
+    private const float GROUND_CONTACT_EPSILON = 0.00001f;
+
     private const string LAYER_GROUND = "Ground";
     private const string LAYER_HOMERUN_ZONE = "HomerunZone";
     private const string LAYER_UNKNOWN = "Unknown";
@@ -30,13 +34,20 @@ public static class BallTrajectorySimulator
         Vector3 spinAxisNormalized,
         float spinRateRpm,
         float liftCoefficient,
-        float deltaTime,
-        SpinState? pitchSpin)
+        float DeltaTime,
+        SpinState? pitchSpin,
+        BattingParameters battingParameters)
     {
+        if (pitchSpin.HasValue)
+        {
+            IntegratePitch(ref position, ref velocityMps, pitchSpin.Value, DeltaTime);
+            return;
+        }
+
         Vector3 gravityMetersPerSecondSquared = Physics.gravity;
         Vector3 dragForceNewtons = BallAerodynamics.CalculateDragForce(velocityMps);
-        Vector3 magnusForceNewtons = pitchSpin.HasValue
-            ? BallAerodynamics.CalculateMagnusForce(velocityMps, pitchSpin.Value)
+        Vector3 magnusForceNewtons = battingParameters != null
+            ? BallAerodynamics.CalculateMagnusForce(velocityMps, spinAxisNormalized, spinRateRpm, battingParameters)
             : BallAerodynamics.CalculateMagnusForce(
             velocityMps,
             spinAxisNormalized,
@@ -46,8 +57,23 @@ public static class BallTrajectorySimulator
 
         Vector3 accelerationMetersPerSecondSquared = gravityMetersPerSecondSquared + (dragForceNewtons + magnusForceNewtons) / BallPhysicsConstants.BALL_MASS_KG;
 
-        velocityMps += accelerationMetersPerSecondSquared * deltaTime;
-        position += velocityMps * deltaTime;
+        velocityMps += accelerationMetersPerSecondSquared * DeltaTime;
+        position += BaseballWorldScale.ToWorldUnits(velocityMps * DeltaTime);
+    }
+
+    // 力は速度と固定した回転ベクトルから求める。位置と速度を同じRK4の段階で積分する。
+    private static void IntegratePitch(ref Vector3 position, ref Vector3 velocityMps, SpinState spin, float dt)
+    {
+        Vector3 v1 = velocityMps;
+        Vector3 a1 = BallAerodynamics.CalculatePitchAcceleration(v1, spin);
+        Vector3 v2 = velocityMps + a1 * (dt * .5f);
+        Vector3 a2 = BallAerodynamics.CalculatePitchAcceleration(v2, spin);
+        Vector3 v3 = velocityMps + a2 * (dt * .5f);
+        Vector3 a3 = BallAerodynamics.CalculatePitchAcceleration(v3, spin);
+        Vector3 v4 = velocityMps + a3 * dt;
+        Vector3 a4 = BallAerodynamics.CalculatePitchAcceleration(v4, spin);
+        position += BaseballWorldScale.ToWorldUnits((v1 + 2f * v2 + 2f * v3 + v4) * (dt / 6f));
+        velocityMps += (a1 + 2f * a2 + 2f * a3 + a4) * (dt / 6f);
     }
 
     // 接地情報が必要な場合だけ、最初の着地点を調べる。
@@ -67,6 +93,9 @@ public static class BallTrajectorySimulator
         float elapsedSeconds = 0f;
         int bounceCount = 0;
         bool isRolling = false;
+        bool hasGroundContact = config.BounceSettings != null &&
+                                startPosition.y <= config.BounceSettings.groundLevel &&
+                                initialVelocityMps.y >= 0f;
         string firstGroundLayer = null;
         int landingIndex = 0;
 
@@ -76,31 +105,60 @@ public static class BallTrajectorySimulator
             Vector3 newPos = position;
             Vector3 newVelocityMps = velocityMps;
 
-            SimulatePhysicsStep(ref newPos, ref newVelocityMps, spinAxisNormalized,
-                               spinRateRpm, liftCoefficient, config.DeltaTime, config.PitchSpin);
+            // 転がり中は飛翔計算を重ねず、水平移動を1回だけ進める。
+            if (isRolling && config.BounceSettings != null)
+                newPos = BallCollisions.SimulateRolling(newPos, ref newVelocityMps, config.BounceSettings, config.DeltaTime);
+            else
+                SimulatePhysicsStep(ref newPos, ref newVelocityMps, spinAxisNormalized,
+                                   spinRateRpm, liftCoefficient, config.DeltaTime, config.PitchSpin, config.BattingParameters);
 
-            // フェンス反射
-            if (!isRolling && config.BounceSettings != null)
+            if (!isRolling && config.BounceSettings != null && config.BounceSettings.enableWallBounce)
             {
                 BallCollisions.TryReflectOnFence(prevPos, ref newPos, ref newVelocityMps,
                                                 config.DeltaTime,
                                                 config.BounceSettings.wallRestitution);
             }
 
-            // 地面衝突
-            if (config.BounceSettings != null && newPos.y <= config.BounceSettings.groundLevel)
+            if (config.BounceSettings != null)
             {
-                newPos.y = config.BounceSettings.groundLevel;
-
-                if (trackGroundLayer && firstGroundLayer == null)
+                float groundLevel = config.BounceSettings.groundLevel;
+                if (newPos.y > groundLevel)
                 {
-                    firstGroundLayer = DetectGroundLayer(newPos, config.BounceSettings);
-                    landingIndex = trajectory.Count;
-                    bool shouldRoll = BallCollisions.HandleGroundBounce(
-                        ref newVelocityMps, config.BounceSettings, bounceCount);
+                    hasGroundContact = false;
+                }
+                else
+                {
+                    bool didHitGround = !isRolling && !hasGroundContact &&
+                                        prevPos.y >= groundLevel - BaseballWorldScale.ToWorldUnits(GROUND_CONTACT_EPSILON) &&
+                                        newPos.y < prevPos.y && newVelocityMps.y < 0f;
+                    newPos.y = groundLevel;
 
-                    bounceCount++;
-                    if (shouldRoll) isRolling = true;
+                    if (didHitGround)
+                    {
+                        // 接地情報は最初の1回だけ記録し、反射は毎回の接地で行う。
+                        if (trackGroundLayer && firstGroundLayer == null)
+                        {
+                            firstGroundLayer = DetectGroundLayer(newPos, config.BounceSettings);
+                            landingIndex = trajectory.Count;
+                        }
+
+                        // 回数の基準は従来どおり、今回の接地より前に反射した回数。
+                        bool shouldRoll = BallCollisions.HandleGroundBounce(
+                            ref newVelocityMps, config.BounceSettings, bounceCount);
+                        bounceCount++;
+                        if (shouldRoll)
+                        {
+                            isRolling = true;
+                            newVelocityMps.y = 0f;
+                        }
+                    }
+                    else if (newVelocityMps.y < 0f)
+                    {
+                        // 離地していない間は反射を繰り返さず、地面への沈み込みだけを抑える。
+                        newVelocityMps.y = 0f;
+                    }
+
+                    hasGroundContact = true;
                 }
             }
 
@@ -112,10 +170,6 @@ public static class BallTrajectorySimulator
 
             if (isRolling && config.BounceSettings != null)
             {
-                position = BallCollisions.SimulateRolling(
-                    position, ref velocityMps, config.BounceSettings, config.DeltaTime);
-                trajectory[trajectory.Count - 1] = position;
-
                 if (velocityMps.magnitude < config.BounceSettings.stopVelocityThreshold)
                     break;
             }
@@ -189,10 +243,10 @@ public static class BallTrajectorySimulator
         }
 
         if (Physics.Raycast(
-            center + Vector3.up * RAYCAST_START_OFFSET,
+            center + Vector3.up * BaseballWorldScale.ToWorldUnits(RAYCAST_START_OFFSET),
             Vector3.down,
             out RaycastHit hit,
-            RAYCAST_MAX_DISTANCE,
+            BaseballWorldScale.ToWorldUnits(RAYCAST_MAX_DISTANCE),
             mask,
             QueryTriggerInteraction.Collide))
         {
@@ -202,10 +256,11 @@ public static class BallTrajectorySimulator
 
         // 地面に埋まった場合は下からも探す。
         if (Physics.Raycast(
-            center + Vector3.down * RAYCAST_START_OFFSET,
+            center + Vector3.down * BaseballWorldScale.ToWorldUnits(RAYCAST_START_OFFSET),
             Vector3.up,
+
             out hit,
-            RAYCAST_MAX_DISTANCE,
+            BaseballWorldScale.ToWorldUnits(RAYCAST_MAX_DISTANCE),
             mask,
             QueryTriggerInteraction.Collide))
         {
@@ -216,7 +271,7 @@ public static class BallTrajectorySimulator
         // 上下のRaycastで接地面が見つからなければ、周囲のコライダーを調べる。
         Collider[] colliders = Physics.OverlapSphere(
             center,
-            GROUND_DETECTION_RADIUS,
+            BaseballWorldScale.ToWorldUnits(GROUND_DETECTION_RADIUS),
             mask,
             QueryTriggerInteraction.Collide);
 

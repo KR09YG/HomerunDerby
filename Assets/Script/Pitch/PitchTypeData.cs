@@ -5,8 +5,8 @@ namespace Homerunderby
     [CreateAssetMenu(fileName = "PitchType", menuName = "Baseball/Pitch Type")]
     public sealed class PitchTypeData : ScriptableObject
     {
-        [Tooltip("球速はkm/h、回転数はrpm、回転軸の角度は度で設定する。")]
-        [SerializeField] private BallData _ballData;
+        [Tooltip("球速はkm/h、回転数はrpm。回転軸はワールド座標で指定する。")]
+        [SerializeField] private BallData _ballData = new BallData { Speed = 140f, RotateSpeed = 2000f, SpinAxis = Vector3.left };
 
         [Tooltip("自動投球で選ばれる重み。同じ値なら等確率、0なら選択しない。")]
         [Min(0f)]

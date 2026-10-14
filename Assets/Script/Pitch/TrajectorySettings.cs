@@ -8,12 +8,4 @@ public class TrajectorySettings
     public float DeltaTime = 0.01f;
 
     public float MaxSimulationTime = 2.0f;
-    public bool StopAtTarget = true;
-    public Vector3 StopPosition;
-    public float StopThreshold = 0.05f;
-
-    public TrajectorySettings()
-    {
-        StopPosition = Vector3.zero;
-    }
 }
