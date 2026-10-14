@@ -23,8 +23,8 @@ public class BattingBallResult
     public int LandingIndex;
     public float Distance;
 
-    public BattingBallResult(BattingBallType type   )
+    public BattingBallResult(BattingBallType type)
     {
-        BallType = BattingBallType.Miss;
+        BallType = type;
     }
 }

@@ -18,12 +18,21 @@ public class BattingCursor : MonoBehaviour
     private bool _isInputActive = false;
 
     public Vector3 CurrentPos => _currentPos;
+    public Canvas CursorCanvas => _canvas;
+    public RectTransform CursorRect => _cursorRect;
+
+    public void SetWorldPosition(Vector3 position)
+    {
+        _currentPos = position;
+        UpdateCursorUI();
+    }
 
     private void Awake()
     {
         if (_swingEvent != null) _swingEvent.RegisterListener(FinishInput);
-        else Debug.LogWarning("_swingEvent is not assigned in BattingCursor.");
+        else Debug.LogWarning("_swingEvent is not assigned in BattingCursor.", this);
         if (_battingInputEvent != null) _battingInputEvent.RegisterListener(FinishInput);
+        else Debug.LogWarning("_battingInputEvent is not assigned in BattingCursor.", this);
         if (_atBatResetEvent != null) _atBatResetEvent.RegisterListener(StartInput);
         else Debug.LogWarning("_atBatResetEvent is not assigned in BattingCursor.");
     }
@@ -45,21 +54,22 @@ public class BattingCursor : MonoBehaviour
 
     private void Update()
     {
-        if (!_isInputActive) return;
+        if (!_isInputActive || _strikeZoneCollider == null) return;
 
-        // --- World���W�̍X�V�i�]���ʂ�j---
-        Vector3 mousePosition = Input.mousePosition;
-        mousePosition.z = Camera.main.WorldToScreenPoint(_strikeZoneCollider.bounds.center).z;
-        Vector3 worldMousePosition = Camera.main.ScreenToWorldPoint(mousePosition);
+        Camera camera = Camera.main;
+        if (camera == null) return;
 
-        Vector3 clampedPosition = _currentPos;
-        if (_strikeZoneCollider != null)
-        {
-            Bounds bounds = _strikeZoneCollider.bounds;
-            clampedPosition.x = Mathf.Clamp(worldMousePosition.x, bounds.min.x - _moveRange, bounds.max.x + _moveRange);
-            clampedPosition.y = Mathf.Clamp(worldMousePosition.y, bounds.min.y - _moveRange, bounds.max.y + _moveRange);
-            clampedPosition.z = bounds.center.z;
-        }
+        // カメラを傾けても、マウスの指す位置を打撃判定のZ平面上に合わせる。
+        Bounds bounds = _strikeZoneCollider.bounds;
+        Ray ray = camera.ScreenPointToRay(Input.mousePosition);
+        Plane battingPlane = new Plane(Vector3.forward, bounds.center);
+        if (!battingPlane.Raycast(ray, out float distance)) return;
+
+        Vector3 worldMousePosition = ray.GetPoint(distance);
+        Vector3 clampedPosition = new Vector3(
+            Mathf.Clamp(worldMousePosition.x, bounds.min.x - _moveRange, bounds.max.x + _moveRange),
+            Mathf.Clamp(worldMousePosition.y, bounds.min.y - _moveRange, bounds.max.y + _moveRange),
+            bounds.center.z);
 
         _currentPos = Vector3.Lerp(_currentPos, clampedPosition, Time.deltaTime * _moveSpeed);
 
@@ -73,7 +83,7 @@ public class BattingCursor : MonoBehaviour
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 _canvas.transform as RectTransform,
                 screenPoint,
-                null,   // Screen Space - Overlay �� camera = null
+                null,   // OverlayのCanvasではカメラを指定しない。
                 out Vector2 localPoint))
         {
             _cursorRect.anchoredPosition = localPoint;

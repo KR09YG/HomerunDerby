@@ -14,6 +14,7 @@ public class BattingBallMove : BallMoveTrajectory
 
     private bool _hasLanded = false;
     private BattingBallResult _result;
+    private MeshRenderer _renderer;
 
     public bool IsMoving => _isMoving;
     public bool HasLanded => _hasLanded;
@@ -82,10 +83,19 @@ public class BattingBallMove : BallMoveTrajectory
         StartMoving();
     }
 
-    private async UniTaskVoid WaitStopBallAsync()
+    private async UniTask WaitStopBallAsync()
     {
-        await UniTask.Delay(_delayBallStopTime);
-        _isMoving = false;
+        try
+        {
+            await UniTask.Delay(_delayBallStopTime, cancellationToken: this.GetCancellationTokenOnDestroy());
+            _isMoving = false;
+            if (!_renderer) _renderer = GetComponentInChildren<MeshRenderer>(true);
+            if (_renderer != null) _renderer.enabled = false;
+            else Debug.LogError("打球ボールの描画用MeshRendererが見つかりません。", this);
+        }
+        catch (System.OperationCanceledException)
+        {
+        }
     }
 
     private void StartMoving()
@@ -104,7 +114,10 @@ public class BattingBallMove : BallMoveTrajectory
     protected override void ApplySpin()
     {
         _result.SpinAxis.Normalize();
-        float deg = _result.SpinRate * BallPhysicsConstants.RPM_TO_DEGREES_PER_SEC * _spinSpeedMultiplier;
+        float degreesPerSecond = _result.SpinRate * BallPhysicsConstants.RPM_TO_DEGREES_PER_SEC * _spinSpeedMultiplier;
+        float degreesThisFrame = degreesPerSecond * Time.deltaTime;
+
+        transform.Rotate(_result.SpinAxis, degreesThisFrame, Space.World);
     }
 
     protected override void OnReachedEnd()

@@ -1,4 +1,3 @@
-using KanKikuchi.AudioManager;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -21,6 +20,7 @@ public class BattingCalculator : MonoBehaviour
 
     private List<Vector3> _lastTrajectory;
     private string _lastGroundLayer;
+    public StrikeZone Zone => _strikeZone;
 
     private void Awake()
     {
@@ -37,9 +37,9 @@ public class BattingCalculator : MonoBehaviour
     private void OnHitAttempt(PitchBallMove ball)
     {
         // 停止中に座標が変わっても、判定には打撃イベント時の記録を使う。
-        if (_battingSystem == null || !_battingSystem.TryGetContact(ball, out Vector3 swingPos, out Vector3 ballPos))
+        if (_battingSystem == null || !_battingSystem.TryGetContact(ball, out Vector3 cursorPos, out Vector3 ballPos))
         {
-            Debug.LogWarning("[Batting/Result] MISS: no contact snapshot (ball reference or IK contact unavailable).", this);
+            Debug.LogWarning("[Batting/Result] MISS: no contact snapshot (ball or cursor position unavailable).", this);
             RaiseMissEvent();
             return;
         }
@@ -51,16 +51,17 @@ public class BattingCalculator : MonoBehaviour
             return;
         }
 
-        float distance = Vector3.Distance(swingPos, ballPos);
+        Vector3 offsetMeters = BaseballWorldScale.ToMeters(ballPos - cursorPos);
+        float distance = offsetMeters.magnitude;
         bool isHit = distance <= _parameters.MaxImpactDistance;
 
         if (_parameters.EnableDebugLogs)
-            Debug.Log($"[Batting/Result] {(isHit ? "HIT" : "MISS")} distance={distance:F4} limit={_parameters.MaxImpactDistance:F4} deltaXYZ={(ballPos - swingPos).ToString("F4")}", this);
+            Debug.Log($"[Batting/Result] {(isHit ? "HIT" : "MISS")} distance={distance:F4}m " +
+                $"limit={_parameters.MaxImpactDistance:F4}m deltaXYZ(m)={offsetMeters.ToString("F4")}", this);
 
         if (isHit)
         {
-            SEManager.Instance.Play(SEPath.BATTING_HIT);
-            CalculateBattedBall(ball, swingPos, ballPos, distance);
+            CalculateBattedBall(ball, cursorPos, ballPos, distance);
         }
         else
         {
@@ -69,45 +70,48 @@ public class BattingCalculator : MonoBehaviour
         }
     }
 
-    private void CalculateBattedBall(PitchBallMove ball, Vector3 swingPos, Vector3 ballPos, float impactDistance)
+    private void CalculateBattedBall(PitchBallMove ball, Vector3 cursorPos, Vector3 ballPos, float impactDistance)
     {
-        // 1. 基本パラメータ計算
-        float pitchSpeed = GetPitchSpeed(ball);
+        if (!_battingSystem.TryGetContactVelocity(ball, out Vector3 pitchVelocityMps))
+        {
+            Debug.LogWarning("[Batting/Result] 接触時の投球速度を取得できないため、打球計算を中止しました。", this);
+            RaiseMissEvent();
+            return;
+        }
+        // 当たり方は接触時の座標で決め、飛翔だけをバット上の表示位置から始める。
+        Vector3 launchPosition = _battingSystem.TryGetContactLaunchPosition(ball, out Vector3 contactPoint)
+            ? contactPoint : ballPos;
+        float pitchSpeed = pitchVelocityMps.magnitude;
         float timing = CalculateTiming(ballPos);
-        // 2. 効率計算(芯に近いほど高効率)
+        // 接触効率と打球初速の倍率は別に扱う。
         float efficiency = BattingPhysics.CalculateImpactEfficiency(
             impactDistance,
             _parameters.SweetSpotRadius,
             _parameters.MaxImpactDistance,
-            _parameters.ImpactEfficiencyCurve
+            _parameters.ImpactEfficiencyCurve,
+            _parameters.MinImpactEfficiency
         );
 
-        // 飛距離の調整
-        efficiency *= _parameters.ExitVelocityScale;
-
-        // 3. 打球速度計算
         float exitVelocity = BattingPhysics.CalculateExitVelocity(
             pitchSpeed,
             _parameters.BatSpeedKmh,
             _parameters.BatMass,
             _parameters.CoefficientOfRestitution,
             efficiency
-        );
+        ) * _parameters.ExitVelocityScale;
 
-        // 4. 角度計算
-        // ボールとバットの芯のずれを垂直方向のオフセットとして使用
-        float verticalOffset = swingPos.y - ballPos.y;
-        // 打ち上げ角度を計算
+        float verticalOffset = BaseballWorldScale.ToMeters(cursorPos.y - ballPos.y);
         float launchAngle = BattingPhysics.CalculateLaunchAngle(verticalOffset, _parameters);
         float horizontalAngle = BattingPhysics.CalculateHorizontalAngle(timing, _parameters);
 
         float spinRate = BattingPhysics.CalculateSpinRate(exitVelocity, launchAngle, efficiency, _parameters);
 
         Vector3 direction = BattingPhysics.CalculateBattedBallDirection(launchAngle, horizontalAngle);
-        Vector3 spinAxis = BattingPhysics.CalculateSpinAxis(direction);
+        Vector3 spinAxis = BattingPhysics.CalculateSpinAxis(direction, timing, _parameters);
+        if (_parameters.EnableDebugLogs) Debug.Log($"[Spin] spinAxis={spinAxis}");
         Vector3 initialVelocity = direction * exitVelocity;
 
-        // 7. 軌道シミュレーション
+        // 初期値を渡し、飛翔中の揚力係数はシミュレーターで更新する。
         float liftCoefficient = BattingPhysics.CalculateLiftCoefficient(spinRate, exitVelocity, _parameters);
 
         BallPhysicsCalculator.SimulationConfig simulateConfig =
@@ -116,21 +120,23 @@ public class BattingCalculator : MonoBehaviour
                 DeltaTime = FlightStepSeconds,
                 MaxSimulationTimeSeconds = MaxFlightSeconds,
                 StopAtZ = null,
-                BounceSettings = _bounceSettings
+                BounceSettings = _bounceSettings,
+                BattingParameters = _parameters
             };
 
         var (trajectory, firstGroundLayer, landingIndex) =
             BallPhysicsCalculator.SimulateTrajectoryWithGroundInfo(
-            ballPos, initialVelocity,
+            launchPosition, initialVelocity,
             spinAxis, spinRate,
             liftCoefficient, simulateConfig);
 
         _lastTrajectory = trajectory;
+        _lastGroundLayer = firstGroundLayer;
 
-        float distance = CalculateDistance(ballPos, trajectory[landingIndex]);
+        float distance = CalculateDistance(launchPosition, trajectory[landingIndex]);
 
         BattingBallType ballType = DetermineBallType(
-            trajectory, ballPos, distance, launchAngle, horizontalAngle, firstGroundLayer, landingIndex);
+            trajectory, launchPosition, distance, launchAngle, horizontalAngle, firstGroundLayer, landingIndex);
 
         BattingBallResult result = new BattingBallResult(ballType)
         {
@@ -145,7 +151,6 @@ public class BattingCalculator : MonoBehaviour
             IsSweetSpot = impactDistance <= _parameters.SweetSpotRadius,
             Timing = timing,
             TrajectoryPoints = trajectory,
-            BallType = ballType,
             Distance = distance,
             LandingIndex = landingIndex
         };
@@ -153,34 +158,26 @@ public class BattingCalculator : MonoBehaviour
 
         if (_parameters.EnableDebugLogs)
         {
-            Debug.Log($"[Batting] ExitVel={exitVelocity * BallPhysicsConstants.MPS_TO_KPH:F0}km/h, Angle={launchAngle:F1}°, Distance={distance:F1}m, Type={ballType}, Layer={firstGroundLayer}");
+            Debug.Log($"[Batting] ContactPitch={pitchSpeed * BallPhysicsConstants.MPS_TO_KPH:F1}km/h, " +
+                $"ExitVel={exitVelocity * BallPhysicsConstants.MPS_TO_KPH:F1}km/h, Efficiency={efficiency:F3}, " +
+                $"Spin={spinRate:F0}rpm, Launch={launchAngle:F1}°, Timing={timing:F3}, " +
+                $"Horizontal={horizontalAngle:F1}°, Distance={distance:F1}m, Type={ballType}, Layer={firstGroundLayer}");
         }
 
         _battedBallResultEvent?.RaiseEvent(result);
     }
 
-    private float GetPitchSpeed(PitchBallMove ball)
-    {
-        var traj = ball.Trajectory;
-        if (traj == null || traj.Count < 2) return 30f;
-
-        float totalTime = (traj.Count - 1) * FlightStepSeconds;
-        return (traj[traj.Count - 1] - traj[0]).magnitude / totalTime;
-    }
-
     private float CalculateTiming(Vector3 ballPosition)
     {
-        float distanceToZone = ballPosition.z - _strikeZone.CenterZ;
-        // タイミングは-1（早すぎ）から1（遅すぎ）までの範囲で、距離が近いほど0に近づく
-        return Mathf.Clamp(distanceToZone / 2f, -1f, 1f);
+        return BattingPhysics.CalculateTiming(ballPosition.z, _strikeZone.CenterZ, _parameters.TimingRangeMeters);
     }
 
     private float CalculateDistance(Vector3 start, Vector3 end)
     {
-        return Vector3.Distance(
+        return BaseballWorldScale.ToMeters(Vector3.Distance(
             new Vector3(start.x, 0, start.z),
             new Vector3(end.x, 0, end.z)
-        );
+        ));
     }
 
     private bool IsFoulBallByTrajectory(List<Vector3> trajectory, Vector3 startPosition, int landingIndex)

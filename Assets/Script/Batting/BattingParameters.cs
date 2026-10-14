@@ -1,18 +1,18 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [CreateAssetMenu(fileName = "BattingParam", menuName = "Batting Param")]
 public class BattingParameters : ScriptableObject
 {
     [Header("=== 当たり判定 ===")]
-    [Tooltip("最大インパクト距離(m)")]
-    public float MaxImpactDistance = 0.3f;
+    [Tooltip("操作上ヒットを許容する、カーソルからの最大距離(m)")]
+    public float MaxImpactDistance = 0.5f;
 
     [Tooltip("スイートスポット半径(m)")]
-    public float SweetSpotRadius = 0.02f;
+    public float SweetSpotRadius = 0.08f;
 
     [Header("=== バット性能 ===")]
     [Tooltip("バット速度(km/h)")]
-    public float BatSpeedKmh = 130f;
+    public float BatSpeedKmh = 116f;
 
     [Tooltip("バット質量(kg)")]
     public float BatMass = 0.9f;
@@ -40,17 +40,20 @@ public class BattingParameters : ScriptableObject
 
     [Tooltip("角度スケール")]
     [Range(10f, 30f)]
-    public float LaunchAngleScale = 20f;
+    public float LaunchAngleScale = 25f;
 
     [Tooltip("角度計算のべき乗")]
     [Range(0.8f, 2.0f)]
     public float LaunchAnglePower = 1.2f;
 
+    [Tooltip("LaunchAngleScale分だけ角度が変わる上下のずれ(m)"), Min(0.001f)]
+    public float LaunchAngleOffsetMeters = 0.15f;
+
     [Tooltip("最小打ち上げ角度(度)")]
-    public float MinLaunchAngle = -10f;
+    public float MinLaunchAngle = -20f;
 
     [Tooltip("最大打ち上げ角度(度)")]
-    public float MaxLaunchAngle = 50f;
+    public float MaxLaunchAngle = 55f;
 
     [Header("=== 水平角度 ===")]
     [Tooltip("フェア最大角度(度)")]
@@ -63,9 +66,16 @@ public class BattingParameters : ScriptableObject
     [Range(0.5f, 0.9f)]
     public float FoulThreshold = 0.7f;
 
+    [Tooltip("ジャスト付近の前後差が左右角度へ与える影響。1で直線的に変化")]
+    [Range(1f, 3f)]
+    public float HorizontalAnglePower = 1.5f;
+
+    [Tooltip("左右の打球角度を決める前後距離の基準(m)。大きくすると同じ前後差でも角度が変わりにくくなります。"), Min(0.001f)]
+    public float TimingRangeMeters = 0.5f;
+
     [Header("=== スピン ===")]
     [Tooltip("基本バックスピン(RPM)")]
-    public float BaseBackspinRPM = 2000f;
+    public float BaseBackspinRPM = 1800f;
 
     [Tooltip("スピン最小値(RPM)")]
     public float MinSpinRate = 500f;
@@ -73,16 +83,19 @@ public class BattingParameters : ScriptableObject
     [Tooltip("スピン最大値(RPM)")]
     public float MaxSpinRate = 4000f;
 
+    [Tooltip("タイミングのズレ最大時のサイドスピン軸の傾き角度(度)"), Range(0f, 45f)]
+    public float MaxSideSpinAngle = 10f;
+
     [Header("=== 揚力 ===")]
     [Tooltip("最大揚力係数")]
     [Range(0.2f, 0.8f)]
-    public float MaxLiftCoefficient = 0.5f;
+    public float MaxLiftCoefficient = 0.4f;
 
-    [Tooltip("揚力係数パラメータA")]
-    public float LiftCoefficientA = 1.2f;
+    [Tooltip("Cl = A × S / (B + S) のA。Sは球速に対する表面回転速度の比。")]
+    public float LiftCoefficientA = 0.75f;
 
-    [Tooltip("揚力係数パラメータB")]
-    public float LiftCoefficientB = 0.2f;
+    [Tooltip("Cl = A × S / (B + S) のB。初期値は投球用の式と同じ係数になる。")]
+    public float LiftCoefficientB = 0.5f;
 
 
     [Tooltip("ヒット距離(m)")]

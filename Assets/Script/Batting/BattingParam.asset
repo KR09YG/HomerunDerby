@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MaxImpactDistance: 1
   SweetSpotRadius: 0.8
-  BatSpeedKmh: 150
+  BatSpeedKmh: 116
   BatMass: 0.9
-  CoefficientOfRestitution: 0.6
-  ExitVelocityScale: 1.1
+  CoefficientOfRestitution: 0.5
+  ExitVelocityScale: 1
   MinImpactEfficiency: 0.05
   ImpactEfficiencyCurve:
     serializedVersion: 2
@@ -43,20 +43,24 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  IdealLaunchAngle: 15
-  LaunchAngleScale: 20
-  LaunchAnglePower: 1.5
-  MinLaunchAngle: -10
-  MaxLaunchAngle: 30
+  IdealLaunchAngle: 25
+  LaunchAngleScale: 25
+  LaunchAnglePower: 1.2
+  LaunchAngleOffsetMeters: 0.15
+  MinLaunchAngle: -20
+  MaxLaunchAngle: 55
   MaxFairAngle: 45
   MaxFoulAngle: 60
   FoulThreshold: 0.7
-  BaseBackspinRPM: 2000
+  HorizontalAnglePower: 1.5
+  TimingRangeMeters: 0.5
+  BaseBackspinRPM: 1800
   MinSpinRate: 500
   MaxSpinRate: 4000
+  MaxSideSpinAngle: 10
   MaxLiftCoefficient: 0.4
-  LiftCoefficientA: 1.2
-  LiftCoefficientB: 0.2
+  LiftCoefficientA: 0.75
+  LiftCoefficientB: 0.5
   HitDistance: 30
   EnableDebugLogs: 1
   ShowTrajectoryGizmos: 1

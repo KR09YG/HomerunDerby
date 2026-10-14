@@ -45,6 +45,16 @@ public class BatSwingAimIK : MonoBehaviour
     private Quaternion _torsoCorrection, _wristCorrection;
     private Vector3 _handOffset;
     private float _contactTime;
+    private float _swingStateSpeed;
+
+    public BattingCursor Cursor => _cursor;
+
+    public bool TryGetContactDelay(out float gameSeconds)
+    {
+        float speed = _animator != null ? _animator.speed * _swingStateSpeed : 0f;
+        gameSeconds = speed > 0f ? _contactTime / speed : 0f;
+        return _ready && speed > 0f && isActiveAndEnabled;
+    }
     private GameObject _reference;
     private Transform _referenceSpine, _referenceGripHand, _referenceSweetSpot;
     private Transform _referenceSupportHand, _referenceGripShoulder, _referenceSupportShoulder;
@@ -140,6 +150,15 @@ public class BatSwingAimIK : MonoBehaviour
         referenceAnimator.applyRootMotion = true;
         referenceAnimator.fireEvents = false;
         referenceAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+        // 準備動作とスイングでは速度が違うため、予測にはSwingステートの速度を使う。
+        // イベントを無効にした参照用Animatorで調べ、実際のバッターには触れない。
+        referenceAnimator.runtimeAnimatorController = _animator.runtimeAnimatorController;
+        referenceAnimator.Play(_swingStateName, 0, 0f);
+        referenceAnimator.Update(0f);
+        AnimatorStateInfo swingState = referenceAnimator.GetCurrentAnimatorStateInfo(0);
+        _swingStateSpeed = swingState.IsName(_swingStateName)
+            ? swingState.speed * swingState.speedMultiplier : 0f;
+        referenceAnimator.runtimeAnimatorController = null;
         _graph = PlayableGraph.Create("Batter contact pose");
         _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
         _clipPlayable = AnimationClipPlayable.Create(_graph, _swingClip);
@@ -180,7 +199,6 @@ public class BatSwingAimIK : MonoBehaviour
         _swinging = true;
     }
 
-    // 元の接触姿勢から、両腕が届く範囲で腰・手首・手の移動量を決める。
     private void PlanContact(Vector3 pivot, Vector3 sweet, Vector3 hand, Vector3 target)
     {
         Quaternion aim = LimitedRotation(sweet - pivot, target - pivot, _maxTorsoAngle);
