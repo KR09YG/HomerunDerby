@@ -1,0 +1,12 @@
+using System;
+using System.Collections.Generic;
+
+[Serializable]
+public class WorldData
+{
+    public string WorldId;
+    public string Name;
+    public string Description;
+
+    public List<StageData> Stages = new List<StageData>();
+}
