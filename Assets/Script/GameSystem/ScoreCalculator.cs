@@ -43,7 +43,7 @@ public class ScoreCalculator : MonoBehaviour
 
     private void OnBallLanded() => _isBallLanded = true;
 
-    private void Update()
+    private void LateUpdate()
     {
         if (_battingBallMove && _battingBallMove.IsMoving && !_isBallLanded)
         {
