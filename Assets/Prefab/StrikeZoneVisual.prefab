@@ -76,8 +76,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 194dc9e3ada582946aae1f739a448a74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _swingEvent: {fileID: 0}
-  _atBatResetEvent: {fileID: 0}
+  _swingEvent: {fileID: 11400000, guid: 8fa0298ac5f57be4a81bb47339fda11e, type: 2}
+  _atBatResetEvent: {fileID: 11400000, guid: 2605c0b004f350045a8cf39c9c024e73, type: 2}
   _renderer: {fileID: 0}
 --- !u!114 &5876605427512770984
 MonoBehaviour:
