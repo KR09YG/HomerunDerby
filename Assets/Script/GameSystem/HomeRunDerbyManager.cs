@@ -168,7 +168,8 @@ public class HomeRunDerbyManager : MonoBehaviour
         if (_ballCount <= 0)
         {
             Debug.Log("全ての打席が終了しました");
-            _resultDisplay.DisplayFinalResult(_homeRunCount, _scoreCalculator.TotalScore).Forget();
+            _resultDisplay.DisplayFinalResult(
+                _homeRunCount, _scoreCalculator.TotalScore, _lifetimeCts.Token).Forget();
             return;
         }
 

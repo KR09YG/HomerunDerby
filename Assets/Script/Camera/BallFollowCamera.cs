@@ -22,6 +22,8 @@ public class BallFollowCamera : MonoBehaviour
     [Header("Follow Distance")]
     [SerializeField] private float _followDistance = 0.7f;
 
+    private const int DELAY_TIME_MS = 500; // ’Ç]I—¹Œã‚ÌƒJƒƒ‰Ø‚è‘Ö‚¦‚Ü‚Å‚Ì‘Ò‹@ŠÔ(ms)
+
     private bool _isFollowing = false;
 
     private void Awake()
@@ -72,13 +74,12 @@ public class BallFollowCamera : MonoBehaviour
     {
         _isFollowing = false;
 
-        WaitCameraChange().Forget();
+        WaitCameraChange();
     }
 
 
-    private async UniTaskVoid WaitCameraChange()
+    private void WaitCameraChange()
     {
-        await UniTask.Delay(1000);
         _ballFollowCamera.Priority = 0;
         _batterCamera.Priority = 10;
     }

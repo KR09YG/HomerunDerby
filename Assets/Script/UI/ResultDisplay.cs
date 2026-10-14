@@ -101,7 +101,7 @@ public class ResultDisplay : MonoBehaviour
         catch (OperationCanceledException)
         {
             // 演出を飛ばした場合も、表示値は最終スコアに揃える。
-            ShowFinalValues(data, showBonus);
+            if (this != null && _resultPanel != null) ShowFinalValues(data, showBonus);
         }
     }
 
@@ -117,7 +117,7 @@ public class ResultDisplay : MonoBehaviour
             x =>
             {
                 value = x;
-                text.text = Mathf.FloorToInt(value).ToString() + suffix;
+                if (text != null) text.text = Mathf.FloorToInt(value).ToString() + suffix;
             },
             targetValue,
             _countUpDuration
@@ -131,7 +131,7 @@ public class ResultDisplay : MonoBehaviour
         {
             // キャンセル後にTweenがテキストを更新しないよう停止する。
             tween.Kill();
-            text.text = Mathf.FloorToInt(targetValue).ToString() + suffix;
+            if (text != null) text.text = Mathf.FloorToInt(targetValue).ToString() + suffix;
             throw;
         }
     }
@@ -153,11 +153,17 @@ public class ResultDisplay : MonoBehaviour
         }
     }
 
-    public async UniTaskVoid DisplayFinalResult(int homerunCount, float totalScore, Action action = null)
+    public async UniTask DisplayFinalResult(int homerunCount, float totalScore, CancellationToken cancellationToken)
     {
-        _finalResultPanel.SetActive(true);
-        await CountUpAsync(_homerunCountText, homerunCount, CancellationToken.None);
-        await CountUpAsync(_finalTotalScoreText, totalScore, CancellationToken.None);
-        action?.Invoke();
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _finalResultPanel.SetActive(true);
+            await CountUpAsync(_homerunCountText, homerunCount, cancellationToken);
+            await CountUpAsync(_finalTotalScoreText, totalScore, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
     }
 }
