@@ -8,7 +8,6 @@ public class BattingBallMove : BallMoveTrajectory
     [SerializeField] private OnBattingResultEvent _resultEvent;
     [SerializeField] private OnBallLandedEvent _onBallLanded;
 
-    [SerializeField] private ScoreCalculator _scoreCalculator;
     [SerializeField] private float _foulDisplayDistance;
     [Tooltip("着地してからの止まるまでの時間(ms)"), SerializeField] private int _delayBallStopTime;
 
@@ -19,6 +18,8 @@ public class BattingBallMove : BallMoveTrajectory
     public bool IsMoving => _isMoving;
     public bool HasLanded => _hasLanded;
     public BattingBallResult Result => _result;
+
+    public Vector3 Position => transform.position;
 
     private void OnEnable()
     {
@@ -38,7 +39,6 @@ public class BattingBallMove : BallMoveTrajectory
         base.Update();
 
         if (_hasLanded) return;
-        _scoreCalculator.CalculateDistance(transform.position);
 
         if (_index >= _result.LandingIndex)
         {
@@ -47,7 +47,6 @@ public class BattingBallMove : BallMoveTrajectory
             {
                 Debug.Log("ボールが着地しました");
                 _hasLanded = true;
-                _scoreCalculator.CalculateDistance(_trajectory[_result.LandingIndex]);
                 _onBallLanded?.RaiseEvent();
                 WaitStopBallAsync().Forget();
             }
@@ -103,7 +102,6 @@ public class BattingBallMove : BallMoveTrajectory
         _elapsedTime = 0f;
         _isMoving = true;
         _hasLanded = false;
-        _scoreCalculator.Initialize(transform.position);
     }
 
     public void SetVisualSpeed(float multiplier)

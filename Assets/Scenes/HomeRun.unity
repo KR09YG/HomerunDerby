@@ -5100,7 +5100,6 @@ MonoBehaviour:
   _trajectoryDeltaTime: 0.01
   _resultEvent: {fileID: 11400000, guid: be4eb26a82e1d234d9bc7e4c40fc97e7, type: 2}
   _onBallLanded: {fileID: 11400000, guid: 00e0564e7319c3846aefb0ae29b6bee1, type: 2}
-  _scoreCalculator: {fileID: 2102252757}
   _foulDisplayDistance: 10000
   _delayBallStopTime: 2500
 --- !u!114 &1916383632
@@ -5693,6 +5692,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _startPitchEvent: {fileID: 11400000, guid: 9ee0f74af70dfc14eaed4ffaa69717b1, type: 2}
+  _pitchBallReleaseEvent: {fileID: 11400000, guid: 27ccf486de0d16740a1ec35c89e8f8fe, type: 2}
   _atBatResetEvent: {fileID: 11400000, guid: 2605c0b004f350045a8cf39c9c024e73, type: 2}
   _ballReachedTargetEvent: {fileID: 11400000, guid: af9d1e81c6600174f82bf253913b743c, type: 2}
   _battingResultEvent: {fileID: 11400000, guid: be4eb26a82e1d234d9bc7e4c40fc97e7, type: 2}
@@ -5707,6 +5707,7 @@ MonoBehaviour:
   _bgmVolume: 0.3
   _delayBGMStartTime: 0
   _pitchBGMVolume: 1
+  _recordBaselineFlow: 1
 --- !u!4 &2102252756
 Transform:
   m_ObjectHideFlags: 0
@@ -5734,7 +5735,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9b5bcb129e08a94bbf40e55423eea5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _battingBallMove: {fileID: 1916383629}
   _onAtBatResetEvent: {fileID: 11400000, guid: 2605c0b004f350045a8cf39c9c024e73, type: 2}
+  _onBattingResultEvent: {fileID: 11400000, guid: be4eb26a82e1d234d9bc7e4c40fc97e7, type: 2}
   _scoreText: {fileID: 1054235929}
 --- !u!114 &2102252758
 MonoBehaviour:
@@ -6377,7 +6380,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c01612877dab46778ae17bd88b6bb7e6, type: 2}
   - {fileID: 11400000, guid: 22967221fe4c40c7b64a7ff9997dcc73, type: 2}
   _nodAnimTime: 0
-  _firstPitchDelayMs: 5000
   _selectedBall:
     Name: 
     Speed: 0
