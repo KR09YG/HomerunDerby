@@ -45,7 +45,7 @@ public class BattingDistanceTracker : MonoBehaviour
         if (_isBallLanded) return;
         _isBallLanded = true;
         if (_battingBallMove != null)
-            UpdateDistance(_battingBallMove.Position);
+            UpdateDistancText(_battingBallMove.Position);
     }
 
     private void LateUpdate()
@@ -57,7 +57,7 @@ public class BattingDistanceTracker : MonoBehaviour
         }
 
         if (_battingBallMove.IsMoving && !_isBallLanded)
-            UpdateDistance(_battingBallMove.Position);
+            UpdateDistancText(_battingBallMove.Position);
     }
 
     private void OnAtBatReset()
@@ -72,16 +72,17 @@ public class BattingDistanceTracker : MonoBehaviour
         _distanceMeters = 0f;
     }
 
-    public float CalculateDistance(Vector3 ballPos)
+    
+    public float CalculateDistance(Vector3 ballPos, Vector3 StartPos)
     {
-        float xDistance = ballPos.x - _startPos.x;
-        float zDistance = ballPos.z - _startPos.z;
+        float xDistance = ballPos.x - StartPos.x;
+        float zDistance = ballPos.z - StartPos.z;
         return BaseballWorldScale.ToMeters(Mathf.Sqrt(xDistance * xDistance + zDistance * zDistance));
     }
 
-    private void UpdateDistance(Vector3 ballPos)
+    private void UpdateDistancText(Vector3 ballPos)
     {
-        _distanceMeters = CalculateDistance(ballPos);
+        _distanceMeters = CalculateDistance(ballPos, _startPos);
         _distanceText.text = $"{_distanceMeters:F2} m";
     }
 }
