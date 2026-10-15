@@ -28,23 +28,21 @@ public class ResultTallyer : MonoBehaviour
 
     private void OnBattingResultReceive(BattingBallResult result)
     {
-        // ホームランのカウントを増やす
-        if (result.BallType == BattingBallType.HomeRun) _stageStatistics.HomeRunCount++;
-
         // ホームランかヒットなら距離を加算する
-        if (result.BallType == BattingBallType.HomeRun || 
-            result.BallType == BattingBallType.Hit||
+        if (result.BallType == BattingBallType.HomeRun ||
+            result.BallType == BattingBallType.Hit ||
             result.BallType == BattingBallType.GroundBall)
         {
             float distance = _distanceTracker.CalculateDistance(
                 result.TrajectoryPoints[result.LandingIndex], result.TrajectoryPoints[0]);
             _stageStatistics.TotalFairDistance += distance;
-            
+
             // 最大飛距離を更新する
-            if (_stageStatistics.MaxHomeRunDistance < distance &&
-                result.BallType == BattingBallType.HomeRun)
+            if (result.BallType == BattingBallType.HomeRun)
             {
-                _stageStatistics.MaxHomeRunDistance = distance;
+                _stageStatistics.HomeRunCount++;
+                if (_stageStatistics.MaxHomeRunDistance < distance)
+                    _stageStatistics.MaxHomeRunDistance = distance;
             }
         }
     }
