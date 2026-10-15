@@ -16,7 +16,6 @@ public class HomeRunDerbyManager : MonoBehaviour
 
     [Header("Components")]
     [SerializeField] private CountdownDisplay _countdownDisplay; // 投球開始のカウントダウン表示
-    [SerializeField] private ScoreCalculator _scoreCalculator;
     [SerializeField] private ResultDisplay _resultDisplay;
     [SerializeField] private TextMeshProUGUI _ballCountText;
     [Header("Game Settings")]
@@ -32,6 +31,7 @@ public class HomeRunDerbyManager : MonoBehaviour
     private CancellationTokenSource _displayCts;
     private int _consecutiveHomeRunCount = 0;
     private int _homeRunCount = 0;
+    private float _totalScore;
     private bool _isResultDisplaying;
     private bool _pitchRequested;
     private bool _resultQueued;
@@ -43,7 +43,7 @@ public class HomeRunDerbyManager : MonoBehaviour
         _lifetimeCts = new CancellationTokenSource();
         if (_startPitchEvent == null || _atBatResetEvent == null ||
             _ballReachedTargetEvent == null || _battingResultEvent == null || _ballLandedEvent == null ||
-            _countdownDisplay == null || _scoreCalculator == null || _resultDisplay == null || _ballCountText == null)
+            _countdownDisplay == null || _resultDisplay == null || _ballCountText == null)
         {
             Debug.LogError("[HomeRunDerbyManager] イベントまたは画面表示の参照が未設定です。", this);
             enabled = false;
@@ -126,7 +126,9 @@ public class HomeRunDerbyManager : MonoBehaviour
 
             bool isFoul = _currentResult.BallType == BattingBallType.Foul;
             bool isMiss = _currentResult.BallType == BattingBallType.Miss;
-            ResultDisplayData resultData = _scoreCalculator.CalculateScore(_consecutiveHomeRunCount, isFoul, isMiss);
+            ResultDisplayData resultData = DerbyScoreCalculator.Calculate(
+                _currentResult.Distance, _consecutiveHomeRunCount, isFoul, isMiss, _totalScore);
+            _totalScore = resultData.TotalScore;
             resultData.BallType = _currentResult.BallType;
 
             if (!isFoul && !isMiss)
@@ -169,7 +171,7 @@ public class HomeRunDerbyManager : MonoBehaviour
         {
             Debug.Log("全ての打席が終了しました");
             _resultDisplay.DisplayFinalResult(
-                _homeRunCount, _scoreCalculator.TotalScore, _lifetimeCts.Token).Forget();
+                _homeRunCount, _totalScore, _lifetimeCts.Token).Forget();
             return;
         }
 
