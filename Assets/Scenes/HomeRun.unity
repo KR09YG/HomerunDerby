@@ -2279,6 +2279,53 @@ RectTransform:
   m_AnchoredPosition: {x: 114, y: -52.374603}
   m_SizeDelta: {x: 228, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &731554497
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 731554499}
+  - component: {fileID: 731554498}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &731554498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 731554497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64212b2ba7c224347bafb6dcb130e3c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _onBattingResultEvent: {fileID: 11400000, guid: be4eb26a82e1d234d9bc7e4c40fc97e7, type: 2}
+  _onAtBatResetEvent: {fileID: 11400000, guid: 2605c0b004f350045a8cf39c9c024e73, type: 2}
+  _distanceTracker: {fileID: 2102252757}
+--- !u!4 &731554499
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 731554497}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.08654479, y: 0.2595282, z: 0.10551278}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &754613573
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5672,6 +5719,7 @@ GameObject:
   - component: {fileID: 2102252757}
   - component: {fileID: 2102252758}
   - component: {fileID: 2102252759}
+  - component: {fileID: 2102252760}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -5782,6 +5830,32 @@ MonoBehaviour:
   _pulseDuration: 0.5
   _scaleFactor: 1.5
   _countdownText: {fileID: 1054235929}
+--- !u!114 &2102252760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2102252754}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb4c122e1bf12a84aab66556001890db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _startPitchEvent: {fileID: 11400000, guid: 9ee0f74af70dfc14eaed4ffaa69717b1, type: 2}
+  _atBatResetEvent: {fileID: 11400000, guid: 2605c0b004f350045a8cf39c9c024e73, type: 2}
+  _ballReachedTargetEvent: {fileID: 11400000, guid: af9d1e81c6600174f82bf253913b743c, type: 2}
+  _battingResultEvent: {fileID: 11400000, guid: be4eb26a82e1d234d9bc7e4c40fc97e7, type: 2}
+  _ballLandedEvent: {fileID: 11400000, guid: 00e0564e7319c3846aefb0ae29b6bee1, type: 2}
+  _countdownDisplay: {fileID: 2102252759}
+  _resultTallyer: {fileID: 731554498}
+  _resultPanel: {fileID: 0}
+  _resultText: {fileID: 0}
+  _stageResultFont: {fileID: 11400000, guid: 007781302f311b840b7a04f2ecb0b538, type: 2}
+  _resultDisplayDelay: 0.6
+  _fadeDuration: 0.25
+  _bgmVolume: 0.3
+  _delayBGMStartTime: 0
 --- !u!1 &2115914829
 GameObject:
   m_ObjectHideFlags: 0
@@ -6371,14 +6445,6 @@ MonoBehaviour:
   _releasePoint: {fileID: 229178176}
   _passPoint: {fileID: 2131704642}
   _stopZ: 2.07
-  _ballList:
-  - {fileID: 11400000, guid: a4f18af1d49148dfbe92173705aa928c, type: 2}
-  - {fileID: 11400000, guid: 875fd413b8b84a6087a24647ccf159aa, type: 2}
-  - {fileID: 11400000, guid: 60d553d8d72d47709638eb4f0095eaaf, type: 2}
-  - {fileID: 11400000, guid: 406167f6de7941779d4b97359e9c9151, type: 2}
-  - {fileID: 11400000, guid: ddd3c0cdfdc24a0c96d84c991b7c21db, type: 2}
-  - {fileID: 11400000, guid: c01612877dab46778ae17bd88b6bb7e6, type: 2}
-  - {fileID: 11400000, guid: 22967221fe4c40c7b64a7ff9997dcc73, type: 2}
   _nodAnimTime: 0
   _selectedBall:
     Name: 
@@ -6482,3 +6548,4 @@ SceneRoots:
   - {fileID: 2102252756}
   - {fileID: 684579035}
   - {fileID: 854384975}
+  - {fileID: 731554499}

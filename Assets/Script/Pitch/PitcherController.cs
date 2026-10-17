@@ -4,6 +4,13 @@
     using System.Collections.Generic;
     using UnityEngine;
 
+    [System.Serializable]
+    public class WeightedPitch
+    {
+        public PitchTypeData PitchType;
+        public float Weight;
+    }
+
     public class PitcherController : MonoBehaviour
     {
         [Header("Events")]
@@ -20,16 +27,16 @@
         [SerializeField] private Transform _releasePoint;
         [SerializeField] private Transform _passPoint;
         [SerializeField] private float _stopZ;
-        [SerializeField] private List<PitchTypeData> _ballList;
         [SerializeField] private float _nodAnimTime;
 
         private Vector3 _startPos;
         private Vector3 _startRota;
         public BallData _selectedBall;
+        private List<WeightedPitch> _ballList;
         private List<Vector3> _ballTrajectory = new List<Vector3>();
         public bool _isPlaying = false;
         private bool _pitchPending;
-        public List<PitchTypeData> BallList => _ballList;
+        public List<WeightedPitch> BallList => _ballList;
 
         public void Awake()
         {
@@ -42,6 +49,14 @@
         private void OnDestroy()
         {
             _startPitchEvent?.UnregisterListener(ToNextPitch);
+        }
+
+        /// <summary>
+        /// ステージで使用する球種を受け取り設定する
+        /// </summary>
+        public void SetBallList(List<WeightedPitch> ballList)
+        {
+            _ballList = ballList;
         }
 
         private void ToNextPitch()

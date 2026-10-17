@@ -152,7 +152,8 @@ public class BattingCalculator : MonoBehaviour
             Timing = timing,
             TrajectoryPoints = trajectory,
             Distance = distance,
-            LandingIndex = landingIndex
+            LandingIndex = landingIndex,
+            ResolutionIndex = landingIndex
         };
 
 

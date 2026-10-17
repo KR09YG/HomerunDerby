@@ -26,7 +26,5 @@ namespace Homerunderby
 
         // 計算側で値を変更しても、共有している球種アセットには影響しない。
         public BallData Data => _ballData;
-        public float SelectionWeight => float.IsNaN(_selectionWeight) || float.IsInfinity(_selectionWeight)
-            ? 0f : Mathf.Max(0f, _selectionWeight);
     }
 }

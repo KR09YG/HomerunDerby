@@ -11,12 +11,13 @@ public class BattingBallMove : BallMoveTrajectory
     [SerializeField] private float _foulDisplayDistance;
     [Tooltip("着地してからの止まるまでの時間(ms)"), SerializeField] private int _delayBallStopTime;
 
-    private bool _hasLanded = false;
+    private bool _resultResolved;
     private BattingBallResult _result;
     private MeshRenderer _renderer;
+    private int _stopVersion;
 
     public bool IsMoving => _isMoving;
-    public bool HasLanded => _hasLanded;
+    public bool HasResolved => _resultResolved;
     public BattingBallResult Result => _result;
 
     public Vector3 Position => transform.position;
@@ -29,6 +30,7 @@ public class BattingBallMove : BallMoveTrajectory
 
     private void OnDisable()
     {
+        _stopVersion++;
         if (_resultEvent != null)
             _resultEvent.UnregisterListener(OnResultReceived);
     }
@@ -38,23 +40,16 @@ public class BattingBallMove : BallMoveTrajectory
         if (!_isMoving) return;
         base.Update();
 
-        if (_hasLanded) return;
+        if (_resultResolved) return;
 
-        if (_index >= _result.LandingIndex)
-        {
-            Debug.Log($"ボールが着地しました: {_index} >= {_result.LandingIndex}");
-            if (!_hasLanded)
-            {
-                Debug.Log("ボールが着地しました");
-                _hasLanded = true;
-                _onBallLanded?.RaiseEvent();
-                WaitStopBallAsync().Forget();
-            }
-        }
+        if (_index >= _result.ResolutionIndex)
+            ResolveResult();
     }
 
     private void OnResultReceived(BattingBallResult result)
     {
+        if (result == null) return;
+        _stopVersion++;
         _result = result;
         _trajectory = result.TrajectoryPoints;
         Debug.Log($"打球結果受信: {result.BallType}");
@@ -70,23 +65,32 @@ public class BattingBallMove : BallMoveTrajectory
 
         if (result.LandingIndex < 0 || result.LandingIndex >= _trajectory.Count)
         {
-            Debug.LogError($"[BattingBall] 着地点のインデックスが軌道の範囲外です: {result.LandingIndex}", this);
+            Debug.LogError($"[BattingBall] 到達点のインデックスが軌道の範囲外です: {result.LandingIndex}", this);
+            return;
+        }
+
+        if (result.ResolutionIndex < 0 || result.ResolutionIndex >= _trajectory.Count)
+        {
+            Debug.LogError($"[BattingBall] 判定位置のインデックスが軌道の範囲外です: {result.ResolutionIndex}", this);
             return;
         }
 
         _elapsedTime = 0f;
         _isMoving = false;
+        if (!_renderer) _renderer = GetComponentInChildren<MeshRenderer>(true);
+        if (_renderer != null) _renderer.enabled = true;
 
         transform.position = _trajectory[0];
         Debug.Log($"打球結果受信: {result.BallType}, 軌道点数: {_trajectory.Count}");
         StartMoving();
     }
 
-    private async UniTask WaitStopBallAsync()
+    private async UniTask WaitStopBallAsync(int stopVersion)
     {
         try
         {
             await UniTask.Delay(_delayBallStopTime, cancellationToken: this.GetCancellationTokenOnDestroy());
+            if (stopVersion != _stopVersion) return;
             _isMoving = false;
             if (!_renderer) _renderer = GetComponentInChildren<MeshRenderer>(true);
             if (_renderer != null) _renderer.enabled = false;
@@ -101,7 +105,7 @@ public class BattingBallMove : BallMoveTrajectory
     {
         _elapsedTime = 0f;
         _isMoving = true;
-        _hasLanded = false;
+        _resultResolved = false;
     }
 
     public void SetVisualSpeed(float multiplier)
@@ -121,5 +125,24 @@ public class BattingBallMove : BallMoveTrajectory
     protected override void OnReachedEnd()
     {
         _isMoving = false;
+        if (!_resultResolved)
+            ResolveResult();
+    }
+
+    private void ResolveResult()
+    {
+        if (_resultResolved) return;
+
+        _resultResolved = true;
+        _onBallLanded?.RaiseEvent();
+        WaitStopBallAsync(_stopVersion).Forget();
+    }
+
+    public void StopAndHide()
+    {
+        _stopVersion++;
+        _isMoving = false;
+        if (!_renderer) _renderer = GetComponentInChildren<MeshRenderer>(true);
+        if (_renderer != null) _renderer.enabled = false;
     }
 }
