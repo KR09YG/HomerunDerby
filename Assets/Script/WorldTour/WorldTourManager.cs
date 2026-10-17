@@ -12,6 +12,9 @@ public class WorldTourManager : MonoBehaviour
     public static WorldTourManager Instance { get; private set; }
     private WorldTourConfig _config;
     private WorldData _currentWorldData;
+    private PlayerSaveData _saveData = new PlayerSaveData();
+
+    public PlayerSaveData SaveData => _saveData;
 
     private void Awake()
     {
@@ -34,6 +37,11 @@ public class WorldTourManager : MonoBehaviour
     public void SetData(WorldTourConfig config)
     {
         _config = config;
+    }
+
+    public void SetSaveData(PlayerSaveData saveData)
+    {
+        _saveData = saveData ?? throw new ArgumentNullException(nameof(saveData));
     }
 
     private void WorldSelect(string worldId)
@@ -66,7 +74,7 @@ public class WorldTourManager : MonoBehaviour
             }
 
             gameManager.enabled = true;
-            gameManager.BeginStage(stage);
+            gameManager.BeginStage(stage, _saveData);
         }
         catch (Exception exception)
         {

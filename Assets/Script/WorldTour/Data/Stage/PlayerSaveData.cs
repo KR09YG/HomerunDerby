@@ -4,13 +4,13 @@ using System.Collections.Generic;
 [Serializable]
 public class PlayerSaveData
 {
-    // ƒZ[ƒuƒf[ƒ^‚Ì»‘¢ƒo[ƒWƒ‡ƒ“
+    // ã‚»ãƒ¼ãƒ–ãƒ‡ãƒ¼ã‚¿ã®è£½é€ ãƒãƒ¼ã‚¸ãƒ§ãƒ³
     public int SchemaVersion = 1;
-    // ƒZ[ƒuƒf[ƒ^‚ÌXV”Ô†
+    // ã‚»ãƒ¼ãƒ–ãƒ‡ãƒ¼ã‚¿ã®æ›´æ–°ç•ªå·
     public int Revision = 0;
-    // Šƒ|ƒCƒ“ƒg
+    // æ‰€æŒãƒã‚¤ãƒ³ãƒˆ
     public int Points = 0;
 
-    // ƒXƒe[ƒW‚Ìisó‹µ
+    // ã‚¹ãƒ†ãƒ¼ã‚¸ã®é€²è¡ŒçŠ¶æ³
     public Dictionary<string, StageProgressData> Stages = new();
 }

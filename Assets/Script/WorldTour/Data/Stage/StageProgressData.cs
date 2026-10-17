@@ -3,8 +3,8 @@ using System;
 [Serializable]
 public class StageProgressData
 {
-    // ƒXƒe[ƒW‚ÌƒNƒŠƒAó‹µ
+    // ã‚¹ãƒ†ãƒ¼ã‚¸ã®ã‚¯ãƒªã‚¢çŠ¶æ³
     public bool IsCleared;
-    // ƒXƒe[ƒW‚ÅŠl“¾‚µ‚½¯‚ğŠÇ—‚·‚é”z—ñ
+    // ã‚¹ãƒ†ãƒ¼ã‚¸ã§ç²å¾—ã—ãŸæ˜Ÿã‚’ç®¡ç†ã™ã‚‹é…åˆ—
     public bool[] EarnedStars = new bool[3];
 }

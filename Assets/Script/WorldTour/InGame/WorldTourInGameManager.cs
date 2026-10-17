@@ -54,6 +54,7 @@ public class WorldTourInGameManager : MonoBehaviour
     private StageSessionController _stageSessionController;
     private FlowState _state;
     private StageData _currentStage;
+    private PlayerSaveData _saveData;
 
     public event Action<BattingBallResult> AtBatCompleted;
 
@@ -112,7 +113,7 @@ public class WorldTourInGameManager : MonoBehaviour
         _lifetimeCts?.Dispose();
     }
 
-    public void BeginStage(StageData stageData)
+    public void BeginStage(StageData stageData, PlayerSaveData saveData)
     {
         if (!isActiveAndEnabled ||
             (_state != FlowState.WaitingForStartAndStage && _state != FlowState.WaitingForStage)) return;
@@ -121,10 +122,16 @@ public class WorldTourInGameManager : MonoBehaviour
             Debug.LogError("[WorldTourInGameManager] ステージ情報が未設定です。", this);
             return;
         }
+        if (saveData == null)
+        {
+            Debug.LogError("[WorldTourInGameManager] プレイヤーの進捗データが未設定です。", this);
+            return;
+        }
 
         StageStatistics stageStatistics = _stageSessionController.Initialize(stageData);
         _resultTallyer.Initialize(stageStatistics);
         _currentStage = stageData;
+        _saveData = saveData;
         EnsureResultUI();
 
         if (stageData.BallCount <= 0)
@@ -312,6 +319,8 @@ public class WorldTourInGameManager : MonoBehaviour
                   $"Stars=[{session.AchievedStars[0]}, {session.AchievedStars[1]}, {session.AchievedStars[2]}]", this);
 
         if (_resultPanel != null) _resultPanel.SetActive(false);
+        int newStarCount = StageProgressService.MergeStageProgress(_saveData, session);
+        Debug.Log($"[WorldTour] 新たに獲得した星: {newStarCount}", this);
         WorldTourStageResultView.Create(transform, session, _stageResultFont);
     }
 
