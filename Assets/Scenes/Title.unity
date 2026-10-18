@@ -164,7 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _fadeDuration: 1
-  _gameSceneName: Homerun
+  _gameSceneName: WorldSelect
 --- !u!1 &482002761
 GameObject:
   m_ObjectHideFlags: 0

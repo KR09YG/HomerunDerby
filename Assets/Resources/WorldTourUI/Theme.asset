@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4906b71f9a284c8aa10058eb9765f919, type: 3}
+  m_Name: World Tour UI Theme
+  m_EditorClassIdentifier:
+  WorldMap: {fileID: 2800000, guid: cdb35ff125c94944b10b5b9190b53743, type: 3}
+  StadiumMap: {fileID: 2800000, guid: 20602553b59c40e4a67c050ac5bd18ba, type: 3}
+  JapaneseFont: {fileID: 11400000, guid: 9627b1cce9194385827c94ae1391ea58, type: 2}
+  DisplayFont: {fileID: 11400000, guid: 9013c88d3863798419b6c137cf73ca48, type: 2}

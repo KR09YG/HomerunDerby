@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 public class TitleManager : MonoBehaviour
 {
     [SerializeField] private float _fadeDuration = 0.5f;
-    [SerializeField] private string _gameSceneName = "Homerun";
+    [SerializeField] private string _gameSceneName = "WorldSelect";
     [SerializeField] private float _bgmVolumeRate = 0.3f;
 
     private void Awake()

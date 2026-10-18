@@ -13,8 +13,14 @@ public class WorldTourManager : MonoBehaviour
     private WorldTourConfig _config;
     private WorldData _currentWorldData;
     private PlayerSaveData _saveData = new PlayerSaveData();
+    private bool _isLoading;
+    private StageData _currentStage;
 
     public PlayerSaveData SaveData => _saveData;
+    public WorldTourConfig Config => _config;
+    public WorldData CurrentWorld => _currentWorldData;
+    public StageData CurrentStage => _currentStage;
+    public bool IsLoading => _isLoading;
 
     private void Awake()
     {
@@ -29,9 +35,27 @@ public class WorldTourManager : MonoBehaviour
             return;
         }
 
-        _config = JsonTest.LoadConfig(_worldTourConfig.ToJson());
-        WorldSelect("01");
-        StageSelect("0001").Forget();
+        if (_worldTourConfig == null)
+        {
+            Debug.LogError("[WorldTour] ワールド設定が未設定です。", this);
+            return;
+        }
+        _config = _worldTourConfig.Config;
+        if (_config == null)
+        {
+            Debug.LogError("[WorldTour] ワールド設定の内容が空です。", this);
+            return;
+        }
+        _currentWorldData = _config.Worlds.Find(world => !string.IsNullOrEmpty(world.WorldId) && world.Stages.Count > 0);
+        // 従来の確認用シーンだけは、初期ステージを直接開始できるようにする。
+        if (SceneManager.GetActiveScene().name == "test_world_tour" && _currentWorldData?.Stages.Count > 0)
+            StageSelect(_currentWorldData.Stages[0].StageId).Forget();
+    }
+
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= StopDerbyManager;
+        if (Instance == this) Instance = null;
     }
 
     public void SetData(WorldTourConfig config)
@@ -44,13 +68,54 @@ public class WorldTourManager : MonoBehaviour
         _saveData = saveData ?? throw new ArgumentNullException(nameof(saveData));
     }
 
-    private void WorldSelect(string worldId)
+    public void WorldSelect(string worldId)
     {
-        _currentWorldData = _config.Worlds.Find(world => world.WorldId == worldId);
+        WorldData world = _config?.Worlds.Find(value => value.WorldId == worldId);
+        if (world != null && IsWorldUnlocked(world)) _currentWorldData = world;
+    }
+
+    public bool IsWorldUnlocked(WorldData world)
+    {
+        return world != null && !string.IsNullOrEmpty(world.WorldId) &&
+            world.Stages.Count > 0 && _config != null && _config.Worlds.Contains(world);
+    }
+
+    public bool IsStageUnlocked(StageData stage)
+    {
+        if (_currentWorldData == null || stage == null || !IsWorldUnlocked(_currentWorldData)) return false;
+        // 開放条件を接続するまでは、登録済みのステージをすべて選べるようにする。
+        return _currentWorldData.Stages.Contains(stage);
+    }
+
+    public void PlayStage(string stageId)
+    {
+        StageData stage = _currentWorldData?.Stages.Find(value => value.StageId == stageId);
+        if (IsStageUnlocked(stage)) StageSelect(stageId).Forget();
+    }
+
+    public StageData GetNextStage()
+    {
+        if (_currentWorldData == null || _currentStage == null) return null;
+        int index = _currentWorldData.Stages.IndexOf(_currentStage) + 1;
+        return index > 0 && index < _currentWorldData.Stages.Count ? _currentWorldData.Stages[index] : null;
+    }
+
+    public void OpenWorldSelect() => OpenMenu("WorldSelect").Forget();
+    public void OpenStageSelect() => OpenMenu("StageSelect").Forget();
+    public void OpenTitle() => OpenMenu("Title").Forget();
+
+    private async UniTask OpenMenu(string sceneName)
+    {
+        if (_isLoading) return;
+        _isLoading = true;
+        try { await SceneManager.LoadSceneAsync(sceneName); }
+        catch (Exception exception) { Debug.LogException(exception, this); }
+        finally { _isLoading = false; }
     }
 
     private async UniTaskVoid StageSelect(string stageId)
     {
+        if (_isLoading) return;
         StageData stage = _currentWorldData?.Stages.Find(s => s.StageId == stageId);
         if (stage == null)
         {
@@ -58,6 +123,8 @@ public class WorldTourManager : MonoBehaviour
             return;
         }
 
+        _isLoading = true;
+        _currentStage = stage;
         SceneManager.sceneLoaded += StopDerbyManager;
         try
         {
@@ -83,6 +150,7 @@ public class WorldTourManager : MonoBehaviour
         finally
         {
             SceneManager.sceneLoaded -= StopDerbyManager;
+            _isLoading = false;
         }
     }
 

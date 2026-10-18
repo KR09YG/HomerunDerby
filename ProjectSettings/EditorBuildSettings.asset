@@ -17,6 +17,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Script/WorldTour/test_world_tour.unity
     guid: 18f9d5b15ca92a544b44eeec4c4e4d80
+  - enabled: 1
+    path: Assets/Scenes/WorldSelect.unity
+    guid: b94e375003346d04a87488145b67b0c0
+  - enabled: 1
+    path: Assets/Scenes/StageSelect.unity
+    guid: c5e315ae28030d34bb60d2976fcd5b04
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

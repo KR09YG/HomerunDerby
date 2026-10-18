@@ -67,6 +67,27 @@ MonoBehaviour:
         PitchPool:
         - PitchId: 0002
           Weight: 1
+      - StageId: 0003
+        Name: "\u30B9\u30E9\u30A4\u30C0\u30FC"
+        BallCount: 5
+        IsBoss: 0
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: 0003
+          Weight: 1
     - WorldId: 
       Name: 
       Description: 
