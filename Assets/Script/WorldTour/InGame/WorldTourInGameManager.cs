@@ -321,7 +321,7 @@ public class WorldTourInGameManager : MonoBehaviour
         if (_resultPanel != null) _resultPanel.SetActive(false);
         int newStarCount = StageProgressService.MergeStageProgress(_saveData, session);
         WorldTourManager.Instance.SetStageProgress(session, newStarCount);
-        WorldTourStageResultView.Create(transform, session, _stageResultFont);
+        WorldTourStageResultView.Create(transform, session, _stageResultFont, newStarCount);
     }
 
     private void EnsureResultUI()

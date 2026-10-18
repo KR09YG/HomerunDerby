@@ -1,124 +1,119 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public static class WorldTourStageResultView
 {
-    private static readonly Color BackdropColor = new Color(0.015f, 0.025f, 0.04f, 0.48f);
-    private static readonly Color PanelColor = new Color(0.025f, 0.04f, 0.065f, 0.94f);
-    private static readonly Color RowColor = new Color(0.045f, 0.065f, 0.09f, 0.55f);
-    private static readonly Color LineColor = new Color(0.72f, 0.79f, 0.86f, 0.20f);
-    private static readonly Color LabelColor = new Color(0.84f, 0.86f, 0.89f, 1f);
-    private static readonly Color MutedColor = new Color(0.57f, 0.62f, 0.69f, 1f);
-    private static readonly Color GoldColor = new Color(1f, 0.77f, 0.19f, 1f);
-
-    public static void Create(Transform parent, StageSessionData session, TMP_FontAsset font)
+    public static void Create(Transform parent, StageSessionData session, TMP_FontAsset font, int newStarCount = 0)
     {
         if (session == null) return;
+        WorldTourUITheme theme = WorldTourUITheme.Load();
+        if (theme == null)
+        {
+            Debug.LogError("[WorldTour] リザルトのUIテーマが見つかりません。");
+            return;
+        }
+        WorldTourManager manager = WorldTourManager.Instance;
+        StageData stage = manager?.CurrentStage;
+        StageStatistics stats = session.Statistics;
+        RectTransform root = TourUI.Canvas(parent, "World Tour Stage Result", 300);
+        TourUI.Picture(root, "Stadium Background", theme.StadiumMap, 0, 0, 1920, 1080);
+        TourPanelGraphic shade = TourUI.Panel(root, "Backdrop", 0, 0, 1920, 1080);
+        shade.TopColor = new Color(0.01f, 0.04f, 0.16f, 0.22f);
+        shade.BottomColor = new Color(0.01f, 0.03f, 0.1f, 0.65f);
+        shade.BorderWidth = 0;
+        shade.raycastTarget = true;
+        TourUI.Logo(root, theme);
+        TourUI.Totals(root, theme, manager);
 
-        font ??= TMP_Settings.defaultFontAsset;
-        var canvasObject = new GameObject("World Tour Stage Result", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
-        canvasObject.transform.SetParent(parent, false);
-        Canvas canvas = canvasObject.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 300;
+        TourUI.Panel(root, "Result Frame", 110, 330, 1700, 575, true);
+        TourUI.Panel(root, "Result Banner", 505, 165, 910, 145, true);
+        TourUI.Text(root, "Result Title", session.IsCleared ? "STAGE CLEAR" : "STAGE FAILED",
+            535, 172, 850, 123, 112, theme.DisplayFont, session.IsCleared ? TourUI.Gold : Color.white, true);
+        for (int i = 0; i < 3; i++)
+            TourUI.Icon(root, "Earned Star " + i, TourIconGraphic.Symbol.Star,
+                785 + i * 119, 284, 112, session.IsCleared && WorldTourMenuView.HasStar(session.AchievedStars, i));
 
-        CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-        scaler.matchWidthOrHeight = 0.5f;
+        TourUI.Panel(root, "Stage Card", 138, 370, 490, 505, true);
+        TourUI.Picture(root, "Stage Illustration", theme.StadiumMap, 148, 380, 470, 350);
+        TourUI.Panel(root, "Stage Caption", 148, 710, 470, 154);
+        TourUI.Text(root, "World Name", manager?.CurrentWorld?.Name ?? "WORLD TOUR", 172, 390, 420, 45, 33, theme.JapaneseFont);
+        TourUI.Text(root, "Stage Number", "STAGE " + session.StageId, 168, 723, 430, 39, 36, theme.DisplayFont, TourUI.Gold, true);
+        TourUI.Text(root, "Stage Name", stage?.Name ?? session.StageId, 168, 770, 430, 71, 38, theme.JapaneseFont, null, true);
 
-        RectTransform backdrop = AddRect(canvasObject.transform, "Backdrop", Vector2.zero, Vector2.zero);
-        backdrop.anchorMin = Vector2.zero;
-        backdrop.anchorMax = Vector2.one;
-        backdrop.offsetMin = Vector2.zero;
-        backdrop.offsetMax = Vector2.zero;
-        AddImage(backdrop.gameObject, BackdropColor);
+        TourUI.Panel(root, "Current Record", 650, 417, 555, 320);
+        TourUI.Text(root, "Current Record Heading", "今回の記録", 674, 430, 500, 46, 31, theme.JapaneseFont);
+        Record(root, theme, 492, "ホームラン数", stats.HomeRunCount.ToString());
+        Record(root, theme, 547, "最大HR飛距離", $"{stats.MaxHomeRunDistance:F1} m");
+        Record(root, theme, 602, "総フェア飛距離", $"{stats.TotalFairDistance:F1} m");
+        Record(root, theme, 657, "方向別HR（左 / 中 / 右）", $"{stats.LeftHomeRunCount} / {stats.CenterHomeRunCount} / {stats.RightHomeRunCount}");
 
-        RectTransform panel = AddRect(backdrop, "Stage Result Panel", Vector2.zero, new Vector2(1024f, 900f));
-        AddImage(panel.gameObject, PanelColor);
+        TourPanelGraphic reward = TourUI.Panel(root, "Reward", 650, 758, 555, 117, true);
+        reward.TopColor = new Color(1, 0.97f, 0.84f);
+        reward.BottomColor = new Color(0.95f, 0.87f, 0.63f);
+        TourUI.Icon(root, "New Stars", TourIconGraphic.Symbol.Star, 668, 782, 69);
+        TourUI.Text(root, "New Stars Count", $"+ {newStarCount}", 745, 779, 116, 53, 46, theme.DisplayFont, TourUI.Navy);
+        TourUI.Text(root, "New Stars Caption", "新しく獲得した星", 674, 837, 215, 24, 18, theme.JapaneseFont, TourUI.Navy);
+        TourUI.Icon(root, "Reward Coin", TourIconGraphic.Symbol.Coin, 901, 786, 58);
+        TourUI.Text(root, "Player Points", (manager?.SaveData.Points ?? 0).ToString("N0"), 971, 779, 215, 53, 43, theme.DisplayFont, TourUI.Navy);
+        TourUI.Text(root, "Player Points Caption", "所持ポイント", 971, 837, 215, 24, 18, theme.JapaneseFont, TourUI.Navy);
 
-        AddText(panel, "Mode", "W O R L D   T O U R", new Vector2(0f, 359f),
-            new Vector2(860f, 48f), 30f, MutedColor, TextAlignmentOptions.Center, font);
-        AddText(panel, "Stage Result", session.IsCleared ? "STAGE CLEAR!" : "STAGE FAILED",
-            new Vector2(0f, 280f), new Vector2(900f, 100f), 78f, Color.white,
-            TextAlignmentOptions.Center, font);
-
-        AddLine(panel, 207f, 772f);
-        AddImage(AddRect(panel, "Statistics Background", new Vector2(0f, 47f),
-            new Vector2(792f, 312f)).gameObject, RowColor);
-
-        AddRow(panel, "ステージ:", session.StageId ?? "—", 159f, font);
-        AddRow(panel, "ホームラン数:", session.Statistics.HomeRunCount.ToString(), 81f, font);
-        AddRow(panel, "最大飛距離:", $"{session.Statistics.MaxHomeRunDistance:F1} m", 3f, font);
-        AddRow(panel, "総フェア飛距離:", $"{session.Statistics.TotalFairDistance:F1} m", -75f, font, false);
-
-        RectTransform starsPanel = AddRect(panel, "Stars", new Vector2(0f, -235f), new Vector2(772f, 112f));
-        AddImage(starsPanel.gameObject, RowColor);
-        AddText(starsPanel, "Stars Label", "獲得した星:", new Vector2(-232f, 0f),
-            new Vector2(285f, 70f), 31f, LabelColor, TextAlignmentOptions.Left, font);
+        TourUI.Panel(root, "Stage Missions", 1230, 370, 550, 338);
+        TourUI.Text(root, "Missions Heading", "ステージミッション", 1255, 380, 500, 48, 32, theme.JapaneseFont);
         for (int i = 0; i < 3; i++)
         {
-            bool achieved = session.AchievedStars != null &&
-                            i < session.AchievedStars.Length && session.AchievedStars[i];
-            AddText(starsPanel, $"Star {i + 1}", achieved ? "★" : "☆",
-                new Vector2(83f + i * 108f, 0f), new Vector2(86f, 92f), 76f,
-                achieved ? GoldColor : MutedColor, TextAlignmentOptions.Center, font);
+            StageCondition condition = stage != null && i < stage.StarObjectives.Count ? stage.StarObjectives[i] : null;
+            float y = 441 + i * 85;
+            bool achieved = WorldTourMenuView.HasStar(session.AchievedStars, i);
+            TourUI.Icon(root, "Mission Star " + i, TourIconGraphic.Symbol.Star, 1247, y + 3, 57, achieved);
+            TourUI.Text(root, "Mission " + i, WorldTourMenuView.ConditionText(condition), 1320, y, 430, 40, 23, theme.JapaneseFont);
+            TourUI.Text(root, "Mission Value " + i, ConditionValue(condition, stats) + (achieved ? "   達成" : "   未達成"),
+                1320, y + 39, 430, 32, 25, theme.JapaneseFont, achieved ? TourUI.Gold : Color.white);
         }
+        TourUI.Panel(root, "Best Record", 1230, 731, 550, 144);
+        TourUI.Text(root, "Best Record Heading", "ベスト記録", 1255, 742, 500, 42, 29, theme.JapaneseFont);
+        TourUI.Text(root, "Best Record Note", "記録なし", 1255, 798, 500, 44, 23, theme.JapaneseFont, new Color(0.7f, 0.81f, 0.93f));
 
-        AddLine(panel, -355f, 772f);
-        AddText(panel, "Footer", "結果確認用の簡易リザルト", new Vector2(0f, -401f),
-            new Vector2(772f, 50f), 27f, MutedColor, TextAlignmentOptions.Center, font);
+        StageData next = manager?.GetNextStage();
+        UnityEngine.UI.Button nextButton = TourUI.Button(root, "Next Stage", next != null ? "NEXT STAGE" : "BACK TO MAP",
+            next != null ? "次のステージへ" : "ステージ選択へ戻る", 245, 944, 450,
+            () =>
+            {
+                if (manager == null) return;
+                if (next != null) manager.PlayStage(next.StageId);
+                else manager.OpenStageSelect();
+            }, theme);
+        nextButton.interactable = manager != null && (next == null || manager.IsStageUnlocked(next));
+        UnityEngine.UI.Button retryButton = TourUI.Button(root, "Retry", "RETRY", "もう一度挑戦する", 735, 944, 450,
+            () => { if (manager != null) manager.PlayStage(session.StageId); }, theme, new Color(0.9f, 0.08f, 0.17f));
+        retryButton.interactable = manager != null;
+        TourUI.Button(root, "Back To Map", "BACK TO MAP", "ステージマップへ戻る", 1225, 944, 450,
+            () => { if (manager != null) manager.OpenStageSelect(); else SceneManager.LoadScene("StageSelect"); }, theme, new Color(0.1f, 0.39f, 0.75f));
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
     }
 
-    private static void AddRow(Transform parent, string label, string value, float y, TMP_FontAsset font,
-        bool showSeparator = true)
+    private static void Record(Transform root, WorldTourUITheme theme, float y, string label, string value)
     {
-        AddText(parent, label, label, new Vector2(-232f, y), new Vector2(285f, 70f),
-            32f, LabelColor, TextAlignmentOptions.Left, font);
-        AddText(parent, $"{label} Value", value, new Vector2(222f, y), new Vector2(420f, 70f),
-            46f, Color.white, TextAlignmentOptions.Left, font);
-        if (showSeparator) AddLine(parent, y - 39f, 772f);
+        TourUI.Icon(root, label + " Icon", TourIconGraphic.Symbol.Baseball, 667, y + 1, 42);
+        TourUI.Text(root, label, label, 724, y, 285, 43, 23, theme.JapaneseFont);
+        TourUI.Text(root, label + " Value", value, 1012, y, 175, 43, 36, theme.DisplayFont, TourUI.Gold);
     }
 
-    private static void AddLine(Transform parent, float y, float width)
+    private static string ConditionValue(StageCondition condition, StageStatistics stats)
     {
-        AddImage(AddRect(parent, "Separator", new Vector2(0f, y), new Vector2(width, 1f)).gameObject, LineColor);
-    }
-
-    private static RectTransform AddRect(Transform parent, string name, Vector2 position, Vector2 size)
-    {
-        var element = new GameObject(name, typeof(RectTransform));
-        RectTransform rect = (RectTransform)element.transform;
-        rect.SetParent(parent, false);
-        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = position;
-        rect.sizeDelta = size;
-        return rect;
-    }
-
-    private static void AddImage(GameObject gameObject, Color color)
-    {
-        Image image = gameObject.AddComponent<Image>();
-        image.color = color;
-        image.raycastTarget = false;
-    }
-
-    private static void AddText(Transform parent, string name, string value, Vector2 position,
-        Vector2 size, float fontSize, Color color, TextAlignmentOptions alignment, TMP_FontAsset font)
-    {
-        RectTransform rect = AddRect(parent, name, position, size);
-        TextMeshProUGUI text = rect.gameObject.AddComponent<TextMeshProUGUI>();
-        if (font != null) text.font = font;
-        text.text = value;
-        text.fontSize = fontSize;
-        text.fontStyle = FontStyles.Bold;
-        text.color = color;
-        text.alignment = alignment;
-        text.textWrappingMode = TextWrappingModes.NoWrap;
-        text.overflowMode = TextOverflowModes.Overflow;
-        text.raycastTarget = false;
+        if (condition == null) return "—";
+        float value;
+        switch (condition.Type)
+        {
+            case ChallengeConditionType.HomeRunCount: value = stats.HomeRunCount; break;
+            case ChallengeConditionType.MaxHomeRunDistance: value = stats.MaxHomeRunDistance; break;
+            case ChallengeConditionType.TotalFairDistance: value = stats.TotalFairDistance; break;
+            case ChallengeConditionType.DirectionalHomeRunCount:
+                value = condition.Direction == HomeRunDirection.Left ? stats.LeftHomeRunCount : condition.Direction == HomeRunDirection.Right ? stats.RightHomeRunCount : stats.CenterHomeRunCount;
+                break;
+            default: return "—";
+        }
+        return $"{value:0.#} / {condition.TargetValue:0.#}";
     }
 }
