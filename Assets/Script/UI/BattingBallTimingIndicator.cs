@@ -23,6 +23,8 @@ public sealed class BattingBallTimingIndicator : MonoBehaviour
     [SerializeField, Min(8f)] private float _crossPointDiameter = 48f;
     [Tooltip("投球開始時の接近リングの大きさ。打撃判定には影響しません。")]
     [SerializeField, Min(1f)] private float _startingScale = 12f;
+    [Tooltip("ジャスト入力の前後の許容時間（秒）。ゲージ表示と入力評価で共通して使います。")]
+    [SerializeField, Min(0f)] private float _perfectWindowSeconds = 0.02f;
     [Tooltip("入力時刻を過ぎた後に赤い輪を表示する時間。")]
     [SerializeField, Min(0.01f)] private float _lateDisplaySeconds = 0.2f;
     [SerializeField] private Color _ballColor = new Color(0.1f, 0.8f, 1f, 0.8f);
@@ -56,7 +58,7 @@ public sealed class BattingBallTimingIndicator : MonoBehaviour
     private Vector3 _predictionAtSwing;
     private bool _hasPredictionAtSwing;
     private float _lastCueLeadSeconds;
-    private float PerfectInputToleranceSeconds => Mathf.Max(0f, Time.deltaTime) * 0.5f;
+    private float PerfectInputToleranceSeconds => Mathf.Max(0f, _perfectWindowSeconds);
 
     private bool TryGetTimeUntilPerfectInput(out float remainingSeconds, out float contactDelaySeconds)
     {
