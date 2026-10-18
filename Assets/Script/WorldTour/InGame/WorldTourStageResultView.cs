@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 
 public static class WorldTourStageResultView
 {
-    public static void Create(Transform parent, StageSessionData session, TMP_FontAsset font, int newStarCount = 0)
+    public static void Create(Transform parent, StageSessionData session, TMP_FontAsset font, int newStarCount = 0, bool[] previousStars = null)
     {
         if (session == null) return;
         WorldTourUITheme theme = WorldTourUITheme.Load();
@@ -15,7 +15,7 @@ public static class WorldTourStageResultView
         }
         WorldTourManager manager = WorldTourManager.Instance;
         StageData stage = manager?.CurrentStage;
-        StageStatistics stats = session.Statistics;
+        StageStatistics stats = session.Statistics ?? new StageStatistics();
         RectTransform root = TourUI.Canvas(parent, "World Tour Stage Result", 300);
         TourUI.Picture(root, "Stadium Background", theme.StadiumMap, 0, 0, 1920, 1080);
         TourPanelGraphic shade = TourUI.Panel(root, "Backdrop", 0, 0, 1920, 1080);
@@ -31,8 +31,12 @@ public static class WorldTourStageResultView
         TourUI.Text(root, "Result Title", session.IsCleared ? "STAGE CLEAR" : "STAGE FAILED",
             535, 172, 850, 123, 112, theme.DisplayFont, session.IsCleared ? TourUI.Gold : Color.white, true);
         for (int i = 0; i < 3; i++)
+        {
+            bool earned = WorldTourMenuView.HasStar(previousStars, i) ||
+                (session.IsCleared && WorldTourMenuView.HasStar(session.AchievedStars, i));
             TourUI.Icon(root, "Earned Star " + i, TourIconGraphic.Symbol.Star,
-                785 + i * 119, 284, 112, session.IsCleared && WorldTourMenuView.HasStar(session.AchievedStars, i));
+                785 + i * 119, 284, 112, earned);
+        }
 
         TourUI.Panel(root, "Stage Card", 138, 370, 490, 505, true);
         TourUI.Picture(root, "Stage Illustration", theme.StadiumMap, 148, 380, 470, 350);
@@ -62,12 +66,15 @@ public static class WorldTourStageResultView
         TourUI.Text(root, "Missions Heading", "ステージミッション", 1255, 380, 500, 48, 32, theme.JapaneseFont);
         for (int i = 0; i < 3; i++)
         {
-            StageCondition condition = stage != null && i < stage.StarObjectives.Count ? stage.StarObjectives[i] : null;
+            StageCondition condition = stage?.StarObjectives != null && i < stage.StarObjectives.Count ? stage.StarObjectives[i] : null;
             float y = 441 + i * 85;
             bool achieved = WorldTourMenuView.HasStar(session.AchievedStars, i);
-            TourUI.Icon(root, "Mission Star " + i, TourIconGraphic.Symbol.Star, 1247, y + 3, 57, achieved);
+            bool previouslyEarned = WorldTourMenuView.HasStar(previousStars, i);
+            bool newlyEarned = session.IsCleared && achieved && !previouslyEarned;
+            string status = previouslyEarned ? "獲得済み" : newlyEarned ? "初獲得" : achieved ? "条件達成（未クリア）" : "未獲得";
+            TourUI.Icon(root, "Mission Star " + i, TourIconGraphic.Symbol.Star, 1247, y + 3, 57, previouslyEarned || newlyEarned);
             TourUI.Text(root, "Mission " + i, WorldTourMenuView.ConditionText(condition), 1320, y, 430, 40, 23, theme.JapaneseFont);
-            TourUI.Text(root, "Mission Value " + i, ConditionValue(condition, stats) + (achieved ? "   達成" : "   未達成"),
+            TourUI.Text(root, "Mission Value " + i, ConditionValue(condition, stats) + $"   {(achieved ? "今回達成" : "今回未達成")} / {status}",
                 1320, y + 39, 430, 32, 25, theme.JapaneseFont, achieved ? TourUI.Gold : Color.white);
         }
         TourUI.Panel(root, "Best Record", 1230, 731, 550, 144);
@@ -75,15 +82,17 @@ public static class WorldTourStageResultView
         TourUI.Text(root, "Best Record Note", "記録なし", 1255, 798, 500, 44, 23, theme.JapaneseFont, new Color(0.7f, 0.81f, 0.93f));
 
         StageData next = manager?.GetNextStage();
-        UnityEngine.UI.Button nextButton = TourUI.Button(root, "Next Stage", next != null ? "NEXT STAGE" : "BACK TO MAP",
-            next != null ? "次のステージへ" : "ステージ選択へ戻る", 245, 944, 450,
+        bool canAdvance = next != null && manager.IsStageUnlocked(next);
+        bool nextWorld = stage != null && stage.IsBoss;
+        UnityEngine.UI.Button nextButton = TourUI.Button(root, "Next Stage", canAdvance ? (nextWorld ? "NEXT WORLD" : "NEXT STAGE") : "BACK TO MAP",
+            canAdvance ? (nextWorld ? "次のワールドへ" : "次のステージへ") : "ステージ選択へ戻る", 245, 944, 450,
             () =>
             {
                 if (manager == null) return;
-                if (next != null) manager.PlayStage(next.StageId);
+                if (canAdvance) manager.PlayNextStage();
                 else manager.OpenStageSelect();
             }, theme);
-        nextButton.interactable = manager != null && (next == null || manager.IsStageUnlocked(next));
+        nextButton.interactable = manager != null;
         UnityEngine.UI.Button retryButton = TourUI.Button(root, "Retry", "RETRY", "もう一度挑戦する", 735, 944, 450,
             () => { if (manager != null) manager.PlayStage(session.StageId); }, theme, new Color(0.9f, 0.08f, 0.17f));
         retryButton.interactable = manager != null;

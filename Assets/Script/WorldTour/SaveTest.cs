@@ -12,6 +12,7 @@ public class SaveTest : MonoBehaviour
 
     public PlayerSaveDataDto LoadData()
     {
+        if (string.IsNullOrEmpty(jsonString)) return null;
         PlayerSaveDataDto SaveDto = JsonUtility.FromJson<PlayerSaveDataDto>(jsonString);
         return SaveDto;
     }

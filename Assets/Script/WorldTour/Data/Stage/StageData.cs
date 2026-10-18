@@ -17,5 +17,8 @@ public class StageData
     // 持ち球のリスト
     public List<StagePitchEntry> PitchPool = new List<StagePitchEntry>(20);
 
+    // 今後ステージが分岐するかもしれないのでリストで管理
+    public List<string> NextStagesId = new List<string>();
+
     public int? StarRewardOverride;
 }

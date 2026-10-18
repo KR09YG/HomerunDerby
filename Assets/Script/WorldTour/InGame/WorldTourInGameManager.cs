@@ -127,11 +127,11 @@ public class WorldTourInGameManager : MonoBehaviour
             Debug.LogError("[WorldTourInGameManager] プレイヤーの進捗データが未設定です。", this);
             return;
         }
-
         StageStatistics stageStatistics = _stageSessionController.Initialize(stageData);
         _resultTallyer.Initialize(stageStatistics);
         _currentStage = stageData;
         _saveData = saveData;
+
         EnsureResultUI();
 
         if (stageData.BallCount <= 0)
@@ -319,9 +319,12 @@ public class WorldTourInGameManager : MonoBehaviour
                   $"Stars=[{session.AchievedStars[0]}, {session.AchievedStars[1]}, {session.AchievedStars[2]}]", this);
 
         if (_resultPanel != null) _resultPanel.SetActive(false);
+        var previousStars = new bool[3];
+        if (_saveData.Stages.TryGetValue(session.StageId, out StageProgressData previous) && previous?.EarnedStars != null)
+            Array.Copy(previous.EarnedStars, previousStars, Mathf.Min(previous.EarnedStars.Length, previousStars.Length));
         int newStarCount = StageProgressService.MergeStageProgress(_saveData, session);
-        WorldTourManager.Instance.SetStageProgress(session, newStarCount);
-        WorldTourStageResultView.Create(transform, session, _stageResultFont, newStarCount);
+        WorldTourManager.Instance?.SetStageProgress(session, newStarCount);
+        WorldTourStageResultView.Create(transform, session, _stageResultFont, newStarCount, previousStars);
     }
 
     private void EnsureResultUI()

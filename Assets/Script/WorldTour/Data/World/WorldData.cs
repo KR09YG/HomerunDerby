@@ -9,4 +9,5 @@ public class WorldData
     public string Description;
 
     public List<StageData> Stages = new List<StageData>();
+    public string NextWorld;
 }
