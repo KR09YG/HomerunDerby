@@ -17,39 +17,42 @@ MonoBehaviour:
     Worlds:
     - WorldId: 01
       Name: start
-      Description: 
+      Description: "クリアして次のワールドを開放しよう"
+      NextWorld: 02
       Stages:
       - StageId: 0001
         Name: "\u30B9\u30C8\u30EC\u30FC\u30C8"
         BallCount: 5
-        IsBoss: 0
+        IsBoss: 1
+        NextStagesId: []
         ClearObjective:
           Type: 0
-          TargetValue: 2
+          TargetValue: 1
           Direction: 0
         StarObjectives:
         - Type: 0
-          TargetValue: 0
+          TargetValue: 1
+          Direction: 0
+        - Type: 0
+          TargetValue: 2
           Direction: 0
         - Type: 0
           TargetValue: 3
           Direction: 0
-        - Type: 0
-          TargetValue: 4
-          Direction: 0
         PitchPool:
         - PitchId: 0001
           Weight: 1
-        - PitchId: 0002
-          Weight: 1
-        - PitchId: 0003
-          Weight: 1
-        - PitchId: 0004
-          Weight: 1
+    - WorldId: 02
+      Name: "変化球チャレンジ"
+      Description: "カーブとスライダーに挑戦"
+      NextWorld: ""
+      Stages:
       - StageId: 0002
         Name: "\u30AB\u30FC\u30D6"
         BallCount: 5
         IsBoss: 0
+        NextStagesId:
+        - 0003
         ClearObjective:
           Type: 0
           TargetValue: 2
@@ -70,7 +73,8 @@ MonoBehaviour:
       - StageId: 0003
         Name: "\u30B9\u30E9\u30A4\u30C0\u30FC"
         BallCount: 5
-        IsBoss: 0
+        IsBoss: 1
+        NextStagesId: []
         ClearObjective:
           Type: 0
           TargetValue: 2
@@ -88,9 +92,5 @@ MonoBehaviour:
         PitchPool:
         - PitchId: 0003
           Weight: 1
-    - WorldId: 
-      Name: 
-      Description: 
-      Stages: []
     NormalStarReward: 100
     BossStarReward: 300
