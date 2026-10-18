@@ -7,9 +7,9 @@ using TMPro;
 public class Result : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _scoreText;
-    [SerializeField] private float _fadeDuration = 0.5f; // フェードの時間(s)
-    [SerializeField] private CinemachineVirtualCamera _gameCamera; // ゲーム用カメラ
-    [SerializeField] private CinemachineVirtualCamera _resultCamera; // 結果表示用カメラ
+    [SerializeField] private float _fadeDuration = 0.5f; // 繝輔ぉ繝ｼ繝峨�ｮ譎る俣(s)
+    [SerializeField] private CinemachineVirtualCamera _gameCamera; // 繧ｲ繝ｼ繝逕ｨ繧ｫ繝｡繝ｩ
+    [SerializeField] private CinemachineVirtualCamera _resultCamera; // 邨先棡陦ｨ遉ｺ逕ｨ繧ｫ繝｡繝ｩ
     [SerializeField] private GameObject _hideUI;
     private void OnEnable()
     {

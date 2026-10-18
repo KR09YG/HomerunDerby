@@ -17,7 +17,7 @@ public struct ResultDisplayData
 
 public class ResultDisplay : MonoBehaviour
 {
-    [Header("Œ‹‰Ê•\¦")]
+    [Header("çµæœè¡¨ç¤º")]
     [SerializeField] private TextMeshProUGUI _ballType;
     [SerializeField] private GameObject _resultPanel;
     [SerializeField] private GameObject _distancePanel;
@@ -28,13 +28,13 @@ public class ResultDisplay : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _finalScoreText;
     [SerializeField] private GameObject _totalScorePanel;
     [SerializeField] private TextMeshProUGUI _totalScoreText;
-    [Header("ÅIƒXƒRƒA•\¦")]
+    [Header("æœ€çµ‚ã‚¹ã‚³ã‚¢è¡¨ç¤º")]
     [SerializeField] private GameObject _finalResultPanel;
     [SerializeField] private TextMeshProUGUI _homerunCountText;
     [SerializeField] private TextMeshProUGUI _finalTotalScoreText;
-    [Tooltip("ŠeƒJƒEƒ“ƒgƒAƒbƒvƒAƒjƒ[ƒVƒ‡ƒ“‚ÌŠÔ(•b)")]
+    [Tooltip("å„ã‚«ã‚¦ãƒ³ãƒˆã‚¢ãƒƒãƒ—ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®æ™‚é–“(ç§’)")]
     [SerializeField] private float _countUpDuration = 1.0f;
-    [Tooltip("Ÿ‚Ì€–Ú•\¦‚Ü‚Å‚Ì‘Ò‹@ŠÔ(ms)")]
+    [Tooltip("æ¬¡ã®é …ç›®è¡¨ç¤ºã¾ã§ã®å¾…æ©Ÿæ™‚é–“(ms)")]
     [SerializeField] private int _toNextResult = 500;
 
     private const int BonusThreshold = 2;
@@ -44,7 +44,7 @@ public class ResultDisplay : MonoBehaviour
         _resultPanel.SetActive(false);
     }
 
-    // LayoutGroup‚ğˆÛ‚·‚é‚½‚ßAƒpƒlƒ‹‚Å‚Í‚È‚­qƒeƒLƒXƒg‚Ì•`‰æ‚ğØ‚è‘Ö‚¦‚éB
+    // LayoutGroupã‚’ç¶­æŒã™ã‚‹ãŸã‚ã€ãƒ‘ãƒãƒ«ã§ã¯ãªãå­ãƒ†ã‚­ã‚¹ãƒˆã®æç”»ã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹ã€‚
     private void ResetDisplay()
     {
         _distanceText.text = "0";
@@ -100,7 +100,7 @@ public class ResultDisplay : MonoBehaviour
         }
         catch (OperationCanceledException)
         {
-            // ‰‰o‚ğ”ò‚Î‚µ‚½ê‡‚àA•\¦’l‚ÍÅIƒXƒRƒA‚É‘µ‚¦‚éB
+            // æ¼”å‡ºã‚’é£›ã°ã—ãŸå ´åˆã‚‚ã€è¡¨ç¤ºå€¤ã¯æœ€çµ‚ã‚¹ã‚³ã‚¢ã«æƒãˆã‚‹ã€‚
             if (this != null && _resultPanel != null) ShowFinalValues(data, showBonus);
         }
     }
@@ -129,7 +129,7 @@ public class ResultDisplay : MonoBehaviour
         }
         catch (OperationCanceledException)
         {
-            // ƒLƒƒƒ“ƒZƒ‹Œã‚ÉTween‚ªƒeƒLƒXƒg‚ğXV‚µ‚È‚¢‚æ‚¤’â~‚·‚éB
+            // ã‚­ãƒ£ãƒ³ã‚»ãƒ«å¾Œã«TweenãŒãƒ†ã‚­ã‚¹ãƒˆã‚’æ›´æ–°ã—ãªã„ã‚ˆã†åœæ­¢ã™ã‚‹ã€‚
             tween.Kill();
             if (text != null) text.text = Mathf.FloorToInt(targetValue).ToString() + suffix;
             throw;

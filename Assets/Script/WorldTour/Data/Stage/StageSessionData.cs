@@ -1,20 +1,23 @@
 using System;
 
+/// <summary>
+/// ãƒ—ãƒ¬ã‚¤ä¸­ã®ã‚¹ãƒ†ãƒ¼ã‚¸ã®é€²æ—ã‚’ç®¡ç†ã™ã‚‹ã‚¯ãƒ©ã‚¹
+/// </summary>
 [Serializable]
 public class StageSessionData
 {
     public string StageId;
-    // c‚è‚Ì‹…”
+    // æ®‹ã‚Šã®çƒæ•°
     public int RemainingBalls;
 
-    // ƒXƒe[ƒW‚ªƒNƒŠƒA‚³‚ê‚½‚©‚Ç‚¤‚©
+    // ã‚¹ãƒ†ãƒ¼ã‚¸ãŒã‚¯ãƒªã‚¢ã•ã‚ŒãŸã‹ã©ã†ã‹
     public bool IsCleared;
-    // ƒXƒe[ƒW‚ªI—¹‚µ‚½‚©‚Ç‚¤‚©
+    // ã‚¹ãƒ†ãƒ¼ã‚¸ãŒçµ‚äº†ã—ãŸã‹ã©ã†ã‹
     public bool IsFinished;
 
-    // ’B¬‚µ‚½¯‚Ì”‚ğ•\‚·”z—ñi3‚Â‚Ì¯‚É‘Î‰j
+    // é”æˆã—ãŸæ˜Ÿã®æ•°ã‚’è¡¨ã™é…åˆ—ï¼ˆ3ã¤ã®æ˜Ÿã«å¯¾å¿œï¼‰
     public bool[] AchievedStars;
-    // ƒXƒe[ƒW‚Ì“Œvî•ñ
+    // ã‚¹ãƒ†ãƒ¼ã‚¸ã®çµ±è¨ˆæƒ…å ±
     public StageStatistics Statistics;
 
     public StageSessionData(StageData stage)

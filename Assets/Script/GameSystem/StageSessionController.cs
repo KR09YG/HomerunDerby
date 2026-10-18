@@ -1,6 +1,10 @@
 using System.Collections.Generic;
 using System;
 
+
+/// <summary>
+/// ステージプレイ中のセッションを管理するクラス
+/// </summary>
 [Serializable]
 public class StageSessionController
 {

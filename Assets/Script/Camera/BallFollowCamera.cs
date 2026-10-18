@@ -22,16 +22,16 @@ public class BallFollowCamera : MonoBehaviour
     [Header("Follow Distance")]
     [SerializeField] private float _followDistance = 0.7f;
 
-    private const int DELAY_TIME_MS = 500; // ’Ç]I—¹Œã‚ÌƒJƒƒ‰Ø‚è‘Ö‚¦‚Ü‚Å‚Ì‘Ò‹@ŠÔ(ms)
+    private const int DELAY_TIME_MS = 500; // è¿½å¾“çµ‚äº†å¾Œã®ã‚«ãƒ¡ãƒ©åˆ‡ã‚Šæ›¿ãˆã¾ã§ã®å¾…æ©Ÿæ™‚é–“(ms)
 
     private bool _isFollowing = false;
 
     private void Awake()
     {
         if (_battingResultEvent != null) _battingResultEvent.RegisterListener(OnHit);
-        else Debug.LogError("OnBattingResultEvent ‚ª–¢İ’è");
+        else Debug.LogError("OnBattingResultEvent ãŒæœªè¨­å®š");
         if (_atBatResetEvent != null) _atBatResetEvent.RegisterListener(OnFinishedFollowing);
-        else Debug.LogError("OnAtBatResetEvent ‚ª–¢İ’è");
+        else Debug.LogError("OnAtBatResetEvent ãŒæœªè¨­å®š");
     }
 
     private void OnDestroy()

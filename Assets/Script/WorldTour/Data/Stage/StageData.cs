@@ -11,10 +11,10 @@ public class StageData
     public bool IsBoss;
 
     public StageCondition ClearObjective;
-    // ¯Šl“¾ğŒ‚ÌƒŠƒXƒg(‚Ç‚ÌƒXƒe[ƒW‚Å‚à¯‚Ì”‚ÍŒÅ’è‚Å‚RŒÂ)
+    // æ˜Ÿç²å¾—æ¡ä»¶ã®ãƒªã‚¹ãƒˆ(ã©ã®ã‚¹ãƒ†ãƒ¼ã‚¸ã§ã‚‚æ˜Ÿã®æ•°ã¯å›ºå®šã§ï¼“å€‹)
     public List<StageCondition> StarObjectives = new List<StageCondition>(3);
 
-    // ‚¿‹…‚ÌƒŠƒXƒg
+    // æŒã¡çƒã®ãƒªã‚¹ãƒˆ
     public List<StagePitchEntry> PitchPool = new List<StagePitchEntry>(20);
 
     public int? StarRewardOverride;

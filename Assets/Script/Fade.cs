@@ -21,7 +21,7 @@ public class Fade: MonoBehaviour
         fadeImage = GetComponent<Image>();
     }
 
-    /// <param name="isFadeIn">ƒtƒF[ƒhƒCƒ“‚©ƒtƒF[ƒhƒAƒEƒg‚©‚ğw’è‚µ‚Ü‚·</param>
+    /// <param name="isFadeIn">ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¤ãƒ³ã‹ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¢ã‚¦ãƒˆã‹ã‚’æŒ‡å®šã—ã¾ã™</param>
     public static void FadeImage(float duration, bool isFadeIn, Action action = null)
     {
         if (isFadeIn)
