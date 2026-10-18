@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Homerunderby;
 using UnityEngine.SceneManagement;
 using Cysharp.Threading.Tasks;
+using Unity.VisualScripting;
 
 public class WorldTourManager : MonoBehaviour
 {
@@ -15,6 +16,7 @@ public class WorldTourManager : MonoBehaviour
     private PlayerSaveData _saveData = new PlayerSaveData();
     private bool _isLoading;
     private StageData _currentStage;
+    private SaveTest _saveTest;
 
     public PlayerSaveData SaveData => _saveData;
     public WorldTourConfig Config => _config;
@@ -34,6 +36,8 @@ public class WorldTourManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
+        _saveTest = this.AddComponent<SaveTest>();
 
         if (_worldTourConfig == null)
         {
@@ -63,9 +67,15 @@ public class WorldTourManager : MonoBehaviour
         _config = config;
     }
 
-    public void SetSaveData(PlayerSaveData saveData)
+    public void SetStageProgress(StageSessionData session, int newStarCount)
     {
-        _saveData = saveData ?? throw new ArgumentNullException(nameof(saveData));
+        if (!session.IsCleared) return;
+
+        Debug.Log($"[WorldTour] 新たに獲得した星: {newStarCount}", this);
+        PlayerSaveDataDto saveData = PlayerSaveDataConverter.ToDto(_saveData);
+        // 仮セーブ
+        _saveTest.SaveData(saveData);
+
     }
 
     public void WorldSelect(string worldId)

@@ -8,9 +8,18 @@ using System.Collections.Generic;
 [Serializable]
 public class PlayerSaveDataDto
 {
+    public int StageId;
     public int SchemaVersion;
     public int Revision;
     public int Points;
 
-    public Dictionary<string, StageProgressData> Stages = new();
+    public List<StageProgressDataDto> Stages;
+}
+
+[Serializable] 
+public class StageProgressDataDto
+{
+    public string StageId;
+    public bool IsCleared;
+    public bool[] EarnedStars = new bool[3];
 }

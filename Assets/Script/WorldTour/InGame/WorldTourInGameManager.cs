@@ -320,7 +320,7 @@ public class WorldTourInGameManager : MonoBehaviour
 
         if (_resultPanel != null) _resultPanel.SetActive(false);
         int newStarCount = StageProgressService.MergeStageProgress(_saveData, session);
-        Debug.Log($"[WorldTour] 新たに獲得した星: {newStarCount}", this);
+        WorldTourManager.Instance.SetStageProgress(session, newStarCount);
         WorldTourStageResultView.Create(transform, session, _stageResultFont);
     }
 
