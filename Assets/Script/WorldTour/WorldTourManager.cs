@@ -74,7 +74,6 @@ public class WorldTourManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        SceneManager.sceneLoaded -= StopDerbyManager;
         _configLifetime?.Cancel();
         _configLifetime?.Dispose();
         if (Instance == this) Instance = null;
@@ -268,7 +267,6 @@ public class WorldTourManager : MonoBehaviour
 
         _isLoading = true;
         _currentStage = stage;
-        SceneManager.sceneLoaded += StopDerbyManager;
         try
         {
             await SceneManager.LoadSceneAsync("Homerun");
@@ -292,20 +290,8 @@ public class WorldTourManager : MonoBehaviour
         }
         finally
         {
-            SceneManager.sceneLoaded -= StopDerbyManager;
             _isLoading = false;
         }
-    }
-
-    private void StopDerbyManager(Scene scene, LoadSceneMode mode)
-    {
-        if (scene.name != "Homerun") return;
-
-        HomeRunDerbyManager derbyManager = FindFirstObjectByType<HomeRunDerbyManager>();
-        if (derbyManager == null) return;
-
-        derbyManager.enabled = false;
-        Destroy(derbyManager);
     }
 
     private bool SetPitchBall(StageData data)
