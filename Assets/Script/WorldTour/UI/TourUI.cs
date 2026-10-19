@@ -82,6 +82,17 @@ public static class TourUI
         RawImage image = Rect(parent, name, x, y, width, height).gameObject.AddComponent<RawImage>();
         image.texture = texture;
         image.raycastTarget = false;
+        SetTexture(image, texture);
+        return image;
+    }
+
+    public static void SetTexture(RawImage image, Texture texture)
+    {
+        image.texture = texture;
+        image.uvRect = new Rect(0, 0, 1, 1);
+        float width = image.rectTransform.rect.width;
+        float height = image.rectTransform.rect.height;
+        if (width <= 0 || height <= 0) return;
         if (texture != null)
         {
             float sourceAspect = texture.width / (float)texture.height;
@@ -97,7 +108,6 @@ public static class TourUI
                 image.uvRect = new Rect(0f, (1f - crop) * 0.5f, 1f, crop);
             }
         }
-        return image;
     }
 
     public static Button Button(Transform parent, string name, string title, string caption,

@@ -15,9 +15,13 @@ public static class WorldTourStageResultView
         }
         WorldTourManager manager = WorldTourManager.Instance;
         StageData stage = manager?.CurrentStage;
+        WorldData world = manager?.CurrentWorld;
         StageStatistics stats = session.Statistics ?? new StageStatistics();
         RectTransform root = TourUI.Canvas(parent, "World Tour Stage Result", 300);
-        TourUI.Picture(root, "Stadium Background", theme.StadiumMap, 0, 0, 1920, 1080);
+        WorldTourImageLoader images = root.gameObject.AddComponent<WorldTourImageLoader>();
+        string imageUrl = string.IsNullOrWhiteSpace(stage?.ImageUrl) ? world?.ImageUrl : stage.ImageUrl;
+        images.SetImage(TourUI.Picture(root, "Stadium Background", theme.StadiumMap, 0, 0, 1920, 1080),
+            imageUrl);
         TourPanelGraphic shade = TourUI.Panel(root, "Backdrop", 0, 0, 1920, 1080);
         shade.TopColor = new Color(0.01f, 0.04f, 0.16f, 0.22f);
         shade.BottomColor = new Color(0.01f, 0.03f, 0.1f, 0.65f);
@@ -39,7 +43,8 @@ public static class WorldTourStageResultView
         }
 
         TourUI.Panel(root, "Stage Card", 138, 370, 490, 505, true);
-        TourUI.Picture(root, "Stage Illustration", theme.StadiumMap, 148, 380, 470, 350);
+        images.SetImage(TourUI.Picture(root, "Stage Illustration", theme.StadiumMap, 148, 380, 470, 350),
+            imageUrl);
         TourUI.Panel(root, "Stage Caption", 148, 710, 470, 154);
         TourUI.Text(root, "World Name", manager?.CurrentWorld?.Name ?? "WORLD TOUR", 172, 390, 420, 45, 33, theme.JapaneseFont);
         TourUI.Text(root, "Stage Number", "STAGE " + session.StageId, 168, 723, 430, 39, 36, theme.DisplayFont, TourUI.Gold, true);

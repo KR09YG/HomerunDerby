@@ -18,11 +18,13 @@ MonoBehaviour:
     - WorldId: "01"
       RegionId: "asia"
       Name: "日本"
+      ImageUrl: "https://d2cu1apkis48k8.cloudfront.net/world-tour/image/WorldBackgrounds/%E5%AF%8C%E5%A3%AB%E5%B1%B1%E3%81%A8%E6%A1%9C%E3%81%AE%E6%9D%B1%E4%BA%AC%E3%83%91%E3%83%8E%E3%83%A9%E3%83%9E.png"
       Description: "日本を舞台に、球種を見極めてホームランに挑戦しよう。"
       NextWorld: "02"
       Stages:
       - StageId: "0001"
         Name: "ストレートチャレンジ 1"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -46,6 +48,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0002"
         Name: "カーブチャレンジ 2"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -69,6 +72,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0003"
         Name: "スライダーチャレンジ 3"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -92,6 +96,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0004"
         Name: "フォークチャレンジ 4"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -115,6 +120,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0005"
         Name: "日本 最終決戦"
+        ImageUrl: ""
         BallCount: 8
         IsBoss: 1
         NextStagesId: []
@@ -144,11 +150,13 @@ MonoBehaviour:
     - WorldId: "02"
       RegionId: "north_america"
       Name: "アメリカ"
+      ImageUrl: "https://d2cu1apkis48k8.cloudfront.net/world-tour/image/WorldBackgrounds/%E8%87%AA%E7%94%B1%E3%81%AE%E5%A5%B3%E7%A5%9E%E3%81%A8%E3%83%8B%E3%83%A5%E3%83%BC%E3%83%A8%E3%83%BC%E3%82%AF%E6%B9%BE%E3%81%AE%E9%87%8E%E7%90%83%E6%99%AF%E8%A6%B3.png"
       Description: "アメリカを舞台に、球種を見極めてホームランに挑戦しよう。"
       NextWorld: "03"
       Stages:
       - StageId: "0006"
         Name: "カーブチャレンジ 1"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -172,6 +180,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0007"
         Name: "スライダーチャレンジ 2"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -195,6 +204,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0008"
         Name: "フォークチャレンジ 3"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -218,6 +228,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0009"
         Name: "ストレートチャレンジ 4"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -241,6 +252,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0010"
         Name: "カーブチャレンジ 5"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -266,6 +278,7 @@ MonoBehaviour:
           Weight: 1
       - StageId: "0011"
         Name: "アメリカ 最終決戦"
+        ImageUrl: ""
         BallCount: 8
         IsBoss: 1
         NextStagesId: []
@@ -295,11 +308,13 @@ MonoBehaviour:
     - WorldId: "03"
       RegionId: "south_america"
       Name: "ブラジル"
+      ImageUrl: "https://d2cu1apkis48k8.cloudfront.net/world-tour/image/WorldBackgrounds/%E3%83%AA%E3%82%AA%E3%81%AE%E9%9D%92%E3%81%84%E6%B9%BE%E3%81%A8%E4%BA%8C%E5%A4%A7%E5%90%8D%E6%89%80.png"
       Description: "ブラジルを舞台に、球種を見極めてホームランに挑戦しよう。"
       NextWorld: "04"
       Stages:
       - StageId: "0012"
         Name: "スライダーチャレンジ 1"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -323,6 +338,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0013"
         Name: "フォークチャレンジ 2"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -346,6 +362,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0014"
         Name: "ストレートチャレンジ 3"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -369,6 +386,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0015"
         Name: "カーブチャレンジ 4"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -392,6 +410,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0016"
         Name: "スライダーチャレンジ 5"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -417,6 +436,7 @@ MonoBehaviour:
           Weight: 1
       - StageId: "0017"
         Name: "フォークチャレンジ 6"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -442,6 +462,7 @@ MonoBehaviour:
           Weight: 1
       - StageId: "0018"
         Name: "ブラジル 最終決戦"
+        ImageUrl: ""
         BallCount: 8
         IsBoss: 1
         NextStagesId: []
@@ -471,11 +492,13 @@ MonoBehaviour:
     - WorldId: "04"
       RegionId: "europe"
       Name: "フランス"
+      ImageUrl: "https://d2cu1apkis48k8.cloudfront.net/world-tour/image/WorldBackgrounds/%E3%82%BB%E3%83%BC%E3%83%8C%E5%B7%9D%E6%B2%BF%E3%81%84%E3%81%AE%E3%83%91%E3%83%AA%E9%A2%A8%E6%99%AF.png"
       Description: "フランスを舞台に、球種を見極めてホームランに挑戦しよう。"
       NextWorld: "05"
       Stages:
       - StageId: "0019"
         Name: "フォークチャレンジ 1"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -499,6 +522,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0020"
         Name: "ストレートチャレンジ 2"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -522,6 +546,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0021"
         Name: "カーブチャレンジ 3"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -545,6 +570,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0022"
         Name: "スライダーチャレンジ 4"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -568,6 +594,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0023"
         Name: "フォークチャレンジ 5"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -593,6 +620,7 @@ MonoBehaviour:
           Weight: 1
       - StageId: "0024"
         Name: "ストレートチャレンジ 6"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -618,6 +646,7 @@ MonoBehaviour:
           Weight: 1
       - StageId: "0025"
         Name: "カーブチャレンジ 7"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -643,6 +672,7 @@ MonoBehaviour:
           Weight: 1
       - StageId: "0026"
         Name: "フランス 最終決戦"
+        ImageUrl: ""
         BallCount: 8
         IsBoss: 1
         NextStagesId: []
@@ -672,11 +702,13 @@ MonoBehaviour:
     - WorldId: "05"
       RegionId: "oceania"
       Name: "オーストラリア"
+      ImageUrl: "https://d2cu1apkis48k8.cloudfront.net/world-tour/image/WorldBackgrounds/%E3%82%B7%E3%83%89%E3%83%8B%E3%83%BC%E6%B9%BE%E3%81%AE%E8%BC%9D%E3%81%8D.png"
       Description: "オーストラリアを舞台に、球種を見極めてホームランに挑戦しよう。"
       NextWorld: ""
       Stages:
       - StageId: "0027"
         Name: "ストレートチャレンジ 1"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -700,6 +732,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0028"
         Name: "カーブチャレンジ 2"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -723,6 +756,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0029"
         Name: "スライダーチャレンジ 3"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -746,6 +780,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0030"
         Name: "フォークチャレンジ 4"
+        ImageUrl: ""
         BallCount: 6
         IsBoss: 0
         NextStagesId:
@@ -769,6 +804,7 @@ MonoBehaviour:
           Weight: 2
       - StageId: "0031"
         Name: "オーストラリア 最終決戦"
+        ImageUrl: ""
         BallCount: 8
         IsBoss: 1
         NextStagesId: []

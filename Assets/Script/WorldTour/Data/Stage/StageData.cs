@@ -6,6 +6,7 @@ public class StageData
 {
     public string StageId;
     public string Name;
+    public string ImageUrl;
 
     public int BallCount;
     public bool IsBoss;

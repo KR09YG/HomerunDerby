@@ -8,6 +8,7 @@ public class WorldData
     public string RegionId;
     public string Name;
     public string Description;
+    public string ImageUrl;
     public bool IsUnlocked;
 
     public List<StageData> Stages = new List<StageData>();

@@ -20,10 +20,14 @@ public sealed class WorldTourMenuView : MonoBehaviour
     private Button _previousWorldPage;
     private Button _nextWorldPage;
 
+    private WorldTourImageLoader _images;
+
     private void Start()
     {
         foreach (Transform item in GetComponentsInChildren<Transform>(true)) _elements[item.name] = item;
         _manager = WorldTourManager.Instance;
+        _images = GetComponent<WorldTourImageLoader>();
+        if (_images == null) _images = gameObject.AddComponent<WorldTourImageLoader>();
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
         if (_manager == null)
@@ -166,6 +170,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
             Button("WorldPin" + i).interactable = world != null;
             Text("CardNumber" + i, $"WORLD {worldIndex + 1}");
             Text("WorldName" + i, world?.Name);
+            Picture("CardArt" + i, world?.ImageUrl);
             Text("WorldCount" + i, world == null ? "" :
                 $"{(_manager.IsWorldCleared(world) ? "CLEAR " : "")}{WorldStars(world, _manager.SaveData)} / {_manager.GetStages(world).Count * 3}");
             Text("PinName" + i, world?.Name);
@@ -182,6 +187,8 @@ public sealed class WorldTourMenuView : MonoBehaviour
         }
         Text("DetailEyebrow", $"WORLD {index + 1:00}");
         Text("DetailTitle", _selectedWorld.Name);
+        Picture("Background", _selectedWorld.ImageUrl);
+        Picture("DetailArt", _selectedWorld.ImageUrl);
         Text("DetailSubtitle", _manager.IsWorldCleared(_selectedWorld) ? "WORLD CLEAR" :
             _manager.IsWorldUnlocked(_selectedWorld) ? "挑戦可能" : "前のワールドのボスをクリアすると開放");
         Text("WorldDescription", string.IsNullOrWhiteSpace(_selectedWorld.Description)
@@ -201,6 +208,9 @@ public sealed class WorldTourMenuView : MonoBehaviour
         Text("WorldHeading", _selectedWorld.Name);
         Text("DetailEyebrow", _selectedStage.IsBoss ? "BOSS STAGE" : $"STAGE {index + 1:00}");
         Text("DetailTitle", _selectedStage.Name);
+        string imageUrl = string.IsNullOrWhiteSpace(_selectedStage.ImageUrl) ? _selectedWorld.ImageUrl : _selectedStage.ImageUrl;
+        Picture("Background", imageUrl);
+        Picture("DetailArt", imageUrl);
         Text("DetailSubtitle", $"{_selectedStage.BallCount}球で挑戦  /  STAGE {_selectedStage.StageId}");
         Text("ClearCondition", "クリア条件：" + ConditionText(_selectedStage.ClearObjective));
         StageProgressData progress = Progress(_selectedStage.StageId, _manager.SaveData);
@@ -311,6 +321,14 @@ public sealed class WorldTourMenuView : MonoBehaviour
         foreach (WorldData world in _worlds) { count += WorldStars(world, _manager.SaveData); total += world.Stages.Count * 3; }
         Text("TotalStars", $"{count} / {total}");
         Text("TotalPoints", _manager.SaveData.Points.ToString("N0"));
+    }
+
+    private void Picture(string name, string url)
+    {
+        // Never bind remote world/stage images to the fixed world map.
+        if (name == "WorldMapFocus") return;
+        if (_elements.TryGetValue(name, out Transform element))
+            _images.SetImage(element.GetComponent<RawImage>(), url);
     }
 
     private void Text(string name, string value)
