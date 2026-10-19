@@ -1714,7 +1714,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c64d8411423a7948ba9a157ab05a191, type: 3}
   m_Name:
   m_EditorClassIdentifier:
-  _worldTourConfig: {fileID: 11400000, guid: 27a57b4c12247b843a5705ffab17e752, type: 2}
   _pitchCatalog: {fileID: 11400000, guid: 209fc38cedcc8b147b065c8f69f1ca70, type: 2}
 --- !u!1 &81000075
 GameObject:

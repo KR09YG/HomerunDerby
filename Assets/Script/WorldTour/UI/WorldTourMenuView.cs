@@ -26,7 +26,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
         _manager = WorldTourManager.Instance;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
-        if (_manager?.Config == null)
+        if (_manager == null)
         {
             Text("Status", "ワールド設定を確認してください");
             Button("PrimaryAction").interactable = false;
@@ -71,6 +71,30 @@ public sealed class WorldTourMenuView : MonoBehaviour
 
     private void RefreshMenu()
     {
+        if (!_manager.IsConfigReady)
+        {
+            bool failed = _manager.ConfigState == WorldTourConfigState.ConnectionError || _manager.ConfigState == WorldTourConfigState.InvalidData;
+            Text("Status", failed ? _manager.ConfigError : "CloudFrontから設定を取得しています…");
+            Text("DetailTitle", failed ? "設定の取得に失敗しました" : "読み込み中");
+            Text("DetailSubtitle", failed ? "再試行ボタンで取得し直せます" : "通信完了までお待ちください");
+            if (_screen == MenuScreen.World) Text("PrimaryActionTitle", failed ? "再試行" : "取得中…");
+            else
+            {
+                Text("ActionTitle", failed ? "RETRY" : "LOADING");
+                Text("ActionSubtitle", failed ? "設定を取得し直す" : "設定を取得しています");
+            }
+            Button("PrimaryAction").interactable = failed;
+            foreach (Button button in GetComponentsInChildren<Button>(true))
+                if (button != Button("PrimaryAction") && button != Button("Back")) button.interactable = false;
+            foreach (var element in _elements)
+                if (element.Key.StartsWith("WorldCard", System.StringComparison.Ordinal) ||
+                    element.Key.StartsWith("WorldPin", System.StringComparison.Ordinal) ||
+                    element.Key.StartsWith("PinName", System.StringComparison.Ordinal) ||
+                    element.Key.StartsWith("StageNode", System.StringComparison.Ordinal) ||
+                    element.Key.StartsWith("Path", System.StringComparison.Ordinal)) element.Value.gameObject.SetActive(false);
+            return;
+        }
+        if (_screen == MenuScreen.World) Text("PrimaryActionTitle", "このワールドを選ぶ");
         _worlds.Clear();
         _worlds.AddRange(_manager.Worlds);
         _selectedWorld = _manager.CurrentWorld;
@@ -110,6 +134,11 @@ public sealed class WorldTourMenuView : MonoBehaviour
     private void OnConfirm()
     {
         if (_manager.IsLoading) return;
+        if (!_manager.IsConfigReady)
+        {
+            _manager.RetryConfigDownload();
+            return;
+        }
         if (_screen == MenuScreen.World && _manager.IsWorldUnlocked(_selectedWorld))
         {
             _manager.WorldSelect(_selectedWorld.WorldId);

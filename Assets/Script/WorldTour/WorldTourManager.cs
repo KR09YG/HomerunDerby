@@ -4,11 +4,16 @@ using System.Collections.Generic;
 using Homerunderby;
 using UnityEngine.SceneManagement;
 using Cysharp.Threading.Tasks;
+using System.IO;
+using System.Threading;
+
+public enum WorldTourConfigState { NotLoaded, Loading, Ready, ConnectionError, InvalidData }
 
 public class WorldTourManager : MonoBehaviour
 {
-    [SerializeField] private WorldTourConfigAsset _worldTourConfig;
     [SerializeField] private PitchCatalog _pitchCatalog;
+    [SerializeField] private string _configUrl = "https://d2cu1apkis48k8.cloudfront.net/world-tour/config.json";
+    [SerializeField, Min(1)] private int _configTimeoutSeconds = 15;
     public static WorldTourManager Instance { get; private set; }
     private WorldTourConfig _config;
     private WorldData _currentWorldData;
@@ -17,6 +22,9 @@ public class WorldTourManager : MonoBehaviour
     private StageData _currentStage;
     private SaveTest _saveTest;
     private WorldUnlock _progress;
+    private CancellationTokenSource _configLifetime;
+    private WorldTourConfigState _configState;
+    private string _configError;
 
     public event Action StateChanged;
 
@@ -24,7 +32,10 @@ public class WorldTourManager : MonoBehaviour
     public WorldTourConfig Config => _config;
     public WorldData CurrentWorld => _currentWorldData;
     public StageData CurrentStage => _currentStage;
-    public bool IsLoading => _isLoading;
+    public bool IsLoading => _isLoading || _configState == WorldTourConfigState.Loading;
+    public bool IsConfigReady => _configState == WorldTourConfigState.Ready;
+    public WorldTourConfigState ConfigState => _configState;
+    public string ConfigError => _configError;
     public IReadOnlyList<WorldData> Worlds => Progress.Worlds;
 
     private WorldUnlock Progress
@@ -57,26 +68,68 @@ public class WorldTourManager : MonoBehaviour
         _saveTest = GetComponent<SaveTest>();
         if (_saveTest == null) _saveTest = gameObject.AddComponent<SaveTest>();
 
-        if (_worldTourConfig == null)
-        {
-            Debug.LogError("[WorldTour] ワールド設定が未設定です。", this);
-            return;
-        }
-        if (_worldTourConfig.Config == null)
-        {
-            Debug.LogError("[WorldTour] ワールド設定の内容が空です。", this);
-            return;
-        }
-        SetData(_worldTourConfig.Config);
-        // 従来の確認用シーンだけは、初期ステージを直接開始できるようにする。
-        if (SceneManager.GetActiveScene().name == "test_world_tour" && GetStages(_currentWorldData).Count > 0)
-            PlayStage(GetStages(_currentWorldData)[0].StageId);
+        _configLifetime = new CancellationTokenSource();
+        RetryConfigDownload();
     }
 
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= StopDerbyManager;
+        _configLifetime?.Cancel();
+        _configLifetime?.Dispose();
         if (Instance == this) Instance = null;
+    }
+
+    public void RetryConfigDownload()
+    {
+        if (IsLoading || _configLifetime == null ||
+            string.Equals(SceneManager.GetActiveScene().name, "Homerun", StringComparison.OrdinalIgnoreCase)) return;
+        DownloadConfigAsync(_configLifetime.Token).Forget();
+    }
+
+    private async UniTask DownloadConfigAsync(CancellationToken cancellationToken)
+    {
+        _configState = WorldTourConfigState.Loading;
+        _configError = null;
+        StateChanged?.Invoke();
+        try
+        {
+            WorldTourConfig config = await WorldTourConfigClient.DownloadAsync(_configUrl, _configTimeoutSeconds, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            // 戻る操作によるシーン移動が終わってから設定とUIを更新する。
+            if (_isLoading) await UniTask.WaitUntil(() => !_isLoading, cancellationToken: cancellationToken);
+            if (_pitchCatalog == null) throw new InvalidDataException("PitchCatalogが未設定です。");
+            int stageCount = 0;
+            foreach (WorldData world in config.Worlds)
+                foreach (StageData stage in world.Stages)
+                {
+                    stageCount++;
+                    foreach (StagePitchEntry pitch in stage.PitchPool)
+                        if (!_pitchCatalog.TryGetPitch(pitch.PitchId, out _))
+                            throw new InvalidDataException($"未登録の球種IDです: Stage={stage.StageId}, PitchId={pitch.PitchId}");
+                }
+            SetData(config);
+            Debug.Log($"[WorldTour Config] Source=CloudFront URL={_configUrl} ConfigVersion={config.ConfigVersion} Worlds={config.Worlds.Count} Stages={stageCount}", this);
+            if (Application.isPlaying && SceneManager.GetActiveScene().name == "test_world_tour" && GetStages(_currentWorldData).Count > 0)
+                PlayStage(GetStages(_currentWorldData)[0].StageId);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+        catch (UnityWebRequestException exception)
+        {
+            SetConfigError(WorldTourConfigState.ConnectionError, $"通信に失敗しました（HTTP {exception.ResponseCode}）。接続を確認して再試行してください。", exception);
+        }
+        catch (Exception exception)
+        {
+            SetConfigError(WorldTourConfigState.InvalidData, "設定データを利用できません。時間をおいて再試行してください。", exception);
+        }
+    }
+
+    private void SetConfigError(WorldTourConfigState state, string message, Exception exception)
+    {
+        _configState = state;
+        _configError = message;
+        Debug.LogError($"[WorldTour Config] {state}: {exception.Message} URL={_configUrl}", this);
+        StateChanged?.Invoke();
     }
 
     public void SetData(WorldTourConfig config)
@@ -92,6 +145,8 @@ public class WorldTourManager : MonoBehaviour
         _progress = new WorldUnlock(message => Debug.LogWarning(message, this));
         _progress.SetConfig(config);
         RefreshSelection(worldId, stageId);
+        _configState = config == null ? WorldTourConfigState.NotLoaded : WorldTourConfigState.Ready;
+        _configError = null;
         StateChanged?.Invoke();
     }
 
@@ -141,7 +196,7 @@ public class WorldTourManager : MonoBehaviour
     public void WorldSelect(string worldId)
     {
         WorldData world = Progress.FindWorld(worldId);
-        if (world == null || !IsWorldUnlocked(world) || _isLoading) return;
+        if (!IsConfigReady || world == null || !IsWorldUnlocked(world) || IsLoading) return;
         if (_currentWorldData != world) _currentStage = null;
         _currentWorldData = world;
     }
@@ -161,6 +216,7 @@ public class WorldTourManager : MonoBehaviour
 
     public void PlayStage(string stageId)
     {
+        if (!IsConfigReady || IsLoading) return;
         StageData stage = FindSelectedStage(stageId);
         if (IsStageUnlocked(stage)) StageSelect(stageId).Forget();
     }
@@ -193,7 +249,7 @@ public class WorldTourManager : MonoBehaviour
 
     private async UniTask OpenMenu(string sceneName)
     {
-        if (_isLoading) return;
+        if (_isLoading || (sceneName == "StageSelect" && !IsConfigReady)) return;
         _isLoading = true;
         try { await SceneManager.LoadSceneAsync(sceneName); }
         catch (Exception exception) { Debug.LogException(exception, this); }
@@ -202,7 +258,7 @@ public class WorldTourManager : MonoBehaviour
 
     private async UniTaskVoid StageSelect(string stageId)
     {
-        if (_isLoading) return;
+        if (!IsConfigReady || IsLoading) return;
         StageData stage = FindSelectedStage(stageId);
         if (stage == null || !IsStageUnlocked(stage))
         {
