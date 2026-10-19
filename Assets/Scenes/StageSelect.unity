@@ -8214,6 +8214,7 @@ GameObject:
   - component: {fileID: 81000501}
   - component: {fileID: 81000502}
   - component: {fileID: 81000503}
+  - component: {fileID: 99000001}
   m_Layer: 5
   m_Name: "StageNode0"
   m_TagString: Untagged
@@ -8769,6 +8770,7 @@ GameObject:
   - component: {fileID: 81000534}
   - component: {fileID: 81000535}
   - component: {fileID: 81000536}
+  - component: {fileID: 99000002}
   m_Layer: 5
   m_Name: "StageNode1"
   m_TagString: Untagged
@@ -8853,7 +8855,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000535}
   m_OnClick:
     m_PersistentCalls:
@@ -9324,6 +9326,7 @@ GameObject:
   - component: {fileID: 81000567}
   - component: {fileID: 81000568}
   - component: {fileID: 81000569}
+  - component: {fileID: 99000003}
   m_Layer: 5
   m_Name: "StageNode2"
   m_TagString: Untagged
@@ -9408,7 +9411,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000568}
   m_OnClick:
     m_PersistentCalls:
@@ -9879,6 +9882,7 @@ GameObject:
   - component: {fileID: 81000600}
   - component: {fileID: 81000601}
   - component: {fileID: 81000602}
+  - component: {fileID: 99000004}
   m_Layer: 5
   m_Name: "StageNode3"
   m_TagString: Untagged
@@ -9963,7 +9967,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000601}
   m_OnClick:
     m_PersistentCalls:
@@ -10434,6 +10438,7 @@ GameObject:
   - component: {fileID: 81000633}
   - component: {fileID: 81000634}
   - component: {fileID: 81000635}
+  - component: {fileID: 99000005}
   m_Layer: 5
   m_Name: "StageNode4"
   m_TagString: Untagged
@@ -10518,7 +10523,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000634}
   m_OnClick:
     m_PersistentCalls:
@@ -10989,6 +10994,7 @@ GameObject:
   - component: {fileID: 81000666}
   - component: {fileID: 81000667}
   - component: {fileID: 81000668}
+  - component: {fileID: 99000006}
   m_Layer: 5
   m_Name: "StageNode5"
   m_TagString: Untagged
@@ -11073,7 +11079,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000667}
   m_OnClick:
     m_PersistentCalls:
@@ -11544,6 +11550,7 @@ GameObject:
   - component: {fileID: 81000699}
   - component: {fileID: 81000700}
   - component: {fileID: 81000701}
+  - component: {fileID: 99000007}
   m_Layer: 5
   m_Name: "StageNode6"
   m_TagString: Untagged
@@ -11628,7 +11635,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000700}
   m_OnClick:
     m_PersistentCalls:
@@ -12099,6 +12106,7 @@ GameObject:
   - component: {fileID: 81000732}
   - component: {fileID: 81000733}
   - component: {fileID: 81000734}
+  - component: {fileID: 99000008}
   m_Layer: 5
   m_Name: "StageNode7"
   m_TagString: Untagged
@@ -12183,7 +12191,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000733}
   m_OnClick:
     m_PersistentCalls:
@@ -14585,7 +14593,6 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 81000879}
   - {fileID: 81000883}
   - {fileID: 81000887}
   m_Father: {fileID: 81000002}
@@ -14654,80 +14661,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &81000878
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 81000879}
-  - component: {fileID: 81000880}
-  - component: {fileID: 81000881}
-  m_Layer: 5
-  m_Name: "PrimaryActionTitle"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &81000879
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 81000878}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 81000874}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 14, y: -4}
-  m_SizeDelta: {x: 552, y: 66}
-  m_Pivot: {x: 0, y: 1}
---- !u!222 &81000880
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_GameObject: {fileID: 81000878}
-  m_CullTransparentMesh: 1
---- !u!114 &81000881
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 81000878}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
-  m_Maskable: 1
-  m_text: ""
-  m_fontAsset: {fileID: 11400000, guid: 9013c88d3863798419b6c137cf73ca48, type: 2}
-  m_fontSize: 40
-  m_fontSizeBase: 40
-  m_enableAutoSizing: 1
-  m_fontSizeMin: 15
-  m_fontSizeMax: 40
-  m_fontStyle: 1
-  m_fontColor: {r: 0.015, g: 0.055, b: 0.16, a: 1}
-  m_HorizontalAlignment: 2
-  m_VerticalAlignment: 512
-  m_textWrappingMode: 1
-  m_overflowMode: 1
-  m_isRichText: 1
-  m_isOrthographic: 1
-  m_isCullingEnabled: 0
 --- !u!1 &81000882
 GameObject:
   m_ObjectHideFlags: 0
@@ -14787,13 +14720,13 @@ MonoBehaviour:
   m_RaycastTarget: 0
   m_Maskable: 1
   m_text: "START STAGE"
-  m_fontAsset: {fileID: 11400000, guid: 9013c88d3863798419b6c137cf73ca48, type: 2}
-  m_fontSize: 43
-  m_fontSizeBase: 43
+  m_fontAsset: {fileID: 11400000, guid: 9627b1cce9194385827c94ae1391ea58, type: 2}
+  m_fontSize: 34
+  m_fontSizeBase: 34
   m_enableAutoSizing: 1
   m_fontSizeMin: 15
-  m_fontSizeMax: 43
-  m_fontStyle: 1
+  m_fontSizeMax: 34
+  m_fontStyle: 0
   m_fontColor: {r: 0.015, g: 0.055, b: 0.16, a: 1}
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -14867,7 +14800,7 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 15
   m_fontSizeMax: 19
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_fontColor: {r: 0.015, g: 0.055, b: 0.16, a: 1}
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -14885,3 +14818,99 @@ SceneRoots:
   - {fileID: 81000002}
   - {fileID: 81000073}
   - {fileID: 81000077}
+--- !u!225 &99000001
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000499}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000002
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000532}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000003
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000565}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000004
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000598}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000005
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000631}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000006
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000664}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000007
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000697}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000008
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000730}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0

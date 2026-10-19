@@ -2406,6 +2406,7 @@ GameObject:
   - component: {fileID: 81000117}
   - component: {fileID: 81000118}
   - component: {fileID: 81000119}
+  - component: {fileID: 99000002}
   m_Layer: 5
   m_Name: "WorldPin0"
   m_TagString: Untagged
@@ -2713,6 +2714,7 @@ GameObject:
   - component: {fileID: 81000134}
   - component: {fileID: 81000135}
   - component: {fileID: 81000136}
+  - component: {fileID: 99000004}
   m_Layer: 5
   m_Name: "WorldPin1"
   m_TagString: Untagged
@@ -2795,7 +2797,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000135}
   m_OnClick:
     m_PersistentCalls:
@@ -3020,6 +3022,7 @@ GameObject:
   - component: {fileID: 81000151}
   - component: {fileID: 81000152}
   - component: {fileID: 81000153}
+  - component: {fileID: 99000006}
   m_Layer: 5
   m_Name: "WorldPin2"
   m_TagString: Untagged
@@ -3102,7 +3105,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000152}
   m_OnClick:
     m_PersistentCalls:
@@ -3327,6 +3330,7 @@ GameObject:
   - component: {fileID: 81000168}
   - component: {fileID: 81000169}
   - component: {fileID: 81000170}
+  - component: {fileID: 99000008}
   m_Layer: 5
   m_Name: "WorldPin3"
   m_TagString: Untagged
@@ -3409,7 +3413,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000169}
   m_OnClick:
     m_PersistentCalls:
@@ -3634,6 +3638,7 @@ GameObject:
   - component: {fileID: 81000185}
   - component: {fileID: 81000186}
   - component: {fileID: 81000187}
+  - component: {fileID: 99000010}
   m_Layer: 5
   m_Name: "WorldPin4"
   m_TagString: Untagged
@@ -3716,7 +3721,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000186}
   m_OnClick:
     m_PersistentCalls:
@@ -3941,13 +3946,14 @@ GameObject:
   - component: {fileID: 81000202}
   - component: {fileID: 81000203}
   - component: {fileID: 81000204}
+  - component: {fileID: 99000012}
   m_Layer: 5
   m_Name: "WorldPin5"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000201
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4023,7 +4029,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000203}
   m_OnClick:
     m_PersistentCalls:
@@ -4179,7 +4185,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000214
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4248,6 +4254,7 @@ GameObject:
   - component: {fileID: 81000219}
   - component: {fileID: 81000220}
   - component: {fileID: 81000221}
+  - component: {fileID: 99000001}
   m_Layer: 5
   m_Name: "WorldCard0"
   m_TagString: Untagged
@@ -4705,7 +4712,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000243
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4765,7 +4772,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000247
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4825,7 +4832,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000251
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4902,8 +4909,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 12, y: -283}
-  m_SizeDelta: {x: 161, y: 21}
+  m_AnchoredPosition: {x: 12, y: -251}
+  m_SizeDelta: {x: 161, y: 36}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &81000256
 CanvasRenderer:
@@ -4926,18 +4933,18 @@ MonoBehaviour:
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_Maskable: 1
-  m_text: "0 / 9"
+  m_text: "0 / 15"
   m_fontAsset: {fileID: 11400000, guid: 9013c88d3863798419b6c137cf73ca48, type: 2}
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 26
+  m_fontSizeBase: 26
   m_enableAutoSizing: 1
-  m_fontSizeMin: 15
-  m_fontSizeMax: 20
+  m_fontSizeMin: 18
+  m_fontSizeMax: 26
   m_fontStyle: 1
   m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
-  m_textWrappingMode: 1
+  m_textWrappingMode: 0
   m_overflowMode: 1
   m_isRichText: 1
   m_isOrthographic: 1
@@ -5014,6 +5021,7 @@ GameObject:
   - component: {fileID: 81000264}
   - component: {fileID: 81000265}
   - component: {fileID: 81000266}
+  - component: {fileID: 99000003}
   m_Layer: 5
   m_Name: "WorldCard1"
   m_TagString: Untagged
@@ -5104,7 +5112,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000265}
   m_OnClick:
     m_PersistentCalls:
@@ -5471,7 +5479,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000288
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5531,7 +5539,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000292
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5591,7 +5599,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000296
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5668,8 +5676,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 12, y: -283}
-  m_SizeDelta: {x: 161, y: 21}
+  m_AnchoredPosition: {x: 12, y: -251}
+  m_SizeDelta: {x: 161, y: 36}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &81000301
 CanvasRenderer:
@@ -5692,18 +5700,18 @@ MonoBehaviour:
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_Maskable: 1
-  m_text: "COMING SOON"
+  m_text: "0 / 18"
   m_fontAsset: {fileID: 11400000, guid: 9013c88d3863798419b6c137cf73ca48, type: 2}
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 26
+  m_fontSizeBase: 26
   m_enableAutoSizing: 1
-  m_fontSizeMin: 15
-  m_fontSizeMax: 20
+  m_fontSizeMin: 18
+  m_fontSizeMax: 26
   m_fontStyle: 1
   m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
-  m_textWrappingMode: 1
+  m_textWrappingMode: 0
   m_overflowMode: 1
   m_isRichText: 1
   m_isOrthographic: 1
@@ -5780,6 +5788,7 @@ GameObject:
   - component: {fileID: 81000309}
   - component: {fileID: 81000310}
   - component: {fileID: 81000311}
+  - component: {fileID: 99000005}
   m_Layer: 5
   m_Name: "WorldCard2"
   m_TagString: Untagged
@@ -5870,7 +5879,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000310}
   m_OnClick:
     m_PersistentCalls:
@@ -6237,7 +6246,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000333
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6297,7 +6306,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000337
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6357,7 +6366,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000341
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6434,8 +6443,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 12, y: -283}
-  m_SizeDelta: {x: 161, y: 21}
+  m_AnchoredPosition: {x: 12, y: -251}
+  m_SizeDelta: {x: 161, y: 36}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &81000346
 CanvasRenderer:
@@ -6458,18 +6467,18 @@ MonoBehaviour:
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_Maskable: 1
-  m_text: "COMING SOON"
+  m_text: "0 / 21"
   m_fontAsset: {fileID: 11400000, guid: 9013c88d3863798419b6c137cf73ca48, type: 2}
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 26
+  m_fontSizeBase: 26
   m_enableAutoSizing: 1
-  m_fontSizeMin: 15
-  m_fontSizeMax: 20
+  m_fontSizeMin: 18
+  m_fontSizeMax: 26
   m_fontStyle: 1
   m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
-  m_textWrappingMode: 1
+  m_textWrappingMode: 0
   m_overflowMode: 1
   m_isRichText: 1
   m_isOrthographic: 1
@@ -6546,6 +6555,7 @@ GameObject:
   - component: {fileID: 81000354}
   - component: {fileID: 81000355}
   - component: {fileID: 81000356}
+  - component: {fileID: 99000007}
   m_Layer: 5
   m_Name: "WorldCard3"
   m_TagString: Untagged
@@ -6636,7 +6646,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000355}
   m_OnClick:
     m_PersistentCalls:
@@ -7003,7 +7013,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000378
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7063,7 +7073,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000382
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7123,7 +7133,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000386
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7200,8 +7210,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 12, y: -283}
-  m_SizeDelta: {x: 161, y: 21}
+  m_AnchoredPosition: {x: 12, y: -251}
+  m_SizeDelta: {x: 161, y: 36}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &81000391
 CanvasRenderer:
@@ -7224,18 +7234,18 @@ MonoBehaviour:
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_Maskable: 1
-  m_text: "COMING SOON"
+  m_text: "0 / 24"
   m_fontAsset: {fileID: 11400000, guid: 9013c88d3863798419b6c137cf73ca48, type: 2}
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 26
+  m_fontSizeBase: 26
   m_enableAutoSizing: 1
-  m_fontSizeMin: 15
-  m_fontSizeMax: 20
+  m_fontSizeMin: 18
+  m_fontSizeMax: 26
   m_fontStyle: 1
   m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
-  m_textWrappingMode: 1
+  m_textWrappingMode: 0
   m_overflowMode: 1
   m_isRichText: 1
   m_isOrthographic: 1
@@ -7312,6 +7322,7 @@ GameObject:
   - component: {fileID: 81000399}
   - component: {fileID: 81000400}
   - component: {fileID: 81000401}
+  - component: {fileID: 99000009}
   m_Layer: 5
   m_Name: "WorldCard4"
   m_TagString: Untagged
@@ -7402,7 +7413,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000400}
   m_OnClick:
     m_PersistentCalls:
@@ -7769,7 +7780,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000423
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7829,7 +7840,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000427
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7889,7 +7900,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000431
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7966,8 +7977,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 12, y: -283}
-  m_SizeDelta: {x: 161, y: 21}
+  m_AnchoredPosition: {x: 12, y: -251}
+  m_SizeDelta: {x: 161, y: 36}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &81000436
 CanvasRenderer:
@@ -7990,18 +8001,18 @@ MonoBehaviour:
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_Maskable: 1
-  m_text: "COMING SOON"
+  m_text: "0 / 15"
   m_fontAsset: {fileID: 11400000, guid: 9013c88d3863798419b6c137cf73ca48, type: 2}
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 26
+  m_fontSizeBase: 26
   m_enableAutoSizing: 1
-  m_fontSizeMin: 15
-  m_fontSizeMax: 20
+  m_fontSizeMin: 18
+  m_fontSizeMax: 26
   m_fontStyle: 1
   m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
-  m_textWrappingMode: 1
+  m_textWrappingMode: 0
   m_overflowMode: 1
   m_isRichText: 1
   m_isOrthographic: 1
@@ -8078,6 +8089,7 @@ GameObject:
   - component: {fileID: 81000444}
   - component: {fileID: 81000445}
   - component: {fileID: 81000446}
+  - component: {fileID: 99000011}
   m_Layer: 5
   m_Name: "WorldCard5"
   m_TagString: Untagged
@@ -8168,7 +8180,7 @@ MonoBehaviour:
     m_DisabledColor: {r: 0.4, g: 0.47, b: 0.57, a: 0.8}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 81000445}
   m_OnClick:
     m_PersistentCalls:
@@ -8535,7 +8547,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000468
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8595,7 +8607,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000472
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8655,7 +8667,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000476
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8732,8 +8744,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 12, y: -283}
-  m_SizeDelta: {x: 161, y: 21}
+  m_AnchoredPosition: {x: 12, y: -100}
+  m_SizeDelta: {x: 161, y: 120}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &81000481
 CanvasRenderer:
@@ -8756,18 +8768,18 @@ MonoBehaviour:
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_Maskable: 1
-  m_text: "COMING SOON"
+  m_text: "COMING\nSOON"
   m_fontAsset: {fileID: 11400000, guid: 9013c88d3863798419b6c137cf73ca48, type: 2}
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 26
+  m_fontSizeBase: 26
   m_enableAutoSizing: 1
-  m_fontSizeMin: 15
-  m_fontSizeMax: 20
+  m_fontSizeMin: 18
+  m_fontSizeMax: 26
   m_fontStyle: 1
   m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
-  m_textWrappingMode: 1
+  m_textWrappingMode: 0
   m_overflowMode: 1
   m_isRichText: 1
   m_isOrthographic: 1
@@ -8789,7 +8801,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &81000484
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9555,3 +9567,147 @@ SceneRoots:
   - {fileID: 81000002}
   - {fileID: 81000069}
   - {fileID: 81000073}
+--- !u!225 &99000001
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000217}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000002
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000115}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000003
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000262}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000004
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000132}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000005
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000307}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000006
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000149}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000007
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000352}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000008
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000166}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000009
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000397}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000010
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000183}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000011
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000442}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!225 &99000012
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81000200}
+  m_Enabled: 1
+  m_Alpha: 0.45
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
