@@ -13,18 +13,20 @@ MonoBehaviour:
   m_Name: test
   m_EditorClassIdentifier: 
   Config:
-    ConfigVersion: 0
+    ConfigVersion: 2
     Worlds:
-    - WorldId: 01
-      Name: start
-      Description: "クリアして次のワールドを開放しよう"
-      NextWorld: 02
+    - WorldId: "01"
+      RegionId: "asia"
+      Name: "日本"
+      Description: "日本を舞台に、球種を見極めてホームランに挑戦しよう。"
+      NextWorld: "02"
       Stages:
-      - StageId: 0001
-        Name: "\u30B9\u30C8\u30EC\u30FC\u30C8"
-        BallCount: 5
-        IsBoss: 1
-        NextStagesId: []
+      - StageId: "0001"
+        Name: "ストレートチャレンジ 1"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0002"
         ClearObjective:
           Type: 0
           TargetValue: 1
@@ -40,39 +42,80 @@ MonoBehaviour:
           TargetValue: 3
           Direction: 0
         PitchPool:
-        - PitchId: 0001
-          Weight: 1
-    - WorldId: 02
-      Name: "変化球チャレンジ"
-      Description: "カーブとスライダーに挑戦"
-      NextWorld: ""
-      Stages:
-      - StageId: 0002
-        Name: "\u30AB\u30FC\u30D6"
-        BallCount: 5
+        - PitchId: "0001"
+          Weight: 2
+      - StageId: "0002"
+        Name: "カーブチャレンジ 2"
+        BallCount: 6
         IsBoss: 0
         NextStagesId:
-        - 0003
+        - "0003"
         ClearObjective:
           Type: 0
-          TargetValue: 2
+          TargetValue: 1
           Direction: 0
         StarObjectives:
         - Type: 0
+          TargetValue: 1
+          Direction: 0
+        - Type: 0
           TargetValue: 2
           Direction: 0
-        - Type: 2
-          TargetValue: 300
+        - Type: 0
+          TargetValue: 3
           Direction: 0
-        - Type: 3
-          TargetValue: 1
-          Direction: 2
         PitchPool:
-        - PitchId: 0002
-          Weight: 1
-      - StageId: 0003
-        Name: "\u30B9\u30E9\u30A4\u30C0\u30FC"
-        BallCount: 5
+        - PitchId: "0002"
+          Weight: 2
+      - StageId: "0003"
+        Name: "スライダーチャレンジ 3"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0004"
+        ClearObjective:
+          Type: 0
+          TargetValue: 1
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 1
+          Direction: 0
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        PitchPool:
+        - PitchId: "0003"
+          Weight: 2
+      - StageId: "0004"
+        Name: "フォークチャレンジ 4"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0005"
+        ClearObjective:
+          Type: 0
+          TargetValue: 1
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 1
+          Direction: 0
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        PitchPool:
+        - PitchId: "0004"
+          Weight: 2
+      - StageId: "0005"
+        Name: "日本 最終決戦"
+        BallCount: 8
         IsBoss: 1
         NextStagesId: []
         ClearObjective:
@@ -90,7 +133,667 @@ MonoBehaviour:
           TargetValue: 4
           Direction: 0
         PitchPool:
-        - PitchId: 0003
+        - PitchId: "0001"
+          Weight: 1
+        - PitchId: "0002"
+          Weight: 1
+        - PitchId: "0003"
+          Weight: 1
+        - PitchId: "0004"
+          Weight: 1
+    - WorldId: "02"
+      RegionId: "north_america"
+      Name: "アメリカ"
+      Description: "アメリカを舞台に、球種を見極めてホームランに挑戦しよう。"
+      NextWorld: "03"
+      Stages:
+      - StageId: "0006"
+        Name: "カーブチャレンジ 1"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0007"
+        ClearObjective:
+          Type: 0
+          TargetValue: 1
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 1
+          Direction: 0
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        PitchPool:
+        - PitchId: "0002"
+          Weight: 2
+      - StageId: "0007"
+        Name: "スライダーチャレンジ 2"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0008"
+        ClearObjective:
+          Type: 0
+          TargetValue: 1
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 1
+          Direction: 0
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        PitchPool:
+        - PitchId: "0003"
+          Weight: 2
+      - StageId: "0008"
+        Name: "フォークチャレンジ 3"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0009"
+        ClearObjective:
+          Type: 0
+          TargetValue: 1
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 1
+          Direction: 0
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        PitchPool:
+        - PitchId: "0004"
+          Weight: 2
+      - StageId: "0009"
+        Name: "ストレートチャレンジ 4"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0010"
+        ClearObjective:
+          Type: 0
+          TargetValue: 1
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 1
+          Direction: 0
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        PitchPool:
+        - PitchId: "0001"
+          Weight: 2
+      - StageId: "0010"
+        Name: "カーブチャレンジ 5"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0011"
+        ClearObjective:
+          Type: 0
+          TargetValue: 1
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 1
+          Direction: 0
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        PitchPool:
+        - PitchId: "0002"
+          Weight: 2
+        - PitchId: "0003"
+          Weight: 1
+      - StageId: "0011"
+        Name: "アメリカ 最終決戦"
+        BallCount: 8
+        IsBoss: 1
+        NextStagesId: []
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0001"
+          Weight: 1
+        - PitchId: "0002"
+          Weight: 1
+        - PitchId: "0003"
+          Weight: 1
+        - PitchId: "0004"
+          Weight: 1
+    - WorldId: "03"
+      RegionId: "south_america"
+      Name: "ブラジル"
+      Description: "ブラジルを舞台に、球種を見極めてホームランに挑戦しよう。"
+      NextWorld: "04"
+      Stages:
+      - StageId: "0012"
+        Name: "スライダーチャレンジ 1"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0013"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0003"
+          Weight: 2
+      - StageId: "0013"
+        Name: "フォークチャレンジ 2"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0014"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0004"
+          Weight: 2
+      - StageId: "0014"
+        Name: "ストレートチャレンジ 3"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0015"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0001"
+          Weight: 2
+      - StageId: "0015"
+        Name: "カーブチャレンジ 4"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0016"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0002"
+          Weight: 2
+      - StageId: "0016"
+        Name: "スライダーチャレンジ 5"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0017"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0003"
+          Weight: 2
+        - PitchId: "0004"
+          Weight: 1
+      - StageId: "0017"
+        Name: "フォークチャレンジ 6"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0018"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0004"
+          Weight: 2
+        - PitchId: "0001"
+          Weight: 1
+      - StageId: "0018"
+        Name: "ブラジル 最終決戦"
+        BallCount: 8
+        IsBoss: 1
+        NextStagesId: []
+        ClearObjective:
+          Type: 0
+          TargetValue: 3
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        - Type: 0
+          TargetValue: 5
+          Direction: 0
+        PitchPool:
+        - PitchId: "0001"
+          Weight: 1
+        - PitchId: "0002"
+          Weight: 1
+        - PitchId: "0003"
+          Weight: 1
+        - PitchId: "0004"
+          Weight: 1
+    - WorldId: "04"
+      RegionId: "europe"
+      Name: "フランス"
+      Description: "フランスを舞台に、球種を見極めてホームランに挑戦しよう。"
+      NextWorld: "05"
+      Stages:
+      - StageId: "0019"
+        Name: "フォークチャレンジ 1"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0020"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0004"
+          Weight: 2
+      - StageId: "0020"
+        Name: "ストレートチャレンジ 2"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0021"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0001"
+          Weight: 2
+      - StageId: "0021"
+        Name: "カーブチャレンジ 3"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0022"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0002"
+          Weight: 2
+      - StageId: "0022"
+        Name: "スライダーチャレンジ 4"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0023"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0003"
+          Weight: 2
+      - StageId: "0023"
+        Name: "フォークチャレンジ 5"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0024"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0004"
+          Weight: 2
+        - PitchId: "0001"
+          Weight: 1
+      - StageId: "0024"
+        Name: "ストレートチャレンジ 6"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0025"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0001"
+          Weight: 2
+        - PitchId: "0002"
+          Weight: 1
+      - StageId: "0025"
+        Name: "カーブチャレンジ 7"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0026"
+        ClearObjective:
+          Type: 0
+          TargetValue: 2
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 2
+          Direction: 0
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        PitchPool:
+        - PitchId: "0002"
+          Weight: 2
+        - PitchId: "0003"
+          Weight: 1
+      - StageId: "0026"
+        Name: "フランス 最終決戦"
+        BallCount: 8
+        IsBoss: 1
+        NextStagesId: []
+        ClearObjective:
+          Type: 0
+          TargetValue: 3
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        - Type: 0
+          TargetValue: 5
+          Direction: 0
+        PitchPool:
+        - PitchId: "0001"
+          Weight: 1
+        - PitchId: "0002"
+          Weight: 1
+        - PitchId: "0003"
+          Weight: 1
+        - PitchId: "0004"
+          Weight: 1
+    - WorldId: "05"
+      RegionId: "oceania"
+      Name: "オーストラリア"
+      Description: "オーストラリアを舞台に、球種を見極めてホームランに挑戦しよう。"
+      NextWorld: ""
+      Stages:
+      - StageId: "0027"
+        Name: "ストレートチャレンジ 1"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0028"
+        ClearObjective:
+          Type: 0
+          TargetValue: 3
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        - Type: 0
+          TargetValue: 5
+          Direction: 0
+        PitchPool:
+        - PitchId: "0001"
+          Weight: 2
+      - StageId: "0028"
+        Name: "カーブチャレンジ 2"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0029"
+        ClearObjective:
+          Type: 0
+          TargetValue: 3
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        - Type: 0
+          TargetValue: 5
+          Direction: 0
+        PitchPool:
+        - PitchId: "0002"
+          Weight: 2
+      - StageId: "0029"
+        Name: "スライダーチャレンジ 3"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0030"
+        ClearObjective:
+          Type: 0
+          TargetValue: 3
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        - Type: 0
+          TargetValue: 5
+          Direction: 0
+        PitchPool:
+        - PitchId: "0003"
+          Weight: 2
+      - StageId: "0030"
+        Name: "フォークチャレンジ 4"
+        BallCount: 6
+        IsBoss: 0
+        NextStagesId:
+        - "0031"
+        ClearObjective:
+          Type: 0
+          TargetValue: 3
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 3
+          Direction: 0
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        - Type: 0
+          TargetValue: 5
+          Direction: 0
+        PitchPool:
+        - PitchId: "0004"
+          Weight: 2
+      - StageId: "0031"
+        Name: "オーストラリア 最終決戦"
+        BallCount: 8
+        IsBoss: 1
+        NextStagesId: []
+        ClearObjective:
+          Type: 0
+          TargetValue: 4
+          Direction: 0
+        StarObjectives:
+        - Type: 0
+          TargetValue: 4
+          Direction: 0
+        - Type: 0
+          TargetValue: 5
+          Direction: 0
+        - Type: 0
+          TargetValue: 6
+          Direction: 0
+        PitchPool:
+        - PitchId: "0001"
+          Weight: 1
+        - PitchId: "0002"
+          Weight: 1
+        - PitchId: "0003"
+          Weight: 1
+        - PitchId: "0004"
           Weight: 1
     NormalStarReward: 100
     BossStarReward: 300

@@ -30,6 +30,7 @@ public sealed class WorldUnlock
         _invalidStageLinks.Clear();
         _invalidWorldLinks.Clear();
         if (config?.Worlds == null) return;
+        config.ValidateRegions(Warn);
 
         foreach (WorldData world in config.Worlds)
         {

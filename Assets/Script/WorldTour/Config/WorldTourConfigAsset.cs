@@ -1,6 +1,5 @@
 using UnityEngine;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 [CreateAssetMenu(menuName = "WorldTour/Config Editor")]
 public class WorldTourConfigAsset : ScriptableObject
@@ -11,8 +10,7 @@ public class WorldTourConfigAsset : ScriptableObject
     {
         return JsonConvert.SerializeObject(
             Config,
-            Formatting.Indented,
-            new StringEnumConverter()
+            Formatting.Indented
         );
     }
 }

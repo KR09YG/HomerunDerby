@@ -4,6 +4,8 @@ public static class JsonTest
 {
     public static WorldTourConfig LoadConfig(string json)
     {
-        return JsonUtility.FromJson<WorldTourConfig>(json);
+        WorldTourConfig config = JsonUtility.FromJson<WorldTourConfig>(json);
+        config?.ValidateRegions(message => Debug.LogWarning("[WorldTour] " + message));
+        return config;
     }
 }

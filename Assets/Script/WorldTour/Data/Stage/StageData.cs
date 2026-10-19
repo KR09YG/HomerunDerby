@@ -9,6 +9,7 @@ public class StageData
 
     public int BallCount;
     public bool IsBoss;
+    public bool IsUnlocked;
 
     public StageCondition ClearObjective;
     // 星獲得条件のリスト(どのステージでも星の数は固定で３個)

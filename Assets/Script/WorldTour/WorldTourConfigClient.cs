@@ -14,7 +14,7 @@ public static class WorldTourConfigClient
             request.timeout = Math.Max(1, timeoutSeconds);
             await request.SendWebRequest().ToUniTask(cancellationToken: cancellationToken, cancelImmediately: true);
             cancellationToken.ThrowIfCancellationRequested();
-            return JsonTest.LoadConfig(request.downloadHandler.text);
+            return WorldTourConfigJson.Parse(request.downloadHandler.text);
         }
     }
 }
