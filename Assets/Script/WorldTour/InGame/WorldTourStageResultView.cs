@@ -86,22 +86,10 @@ public static class WorldTourStageResultView
         TourUI.Text(root, "Best Record Heading", "ベスト記録", 1255, 742, 500, 42, 29, theme.JapaneseFont);
         TourUI.Text(root, "Best Record Note", "記録なし", 1255, 798, 500, 44, 23, theme.JapaneseFont, new Color(0.7f, 0.81f, 0.93f));
 
-        StageData next = manager?.GetNextStage();
-        bool canAdvance = next != null && manager.IsStageUnlocked(next);
-        bool nextWorld = stage != null && stage.IsBoss;
-        UnityEngine.UI.Button nextButton = TourUI.Button(root, "Next Stage", canAdvance ? (nextWorld ? "NEXT WORLD" : "NEXT STAGE") : "BACK TO MAP",
-            canAdvance ? (nextWorld ? "次のワールドへ" : "次のステージへ") : "ステージ選択へ戻る", 245, 944, 450,
-            () =>
-            {
-                if (manager == null) return;
-                if (canAdvance) manager.PlayNextStage();
-                else manager.OpenStageSelect();
-            }, theme);
-        nextButton.interactable = manager != null;
-        UnityEngine.UI.Button retryButton = TourUI.Button(root, "Retry", "RETRY", "もう一度挑戦する", 735, 944, 450,
+        UnityEngine.UI.Button retryButton = TourUI.Button(root, "Retry", "RETRY", "もう一度挑戦する", 490, 944, 450,
             () => { if (manager != null) manager.PlayStage(session.StageId); }, theme, new Color(0.9f, 0.08f, 0.17f));
         retryButton.interactable = manager != null;
-        TourUI.Button(root, "Back To Map", "BACK TO MAP", "ステージマップへ戻る", 1225, 944, 450,
+        TourUI.Button(root, "Back To Map", "BACK TO MAP", "ステージマップへ戻る", 980, 944, 450,
             () => { if (manager != null) manager.OpenStageSelect(); else SceneManager.LoadScene("StageSelect"); }, theme, new Color(0.1f, 0.39f, 0.75f));
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
