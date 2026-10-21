@@ -16,7 +16,7 @@ public class Result : MonoBehaviour
         _scoreText.text = "";
         _gameCamera.Priority = 0;
         _resultCamera.Priority = 11;
-        _hideUI.SetActive(false);
+        if (_hideUI != null) _hideUI.SetActive(false);
     }
 
     public void ToTitle()

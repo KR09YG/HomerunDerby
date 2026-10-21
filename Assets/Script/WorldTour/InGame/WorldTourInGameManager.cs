@@ -17,6 +17,7 @@ public class WorldTourInGameManager : MonoBehaviour
         WaitingForStart,
         WaitingForStage,
         CountingDown,
+        PreparingPitch,
         Pitching,
         ResultQueued,
         ResultCommitted,
@@ -44,6 +45,7 @@ public class WorldTourInGameManager : MonoBehaviour
     [Header("Timing")]
     [SerializeField] private float _resultDisplayDelay = 1f;
     [SerializeField] private float _fadeDuration = 0.5f;
+    [SerializeField, Min(0f)] private float _remainingBallNoticeSeconds = 1.2f;
 
     [Header("Audio")]
     [SerializeField] private float _bgmVolume = 0.3f;
@@ -184,10 +186,24 @@ public class WorldTourInGameManager : MonoBehaviour
     private void StartPitch()
     {
         if (_state != FlowState.CountingDown && _state != FlowState.Transitioning) return;
+        _state = FlowState.PreparingPitch;
+        PreparePitchAsync(_lifetimeCts.Token).Forget();
+    }
 
-        _currentResult = null;
-        _state = FlowState.Pitching;
-        _startPitchEvent.RaiseEvent();
+    private async UniTask PreparePitchAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            // 開始カウントダウンの後片付けが終わってから、同じ表示欄を使う。
+            await UniTask.NextFrame(cancellationToken: cancellationToken);
+            await _countdownDisplay.ShowRemainingBalls(Session.RemainingBalls, _remainingBallNoticeSeconds, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_state != FlowState.PreparingPitch) return;
+            _currentResult = null;
+            _state = FlowState.Pitching;
+            _startPitchEvent.RaiseEvent();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
     }
 
     private void OnBattingResultReceived(BattingBallResult result)
