@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using System;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -15,16 +16,12 @@ public static class WorldTourApiClient
         public PlayerSaveDataDto save;
     }
 
-    /// <summary>
-    /// セーブデータの新規登録
-    /// </summary>
-    /// <returns></returns>
     public static async UniTask<PlayerData> CreatePlayerAsync()
     {
-        using var request = new UnityWebRequest($"{BASE_URL}/register", UnityWebRequest.kHttpVerbPOST);
+        using var request = UnityWebRequest.PostWwwForm($"{BASE_URL}/register", UnityWebRequest.kHttpVerbPOST);
+        request.timeout = 10;
 
         request.downloadHandler = new DownloadHandlerBuffer();
-        request.timeout = 10;
         try
         {
             await request.SendWebRequest().ToUniTask();
@@ -34,23 +31,14 @@ public static class WorldTourApiClient
                 Debug.LogError($"Failed to create player: {request.error}");
                 return null;
             }
-            PlayerData response = JsonUtility.FromJson<PlayerData>(request.downloadHandler.text);
 
-            if (response == null ||
-                string.IsNullOrEmpty(response.playerId) ||
-                string.IsNullOrEmpty(response.token) ||
-                response.save == null)
-            {
-                Debug.LogError("Invalid registration response.");
-                return null;
-            }
-
-            return response;
+            return JsonUtility.FromJson<PlayerData>(request.downloadHandler.text);
         }
         catch (System.Exception ex)
         {
             Debug.LogError($"Exception occurred while creating player: {ex.Message}");
             return null;
+
         }
     }
 
@@ -70,7 +58,6 @@ public static class WorldTourApiClient
 
         request.SetRequestHeader("x-player-id", playerId);
         request.SetRequestHeader("Authorization", $"Bearer {token}");
-        request.timeout = 10;
 
         try
         {
@@ -78,7 +65,7 @@ public static class WorldTourApiClient
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError($"Failed to load save data: HTTP {request.responseCode}, {request.error}");
+                Debug.LogError($"Failed to load save data: {request.error}");
                 return null;
             }
 
@@ -99,7 +86,6 @@ public static class WorldTourApiClient
         }
     }
 
-
     [Serializable]
     public class PutSaveRequest
     {
@@ -118,10 +104,8 @@ public static class WorldTourApiClient
     /// <summary>
     /// セーブデータの保存
     /// </summary>
-    public static async UniTask<bool> SavePlayerData(
-        string playerId,
-        string token,
-        PlayerSaveDataDto saveData)
+    public static async UniTask<bool> SavePlayerData(string playerId, string token, PlayerSaveDataDto saveData,
+        CancellationToken cancellationToken = default)
     {
         if (saveData == null)
         {
@@ -129,7 +113,6 @@ public static class WorldTourApiClient
             return false;
         }
 
-        // AWSが要求する形式のJSONを作成
         var body = new PutSaveRequest
         {
             expectedRevision = saveData.Revision,
@@ -139,7 +122,9 @@ public static class WorldTourApiClient
         string jsonData = JsonUtility.ToJson(body);
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
 
-        using var request = new UnityWebRequest($"{BASE_URL}/save", UnityWebRequest.kHttpVerbPUT);
+        using var request = new UnityWebRequest(
+            $"{BASE_URL}/save",
+            UnityWebRequest.kHttpVerbPUT);
 
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
@@ -147,20 +132,20 @@ public static class WorldTourApiClient
         request.SetRequestHeader("x-player-id", playerId);
         request.SetRequestHeader("Authorization", $"Bearer {token}");
         request.SetRequestHeader("Content-Type", "application/json");
-
         request.timeout = 10;
 
         try
         {
-            await request.SendWebRequest().ToUniTask();
+            await request.SendWebRequest().ToUniTask(cancellationToken: cancellationToken, cancelImmediately: true);
+            cancellationToken.ThrowIfCancellationRequested();
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError( $"Failed to save player data: HTTP {request.responseCode}, {request.error}");
+                Debug.LogError(
+                    $"Failed to save player data: HTTP {request.responseCode}, {request.error}");
                 return false;
             }
 
-            // AWSから保存結果を取得
             PutSaveResponse response =
                 JsonUtility.FromJson<PutSaveResponse>(
                     request.downloadHandler.text);
@@ -171,10 +156,14 @@ public static class WorldTourApiClient
                 return false;
             }
 
-            // AWS側で更新されたRevisionを反映
+            // サーバーで更新されたRevisionを送信元DTOに反映する
             saveData.Revision = response.revision;
 
             return true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -183,5 +172,4 @@ public static class WorldTourApiClient
             return false;
         }
     }
-
 }
