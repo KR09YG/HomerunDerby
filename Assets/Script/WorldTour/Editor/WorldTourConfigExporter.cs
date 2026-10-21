@@ -3,6 +3,8 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
 using UnityEngine;
 
 internal static class WorldTourConfigExporter
@@ -77,5 +79,47 @@ internal static class WorldTourConfigExporter
                 "JSONの復元後に設定の差が検出されたため、出力を中止しました。" +
                 "JsonUtilityが対応していない型や設定値が含まれていないか確認してください。");
         return json;
+    }
+}
+
+/// <summary>Editor側に残っている認証情報を、ビルド前に共通ファイルへ移行する。</summary>
+public sealed class WorldTourCredentialMigration : IPreprocessBuildWithReport
+{
+    public int callbackOrder => 0;
+
+    [InitializeOnLoadMethod]
+    private static void OnScriptsReloaded()
+    {
+        EditorApplication.delayCall += TryMigrate;
+    }
+
+    [MenuItem("Tools/World Tour/Migrate Credentials")]
+    private static void TryMigrate()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+        try
+        {
+            if (TokenStorage.LoadCredentials() != null)
+                Debug.Log("[WorldTour Auth] 共通ファイルから認証情報を読み込めました。");
+            else
+                Debug.Log("[WorldTour Auth] 既存の認証情報はありません。ゲーム起動時に新規登録します。");
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning($"[WorldTour Auth] 認証情報を移行できませんでした。{exception.Message}");
+        }
+    }
+
+    public void OnPreprocessBuild(BuildReport report)
+    {
+        try
+        {
+            // EditorのPlayerPrefsを参照できるうちに、既存アカウントを移行する。
+            TokenStorage.LoadCredentials();
+        }
+        catch (Exception exception)
+        {
+            throw new BuildFailedException($"World Tourの認証情報を移行できませんでした。既存の進捗を保護するためビルドを中止します。{exception.Message}");
+        }
     }
 }

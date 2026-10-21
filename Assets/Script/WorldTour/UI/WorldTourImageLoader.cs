@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -20,7 +21,7 @@ public sealed class WorldTourImageLoader : MonoBehaviour
 
     private const int TimeoutSeconds = 15;
     private readonly Dictionary<RawImage, ImageBinding> _bindings = new Dictionary<RawImage, ImageBinding>();
-    private readonly Dictionary<string, UniTask<Texture2D>> _downloads = new Dictionary<string, UniTask<Texture2D>>();
+    private readonly Dictionary<string, Task<Texture2D>> _downloads = new Dictionary<string, Task<Texture2D>>();
     private readonly HashSet<Texture2D> _textures = new HashSet<Texture2D>();
     private readonly CancellationTokenSource _lifetime = new CancellationTokenSource();
 
@@ -51,9 +52,10 @@ public sealed class WorldTourImageLoader : MonoBehaviour
     {
         try
         {
-            if (!_downloads.TryGetValue(url, out UniTask<Texture2D> download))
+            if (!_downloads.TryGetValue(url, out Task<Texture2D> download))
             {
-                download = DownloadAsync(url, cancellationToken).Preserve();
+                // 背景とカードから同時に待てるよう、通信1件につきTaskを共有する。
+                download = DownloadAsync(url, cancellationToken).AsTask();
                 _downloads.Add(url, download);
             }
             Texture2D texture = await download;

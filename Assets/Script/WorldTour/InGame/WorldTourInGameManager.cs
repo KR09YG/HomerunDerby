@@ -9,6 +9,7 @@ using UnityEngine.UI;
 public class WorldTourInGameManager : MonoBehaviour
 {
     private const float FoulResolutionTimeoutSeconds = 6f;
+    private const float StageSaveTimeoutSeconds = 15f;
     private enum FlowState
     {
         Uninitialized,
@@ -356,7 +357,21 @@ public class WorldTourInGameManager : MonoBehaviour
         try
         {
             // 再試行でも進捗はマージし直さず、同じ共有データを保存する。
-            bool saved = await WorldTourSaveService.SaveData(_saveData, cancellationToken);
+            Debug.Log($"[WorldTour] クラウド保存開始 StageId={Session?.StageId} Revision={_saveData.Revision}", this);
+            bool saved;
+            using (var saveCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+            {
+                using var timeout = saveCts.CancelAfterSlim(TimeSpan.FromSeconds(StageSaveTimeoutSeconds), DelayType.Realtime);
+                try
+                {
+                    saved = await WorldTourSaveService.SaveData(_saveData, saveCts.Token);
+                }
+                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                {
+                    Debug.LogError("[WorldTour] 保存がタイムアウトしました。リザルトから再試行してください。", this);
+                    saved = false;
+                }
+            }
             cancellationToken.ThrowIfCancellationRequested();
             if (this == null || _state != FlowState.Finished) return;
 

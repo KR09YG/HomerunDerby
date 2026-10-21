@@ -4,7 +4,6 @@ using System.Threading;
 
 public class WorldTourSaveService
 {
-    private const string PlayerIdKey = "playerId";
     private static bool _isSaving;
 
     /// <summary>
@@ -13,10 +12,7 @@ public class WorldTourSaveService
     /// <returns></returns>
     public static bool HasCredentials()
     {
-        var token = TokenStorage.LoadToken();
-        var playerId = PlayerPrefs.GetString(PlayerIdKey, null);
-        // トークンとプレイヤーIDの両方が存在する場合、セーブデータは有効とみなす
-        return !string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(playerId);
+        return TokenStorage.LoadCredentials() != null;
     }
 
     /// <summary>
@@ -34,9 +30,7 @@ public class WorldTourSaveService
             return false;
         }
 
-        TokenStorage.SaveToken(data.token);
-        PlayerPrefs.SetString(PlayerIdKey, data.playerId);
-        PlayerPrefs.Save();
+        TokenStorage.SaveCredentials(data.playerId, data.token);
 
         return true;
     }
@@ -47,14 +41,13 @@ public class WorldTourSaveService
     /// <returns></returns>
     public static async UniTask<PlayerSaveData> LoadData()
     {
-        if (!HasCredentials())
+        TokenStorage.Credentials credentials = TokenStorage.LoadCredentials();
+        if (credentials == null)
         {
             Debug.LogError("No credentials found. Please register first.");
             return null;
         }
-        var playerId = PlayerPrefs.GetString(PlayerIdKey, null);
-        var token = TokenStorage.LoadToken();
-        var saveDataDto = await WorldTourApiClient.LoadSaveData(playerId, token);
+        var saveDataDto = await WorldTourApiClient.LoadSaveData(credentials.PlayerId, credentials.Token);
         return PlayerSaveDataConverter.FromDto(saveDataDto);
     }
 
@@ -74,7 +67,8 @@ public class WorldTourSaveService
             Debug.LogError("Save data is null.");
             return false;
         }
-        if (!HasCredentials())
+        TokenStorage.Credentials credentials = TokenStorage.LoadCredentials();
+        if (credentials == null)
         {
             Debug.LogError("No credentials found. Please register first.");
             return false;
@@ -83,9 +77,7 @@ public class WorldTourSaveService
         try
         {
             PlayerSaveDataDto dto = PlayerSaveDataConverter.ToDto(saveData);
-            var playerId = PlayerPrefs.GetString(PlayerIdKey, null);
-            var token = TokenStorage.LoadToken();
-            bool success = await WorldTourApiClient.SavePlayerData(playerId, token, dto, cancellationToken);
+            bool success = await WorldTourApiClient.SavePlayerData(credentials.PlayerId, credentials.Token, dto, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             if (success)
                 saveData.Revision = dto.Revision;

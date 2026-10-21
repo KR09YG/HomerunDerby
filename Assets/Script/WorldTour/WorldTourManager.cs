@@ -84,17 +84,6 @@ public class WorldTourManager : MonoBehaviour
         {
             if (!WorldTourSaveService.HasCredentials())
             {
-                // 片方だけ残っている場合は新規登録しない。
-                var playerId = PlayerPrefs.GetString("playerId", "");
-                var token = TokenStorage.LoadToken();
-
-                if (!string.IsNullOrEmpty(playerId)
-                    || !string.IsNullOrEmpty(token))
-                {
-                    Debug.LogError("認証情報が不完全です。");
-                    return;
-                }
-
                 bool registered =
                     await WorldTourSaveService.RegisterData();
 
