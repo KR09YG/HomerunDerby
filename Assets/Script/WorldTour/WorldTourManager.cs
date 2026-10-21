@@ -20,11 +20,11 @@ public class WorldTourManager : MonoBehaviour
     private PlayerSaveData _saveData = new PlayerSaveData();
     private bool _isLoading;
     private StageData _currentStage;
-    private SaveTest _saveTest;
     private WorldUnlock _progress;
     private CancellationTokenSource _configLifetime;
     private WorldTourConfigState _configState;
     private string _configError;
+    private bool _isStageSavePending;
 
     public event Action StateChanged;
 
@@ -32,7 +32,7 @@ public class WorldTourManager : MonoBehaviour
     public WorldTourConfig Config => _config;
     public WorldData CurrentWorld => _currentWorldData;
     public StageData CurrentStage => _currentStage;
-    public bool IsLoading => _isLoading || _configState == WorldTourConfigState.Loading;
+    public bool IsLoading => _isLoading || _isStageSavePending || _configState == WorldTourConfigState.Loading;
     public bool IsConfigReady => _configState == WorldTourConfigState.Ready;
     public WorldTourConfigState ConfigState => _configState;
     public string ConfigError => _configError;
@@ -65,11 +65,75 @@ public class WorldTourManager : MonoBehaviour
             return;
         }
 
-        _saveTest = GetComponent<SaveTest>();
-        if (_saveTest == null) _saveTest = gameObject.AddComponent<SaveTest>();
+        InitializeSaveAsync().Forget();
 
         _configLifetime = new CancellationTokenSource();
         RetryConfigDownload();
+    }
+
+    private bool _isSaveReady;
+    private bool _isSaveInitializing;
+
+    private async UniTask InitializeSaveAsync()
+    {
+        if (_isSaveInitializing || _isSaveReady) return;
+
+        _isSaveInitializing = true;
+
+        try
+        {
+            if (!WorldTourSaveService.HasCredentials())
+            {
+                // 片方だけ残っている場合は新規登録しない。
+                var playerId = PlayerPrefs.GetString("playerId", "");
+                var token = TokenStorage.LoadToken();
+
+                if (!string.IsNullOrEmpty(playerId)
+                    || !string.IsNullOrEmpty(token))
+                {
+                    Debug.LogError("認証情報が不完全です。");
+                    return;
+                }
+
+                bool registered =
+                    await WorldTourSaveService.RegisterData();
+
+                if (!registered)
+                {
+                    Debug.LogError("プレイヤー登録に失敗しました。");
+                    return;
+                }
+            }
+
+            var saveData = await WorldTourSaveService.LoadData();
+
+            if (saveData == null)
+            {
+                Debug.LogError("進捗のロードに失敗しました。");
+                return;
+            }
+
+            // メニューのシーン移動が終わるまで待つ。
+            await UniTask.WaitUntil(() => !_isLoading);
+
+            if (string.Equals( SceneManager.GetActiveScene().name, "Homerun",StringComparison.OrdinalIgnoreCase))
+            {
+                Debug.LogError("進捗のロードはステージ開始前に行ってください。");
+                return;
+            }
+
+            SetSaveData(saveData);
+            _isSaveReady = true;
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogException(exception);
+        }
+        finally
+        {
+            _isSaveInitializing = false;
+            StateChanged?.Invoke();
+        }
     }
 
     private void OnDestroy()
@@ -164,13 +228,6 @@ public class WorldTourManager : MonoBehaviour
         StateChanged?.Invoke();
     }
 
-    [ContextMenu("仮セーブから進捗を復元")]
-    public void RestoreProgress()
-    {
-        PlayerSaveDataDto dto = _saveTest != null ? _saveTest.LoadData() : null;
-        if (dto != null) SetSaveData(PlayerSaveDataConverter.FromDto(dto));
-    }
-
     private void RefreshSelection(string worldId, string stageId)
     {
         Progress.SetSaveData(_saveData);
@@ -185,10 +242,15 @@ public class WorldTourManager : MonoBehaviour
     public void SetStageProgress(StageSessionData session, int newStarCount)
     {
         if (session == null || !session.IsFinished || _currentStage?.StageId != session.StageId) return;
-        // 進捗のマージはInGameManagerで完了している。ここでは保存と画面への通知だけ行う。
+        // 進捗のマージと保存はInGameManagerが行う。共有中の進捗を選択画面にも通知する。
         Debug.Log($"[WorldTour] 新たに獲得した星: {newStarCount}", this);
-        PlayerSaveDataDto saveData = PlayerSaveDataConverter.ToDto(_saveData);
-        if (_saveTest != null) _saveTest.SaveData(saveData);
+        StateChanged?.Invoke();
+    }
+
+    public void SetStageSavePending(bool pending)
+    {
+        if (_isStageSavePending == pending) return;
+        _isStageSavePending = pending;
         StateChanged?.Invoke();
     }
 
@@ -215,7 +277,11 @@ public class WorldTourManager : MonoBehaviour
 
     public void PlayStage(string stageId)
     {
-        if (!IsConfigReady || IsLoading) return;
+        if (!_isSaveReady || !IsConfigReady || IsLoading)
+        {
+            Debug.LogWarning("[WorldTour] 進捗の復元と設定の読み込みが完了してからステージを開始してください。", this);
+            return;
+        }
         StageData stage = FindSelectedStage(stageId);
         if (IsStageUnlocked(stage)) StageSelect(stageId).Forget();
     }
@@ -248,7 +314,7 @@ public class WorldTourManager : MonoBehaviour
 
     private async UniTask OpenMenu(string sceneName)
     {
-        if (_isLoading || (sceneName == "StageSelect" && !IsConfigReady)) return;
+        if (IsLoading || (sceneName == "StageSelect" && !IsConfigReady)) return;
         _isLoading = true;
         try { await SceneManager.LoadSceneAsync(sceneName); }
         catch (Exception exception) { Debug.LogException(exception, this); }
@@ -257,7 +323,11 @@ public class WorldTourManager : MonoBehaviour
 
     private async UniTaskVoid StageSelect(string stageId)
     {
-        if (!IsConfigReady || IsLoading) return;
+        if (!_isSaveReady || !IsConfigReady || IsLoading)
+        {
+            Debug.LogWarning("[WorldTour] 進捗の復元と設定の読み込みが完了してからステージを開始してください。", this);
+            return;
+        }
         StageData stage = FindSelectedStage(stageId);
         if (stage == null || !IsStageUnlocked(stage))
         {

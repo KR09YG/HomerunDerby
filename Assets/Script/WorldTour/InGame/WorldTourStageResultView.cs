@@ -1,17 +1,55 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using System;
 
 public static class WorldTourStageResultView
 {
-    public static void Create(Transform parent, StageSessionData session, TMP_FontAsset font, int newStarCount = 0, bool[] previousStars = null)
+    public sealed class SaveControls
     {
-        if (session == null) return;
+        private readonly RectTransform _root;
+        private readonly Button _retry, _back, _retrySave;
+        private readonly TMP_Text _status;
+        private bool _saved;
+
+        public bool CanNavigate => _root != null && _saved;
+
+        internal SaveControls(RectTransform root, Button retry, Button back, Button retrySave, TMP_Text status)
+        {
+            _root = root;
+            _retry = retry;
+            _back = back;
+            _retrySave = retrySave;
+            _status = status;
+        }
+
+        public void SetSaving() => SetState(false, false, "保存中…");
+        public void SetSaved() => SetState(true, false, "クラウドに保存しました");
+        public void SetSaveFailed() => SetState(false, true, "保存に失敗しました。接続を確認して再試行してください。");
+
+        private void SetState(bool saved, bool failed, string message)
+        {
+            if (_root == null) return;
+            _saved = saved;
+            _retry.interactable = saved && WorldTourManager.Instance != null;
+            _back.interactable = saved;
+            _retry.gameObject.SetActive(!failed);
+            _retrySave.gameObject.SetActive(failed);
+            _status.text = message;
+            _status.color = failed ? new Color(1f, .55f, .45f) : Color.white;
+        }
+    }
+
+    public static SaveControls Create(Transform parent, StageSessionData session, TMP_FontAsset font,
+        int newStarCount = 0, bool[] previousStars = null, Action retrySave = null)
+    {
+        if (session == null) return null;
         WorldTourUITheme theme = WorldTourUITheme.Load();
         if (theme == null)
         {
             Debug.LogError("[WorldTour] リザルトのUIテーマが見つかりません。");
-            return;
+            return null;
         }
         WorldTourManager manager = WorldTourManager.Instance;
         StageData stage = manager?.CurrentStage;
@@ -86,13 +124,23 @@ public static class WorldTourStageResultView
         TourUI.Text(root, "Best Record Heading", "ベスト記録", 1255, 742, 500, 42, 29, theme.JapaneseFont);
         TourUI.Text(root, "Best Record Note", "記録なし", 1255, 798, 500, 44, 23, theme.JapaneseFont, new Color(0.7f, 0.81f, 0.93f));
 
-        UnityEngine.UI.Button retryButton = TourUI.Button(root, "Retry", "RETRY", "もう一度挑戦する", 490, 944, 450,
-            () => { if (manager != null) manager.PlayStage(session.StageId); }, theme, new Color(0.9f, 0.08f, 0.17f));
-        retryButton.interactable = manager != null;
-        TourUI.Button(root, "Back To Map", "BACK TO MAP", "ステージマップへ戻る", 980, 944, 450,
-            () => { if (manager != null) manager.OpenStageSelect(); else SceneManager.LoadScene("StageSelect"); }, theme, new Color(0.1f, 0.39f, 0.75f));
+        SaveControls controls = null;
+        Button retryButton = TourUI.Button(root, "Retry", "RETRY", "もう一度挑戦する", 490, 944, 450,
+            () => { if (controls != null && controls.CanNavigate && manager != null) manager.PlayStage(session.StageId); }, theme, new Color(0.9f, 0.08f, 0.17f));
+        Button backButton = TourUI.Button(root, "Back To Map", "BACK TO MAP", "ステージマップへ戻る", 980, 944, 450,
+            () =>
+            {
+                if (controls == null || !controls.CanNavigate) return;
+                if (manager != null) manager.OpenStageSelect(); else SceneManager.LoadScene("StageSelect");
+            }, theme, new Color(0.1f, 0.39f, 0.75f));
+        Button saveButton = TourUI.Button(root, "Retry Save", "RETRY SAVE", "保存を再試行する", 490, 944, 450,
+            () => retrySave?.Invoke(), theme, new Color(0.9f, 0.08f, 0.17f));
+        TMP_Text saveStatus = TourUI.Text(root, "Save Status", "保存中…", 490, 906, 940, 32, 23, theme.JapaneseFont);
+        controls = new SaveControls(root, retryButton, backButton, saveButton, saveStatus);
+        controls.SetSaving();
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+        return controls;
     }
 
     private static void Record(Transform root, WorldTourUITheme theme, float y, string label, string value)

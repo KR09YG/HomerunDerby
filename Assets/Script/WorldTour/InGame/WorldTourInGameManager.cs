@@ -55,6 +55,9 @@ public class WorldTourInGameManager : MonoBehaviour
     private FlowState _state;
     private StageData _currentStage;
     private PlayerSaveData _saveData;
+    private enum StageSaveState { NotStarted, Saving, Failed, Saved }
+    private StageSaveState _stageSaveState;
+    private WorldTourStageResultView.SaveControls _stageResultView;
 
     public event Action<BattingBallResult> AtBatCompleted;
 
@@ -104,6 +107,7 @@ public class WorldTourInGameManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        bool hasPendingSave = _state == FlowState.Finished && _stageSaveState != StageSaveState.Saved;
         _state = FlowState.ShuttingDown;
         _displayCts?.Cancel();
         _lifetimeCts?.Cancel();
@@ -111,6 +115,13 @@ public class WorldTourInGameManager : MonoBehaviour
         _ballLandedEvent?.UnregisterListener(OnBallLanded);
         _ballReachedTargetEvent?.UnregisterListener(OnPitchReachedTarget);
         _lifetimeCts?.Dispose();
+        if (hasPendingSave) WorldTourManager.Instance?.SetStageSavePending(false);
+    }
+
+    private void OnApplicationQuit()
+    {
+        _state = FlowState.ShuttingDown;
+        _lifetimeCts?.Cancel();
     }
 
     public void BeginStage(StageData stageData, PlayerSaveData saveData)
@@ -303,7 +314,7 @@ public class WorldTourInGameManager : MonoBehaviour
 
     private void FinishStage()
     {
-        if (_state == FlowState.Finished) return;
+        if (_state == FlowState.Finished || _state == FlowState.ShuttingDown) return;
         _state = FlowState.Finished;
         StageSessionData session = Session;
         if (session == null)
@@ -323,8 +334,55 @@ public class WorldTourInGameManager : MonoBehaviour
         if (_saveData.Stages.TryGetValue(session.StageId, out StageProgressData previous) && previous?.EarnedStars != null)
             Array.Copy(previous.EarnedStars, previousStars, Mathf.Min(previous.EarnedStars.Length, previousStars.Length));
         int newStarCount = StageProgressService.MergeStageProgress(_saveData, session);
+        WorldTourManager.Instance?.SetStageSavePending(true);
         WorldTourManager.Instance?.SetStageProgress(session, newStarCount);
-        WorldTourStageResultView.Create(transform, session, _stageResultFont, newStarCount, previousStars);
+        _stageResultView = WorldTourStageResultView.Create(
+            transform, session, _stageResultFont, newStarCount, previousStars, RetryStageSave);
+        RetryStageSave();
+    }
+
+    private void RetryStageSave()
+    {
+        if (_state != FlowState.Finished || _stageSaveState == StageSaveState.Saving ||
+            _stageSaveState == StageSaveState.Saved || _lifetimeCts == null || _lifetimeCts.IsCancellationRequested) return;
+
+        _stageSaveState = StageSaveState.Saving;
+        _stageResultView?.SetSaving();
+        SaveStageAsync(_lifetimeCts.Token).Forget();
+    }
+
+    private async UniTask SaveStageAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            // 再試行でも進捗はマージし直さず、同じ共有データを保存する。
+            bool saved = await WorldTourSaveService.SaveData(_saveData, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (this == null || _state != FlowState.Finished) return;
+
+            if (saved)
+            {
+                _stageSaveState = StageSaveState.Saved;
+                Debug.Log($"[WorldTour] クラウド保存完了 StageId={Session?.StageId} Revision={_saveData.Revision}", this);
+                WorldTourManager.Instance?.SetStageSavePending(false);
+                _stageResultView?.SetSaved();
+            }
+            else
+            {
+                _stageSaveState = StageSaveState.Failed;
+                _stageResultView?.SetSaveFailed();
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception exception)
+        {
+            if (cancellationToken.IsCancellationRequested || this == null || _state != FlowState.Finished) return;
+            _stageSaveState = StageSaveState.Failed;
+            _stageResultView?.SetSaveFailed();
+            Debug.LogException(exception, this);
+        }
     }
 
     private void EnsureResultUI()
