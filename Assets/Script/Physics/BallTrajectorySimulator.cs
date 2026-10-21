@@ -5,6 +5,7 @@ public struct TrajectoryResult
 {
     public List<Vector3> Points;
     public string FirstGroundLayer;
+    public int FoulPoleContactIndex;
     /// <summary>地面の反射処理を実行した回数。</summary>
     public int BounceCount;
     public int LandingIndex;
@@ -98,6 +99,7 @@ public static class BallTrajectorySimulator
                                 initialVelocityMps.y >= 0f;
         string firstGroundLayer = null;
         int landingIndex = 0;
+        int foulPoleContactIndex = -1;
 
         while (elapsedSeconds < config.MaxSimulationTimeSeconds)
         {
@@ -114,9 +116,11 @@ public static class BallTrajectorySimulator
 
             if (!isRolling && config.BounceSettings != null && config.BounceSettings.enableWallBounce)
             {
-                BallCollisions.TryReflectOnFence(prevPos, ref newPos, ref newVelocityMps,
-                                                config.DeltaTime,
-                                                config.BounceSettings.wallRestitution);
+                if (BallCollisions.TryReflectOnFence(prevPos, ref newPos, ref newVelocityMps,
+                        config.DeltaTime, config.BounceSettings.wallRestitution, out RaycastHit fenceHit) &&
+                    trackGroundLayer && foulPoleContactIndex < 0 &&
+                    fenceHit.collider.name.StartsWith("WALL_FoulPole_", System.StringComparison.Ordinal))
+                    foulPoleContactIndex = trajectory.Count;
             }
 
             if (config.BounceSettings != null)
@@ -188,6 +192,7 @@ public static class BallTrajectorySimulator
         {
             Points = trajectory,
             FirstGroundLayer = firstGroundLayer,
+            FoulPoleContactIndex = foulPoleContactIndex,
             BounceCount = bounceCount,
             LandingIndex = landingIndex
         };

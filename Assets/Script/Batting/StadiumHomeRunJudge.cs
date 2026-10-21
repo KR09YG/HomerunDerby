@@ -32,7 +32,7 @@ public static class StadiumHomeRunJudge
 
         Vector3 forward = Vector3.ProjectOnPlane(fieldForward, Vector3.up).normalized;
         float ballRadius = BaseballWorldScale.ToWorldUnits(BallPhysicsConstants.BALL_RADIUS_M);
-        int endIndex = firstGroundIndex > 0 ? Mathf.Min(firstGroundIndex, trajectory.Count - 1) : trajectory.Count - 1;
+        int endIndex = firstGroundIndex >= 0 ? Mathf.Min(firstGroundIndex, trajectory.Count - 1) : trajectory.Count - 1;
 
         for (int i = 1; i <= endIndex; i++)
         {
@@ -59,7 +59,9 @@ public static class StadiumHomeRunJudge
 
             float fromDepth = Vector3.Dot(from - homePlate, direction);
             float toDepth = Vector3.Dot(to - homePlate, direction);
-            if (fromDepth >= fenceDistance || toDepth < fenceDistance + ballRadius) continue;
+            // 中心がフェンス面を横切った区間で確定する。半径分の通過を待つと、
+            // 次の区間では始点が面の外になり、越えた瞬間を取りこぼす。
+            if (fromDepth >= fenceDistance || toDepth < fenceDistance) continue;
 
             float fraction = (fenceDistance - fromDepth) / (toDepth - fromDepth);
             float height = Mathf.Lerp(from.y, to.y, fraction);

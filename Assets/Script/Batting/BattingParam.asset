@@ -50,6 +50,7 @@ MonoBehaviour:
   MinLaunchAngle: -20
   MaxLaunchAngle: 55
   MaxFairAngle: 45
+  BaseDistanceMeters: 28.28
   MaxFoulAngle: 60
   FoulThreshold: 0.85
   HorizontalAnglePower: 1

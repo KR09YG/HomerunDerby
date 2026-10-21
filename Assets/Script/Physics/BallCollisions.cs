@@ -18,8 +18,10 @@ internal static class BallCollisions
     ref Vector3 to,
     ref Vector3 velocity,
     float deltaTime,
-    float restitution)
+    float restitution,
+    out RaycastHit fenceHit)
     {
+        fenceHit = default;
         int fenceMask = LayerMask.GetMask("Net");
 
         Vector3 dir = to - from;
@@ -32,6 +34,7 @@ internal static class BallCollisions
 
         if (Physics.SphereCast(from, radius, dir, out RaycastHit hit, dist, fenceMask, QueryTriggerInteraction.Ignore))
         {
+            fenceHit = hit;
             // 接触点の少し手前に戻す（めり込み防止）
             float backOff = BaseballWorldScale.ToWorldUnits(BallPhysicsConstants.NET_EPSILON);
             to = hit.point + hit.normal * (radius + backOff);
