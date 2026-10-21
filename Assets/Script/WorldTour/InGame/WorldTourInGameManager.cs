@@ -59,6 +59,7 @@ public class WorldTourInGameManager : MonoBehaviour
     private enum StageSaveState { NotStarted, Saving, Failed, Saved }
     private StageSaveState _stageSaveState;
     private WorldTourStageResultView.SaveControls _stageResultView;
+    private WorldTourScreenFade _screenFade;
 
     public event Action<BattingBallResult> AtBatCompleted;
 
@@ -68,6 +69,7 @@ public class WorldTourInGameManager : MonoBehaviour
     private void Awake()
     {
         _lifetimeCts = new CancellationTokenSource();
+        _screenFade = WorldTourScreenFade.Create(transform, "準備中…");
         if (_startPitchEvent == null || _atBatResetEvent == null ||
             _ballReachedTargetEvent == null || _battingResultEvent == null ||
             _ballLandedEvent == null || _countdownDisplay == null || _resultTallyer == null)
@@ -96,7 +98,7 @@ public class WorldTourInGameManager : MonoBehaviour
 
     private void Start()
     {
-        Fade.FadeImage(_fadeDuration, false);
+        if (Fade.instance != null) Fade.FadeImage(0f, false);
         BGMManager.Instance.Play(
             BGMPath.SPORTS_SEASON, _bgmVolume, _delayBGMStartTime, 1, true, false);
 
@@ -166,7 +168,17 @@ public class WorldTourInGameManager : MonoBehaviour
         if (_state != FlowState.WaitingForStart && _state != FlowState.WaitingForStage) return;
 
         _state = FlowState.CountingDown;
-        _countdownDisplay.PlayCountdown(StartPitch, _lifetimeCts.Token).Forget();
+        StartCountdownAsync(_lifetimeCts.Token).Forget();
+    }
+
+    private async UniTask StartCountdownAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _screenFade.RevealAsync(_fadeDuration, cancellationToken);
+            await _countdownDisplay.PlayCountdown(StartPitch, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
     }
 
     private void StartPitch()
@@ -298,19 +310,23 @@ public class WorldTourInGameManager : MonoBehaviour
         if (_state != FlowState.AwaitingNextAtBat) return;
 
         _state = FlowState.Transitioning;
-        Fade.FadeImage(_fadeDuration, true, () =>
-        {
-            if (_state != FlowState.Transitioning) return;
+        ContinueToNextAtBatAsync(_lifetimeCts.Token).Forget();
+    }
 
+    private async UniTask ContinueToNextAtBatAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _screenFade.HideAsync(_fadeDuration, "次の投球を準備しています…", cancellationToken);
+            if (_state != FlowState.Transitioning) return;
             FindFirstObjectByType<BattingBallMove>()?.StopAndHide();
             _atBatResetEvent.RaiseEvent();
             _currentResult = null;
-            Fade.FadeImage(_fadeDuration, false, () =>
-            {
-                if (_state != FlowState.Transitioning) return;
-                StartPitch();
-            });
-        });
+            await UniTask.NextFrame(cancellationToken: cancellationToken);
+            await _screenFade.RevealAsync(_fadeDuration, cancellationToken);
+            if (_state == FlowState.Transitioning) StartPitch();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
     }
 
     private void FinishStage()
@@ -348,6 +364,7 @@ public class WorldTourInGameManager : MonoBehaviour
             _stageSaveState == StageSaveState.Saved || _lifetimeCts == null || _lifetimeCts.IsCancellationRequested) return;
 
         _stageSaveState = StageSaveState.Saving;
+        _screenFade.Cover("保存中…");
         _stageResultView?.SetSaving();
         SaveStageAsync(_lifetimeCts.Token).Forget();
     }
@@ -376,17 +393,30 @@ public class WorldTourInGameManager : MonoBehaviour
             if (this == null || _state != FlowState.Finished) return;
 
             if (saved)
-            {
-                _stageSaveState = StageSaveState.Saved;
                 Debug.Log($"[WorldTour] クラウド保存完了 StageId={Session?.StageId} Revision={_saveData.Revision}", this);
-                WorldTourManager.Instance?.SetStageSavePending(false);
+            else
+                Debug.LogWarning($"[WorldTour] クラウド保存失敗 StageId={Session?.StageId}", this);
+
+            if (_stageResultView != null && !_stageResultView.AreImagesReady)
+            {
+                _screenFade.Cover("画像を読み込み中…");
+                await UniTask.WaitUntil(() => _stageResultView.AreImagesReady, cancellationToken: cancellationToken);
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            if (this == null || _state != FlowState.Finished) return;
+
+            if (saved)
+            {
                 _stageResultView?.SetSaved();
             }
             else
             {
-                _stageSaveState = StageSaveState.Failed;
                 _stageResultView?.SetSaveFailed();
             }
+            await _screenFade.RevealAsync(_fadeDuration, cancellationToken);
+            if (this == null || _state != FlowState.Finished) return;
+            _stageSaveState = saved ? StageSaveState.Saved : StageSaveState.Failed;
+            if (saved) WorldTourManager.Instance?.SetStageSavePending(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -396,6 +426,7 @@ public class WorldTourInGameManager : MonoBehaviour
             if (cancellationToken.IsCancellationRequested || this == null || _state != FlowState.Finished) return;
             _stageSaveState = StageSaveState.Failed;
             _stageResultView?.SetSaveFailed();
+            await _screenFade.RevealAsync(_fadeDuration, cancellationToken);
             Debug.LogException(exception, this);
         }
     }

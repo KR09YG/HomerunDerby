@@ -34,6 +34,7 @@ public class WorldTourManager : MonoBehaviour
     public StageData CurrentStage => _currentStage;
     public bool IsLoading => _isLoading || _isStageSavePending || _configState == WorldTourConfigState.Loading;
     public bool IsConfigReady => _configState == WorldTourConfigState.Ready;
+    public bool IsSaveInitializing => _isSaveInitializing;
     public WorldTourConfigState ConfigState => _configState;
     public string ConfigError => _configError;
     public IReadOnlyList<WorldData> Worlds => Progress.Worlds;
@@ -105,7 +106,7 @@ public class WorldTourManager : MonoBehaviour
             // メニューのシーン移動が終わるまで待つ。
             await UniTask.WaitUntil(() => !_isLoading);
 
-            if (string.Equals( SceneManager.GetActiveScene().name, "Homerun",StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(SceneManager.GetActiveScene().name, "Homerun", StringComparison.OrdinalIgnoreCase))
             {
                 Debug.LogError("進捗のロードはステージ開始前に行ってください。");
                 return;
@@ -305,7 +306,20 @@ public class WorldTourManager : MonoBehaviour
     {
         if (IsLoading || (sceneName == "StageSelect" && !IsConfigReady)) return;
         _isLoading = true;
-        try { await SceneManager.LoadSceneAsync(sceneName); }
+        try
+        {
+            WorldTourScreenFade screen = FindFirstObjectByType<WorldTourScreenFade>();
+            if (screen != null) await screen.HideAsync(.25f, "読み込み中…", _configLifetime.Token);
+            await SceneManager.LoadSceneAsync(sceneName).ToUniTask(cancellationToken: _configLifetime.Token);
+            if (sceneName == "Title")
+            {
+                WorldTourScreenFade titleFade = WorldTourScreenFade.Create(null, "読み込み中…");
+                if (Fade.instance != null) Fade.FadeImage(0f, false);
+                await titleFade.RevealAsync(.25f, _configLifetime.Token);
+                Destroy(titleFade.gameObject);
+            }
+        }
+        catch (OperationCanceledException) when (_configLifetime.IsCancellationRequested) { }
         catch (Exception exception) { Debug.LogException(exception, this); }
         finally { _isLoading = false; }
     }
@@ -328,8 +342,10 @@ public class WorldTourManager : MonoBehaviour
         _currentStage = stage;
         try
         {
-            await SceneManager.LoadSceneAsync("Homerun");
-            await UniTask.NextFrame();
+            WorldTourScreenFade screen = FindFirstObjectByType<WorldTourScreenFade>();
+            if (screen != null) await screen.HideAsync(.25f, "読み込み中…", _configLifetime.Token);
+            await SceneManager.LoadSceneAsync("Homerun").ToUniTask(cancellationToken: _configLifetime.Token);
+            await UniTask.NextFrame(cancellationToken: _configLifetime.Token);
 
             if (!SetPitchBall(stage)) return;
 
@@ -343,6 +359,7 @@ public class WorldTourManager : MonoBehaviour
             gameManager.enabled = true;
             gameManager.BeginStage(stage, _saveData);
         }
+        catch (OperationCanceledException) when (_configLifetime.IsCancellationRequested) { }
         catch (Exception exception)
         {
             Debug.LogException(exception, this);

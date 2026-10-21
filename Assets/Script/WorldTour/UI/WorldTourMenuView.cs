@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 
 public sealed class WorldTourMenuView : MonoBehaviour
 {
@@ -32,6 +35,11 @@ public sealed class WorldTourMenuView : MonoBehaviour
     private float _cardHeight;
     private float _cardStride;
     private WorldTourImageLoader _images;
+    private WorldTourScreenFade _screenFade;
+    private readonly CancellationTokenSource _lifetime = new CancellationTokenSource();
+    private int _revealRevision;
+
+    private void Awake() => _screenFade = WorldTourScreenFade.Create(transform, "読み込み中…");
 
     private void Start()
     {
@@ -45,6 +53,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
         {
             Text("Status", "ワールド設定を確認してください");
             Button("PrimaryAction").interactable = false;
+            RevealMenu();
             return;
         }
         while (_elements.ContainsKey("WorldCard" + _worldSlots)) _worldSlots++;
@@ -76,11 +85,14 @@ public sealed class WorldTourMenuView : MonoBehaviour
 
     private void OnDestroy()
     {
+        _lifetime.Cancel();
+        _lifetime.Dispose();
         if (_manager != null) _manager.StateChanged -= RefreshMenu;
     }
 
     private void RefreshMenu()
     {
+        RevealMenu();
         if (!_manager.IsConfigReady)
         {
             foreach (var path in _stagePaths)
@@ -173,6 +185,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
     private void SelectWorld(int index)
     {
         if (index < 0 || index >= _worlds.Count || !_manager.IsWorldUnlocked(_worlds[index])) return;
+        RevealMenu();
         _selectedWorld = _worlds[index];
         for (int i = 0; i < _worldSlots; i++)
         {
@@ -219,6 +232,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
     private void SelectStage(int index)
     {
         if (_selectedWorld == null || index < 0 || index >= _stages.Count || !_manager.IsStageUnlocked(_stages[index])) return;
+        RevealMenu();
         _selectedStage = _stages[index];
         RefreshStageNodes();
         bool unlocked = _manager.IsStageUnlocked(_selectedStage);
@@ -600,6 +614,27 @@ public sealed class WorldTourMenuView : MonoBehaviour
         foreach (WorldData world in _worlds) { count += WorldStars(world, _manager.SaveData); total += world.Stages.Count * 3; }
         Text("TotalStars", $"{count} / {total}");
         Text("TotalPoints", _manager.SaveData.Points.ToString("N0"));
+    }
+
+    private void RevealMenu()
+    {
+        _screenFade?.Cover("読み込み中…");
+        RevealMenuAsync(++_revealRevision, _lifetime.Token).Forget();
+    }
+
+    private async UniTask RevealMenuAsync(int revision, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // 同じ更新内で登録される画像をまとめて待つ。
+            await UniTask.NextFrame(cancellationToken: cancellationToken);
+            await UniTask.WaitUntil(() => revision != _revealRevision ||
+                ((_manager == null || (_manager.ConfigState != WorldTourConfigState.Loading && !_manager.IsSaveInitializing)) &&
+                 (_images == null || !_images.IsLoading)), cancellationToken: cancellationToken);
+            if (revision != _revealRevision || this == null) return;
+            await _screenFade.RevealAsync(.25f, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
     }
 
     private void Picture(string name, string url)

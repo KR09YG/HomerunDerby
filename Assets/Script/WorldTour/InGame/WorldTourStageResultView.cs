@@ -11,17 +11,21 @@ public static class WorldTourStageResultView
         private readonly RectTransform _root;
         private readonly Button _retry, _back, _retrySave;
         private readonly TMP_Text _status;
+        private readonly WorldTourImageLoader _images;
         private bool _saved;
 
         public bool CanNavigate => _root != null && _saved;
+        public bool AreImagesReady => _images == null || !_images.IsLoading;
 
-        internal SaveControls(RectTransform root, Button retry, Button back, Button retrySave, TMP_Text status)
+        internal SaveControls(RectTransform root, Button retry, Button back, Button retrySave, TMP_Text status,
+            WorldTourImageLoader images)
         {
             _root = root;
             _retry = retry;
             _back = back;
             _retrySave = retrySave;
             _status = status;
+            _images = images;
         }
 
         public void SetSaving() => SetState(false, false, "保存中…");
@@ -136,7 +140,7 @@ public static class WorldTourStageResultView
         Button saveButton = TourUI.Button(root, "Retry Save", "RETRY SAVE", "保存を再試行する", 490, 944, 450,
             () => retrySave?.Invoke(), theme, new Color(0.9f, 0.08f, 0.17f));
         TMP_Text saveStatus = TourUI.Text(root, "Save Status", "保存中…", 490, 906, 940, 32, 23, theme.JapaneseFont);
-        controls = new SaveControls(root, retryButton, backButton, saveButton, saveStatus);
+        controls = new SaveControls(root, retryButton, backButton, saveButton, saveStatus, images);
         controls.SetSaving();
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;

@@ -17,6 +17,7 @@ public sealed class WorldTourImageLoader : MonoBehaviour
         public Rect FallbackUv;
         public string Url;
         public int Revision;
+        public bool IsLoading;
     }
 
     private const int TimeoutSeconds = 15;
@@ -24,6 +25,15 @@ public sealed class WorldTourImageLoader : MonoBehaviour
     private readonly Dictionary<string, Task<Texture2D>> _downloads = new Dictionary<string, Task<Texture2D>>();
     private readonly HashSet<Texture2D> _textures = new HashSet<Texture2D>();
     private readonly CancellationTokenSource _lifetime = new CancellationTokenSource();
+    public bool IsLoading
+    {
+        get
+        {
+            foreach (var pair in _bindings)
+                if (pair.Key != null && pair.Value.IsLoading) return true;
+            return false;
+        }
+    }
 
     public void SetImage(RawImage image, string url)
     {
@@ -37,6 +47,7 @@ public sealed class WorldTourImageLoader : MonoBehaviour
         if (binding.Url == url && !string.IsNullOrEmpty(url) && _downloads.ContainsKey(url)) return;
         binding.Url = url;
         int revision = ++binding.Revision;
+        binding.IsLoading = false;
         image.texture = binding.Fallback;
         image.uvRect = binding.FallbackUv;
         if (string.IsNullOrWhiteSpace(url)) return;
@@ -45,6 +56,7 @@ public sealed class WorldTourImageLoader : MonoBehaviour
             Debug.LogWarning($"[WorldTour Image] HTTPSの画像URLを指定してください: {url}", this);
             return;
         }
+        binding.IsLoading = true;
         ApplyAsync(image, binding, revision, url, _lifetime.Token).Forget();
     }
 
@@ -70,6 +82,10 @@ public sealed class WorldTourImageLoader : MonoBehaviour
             // 画像だけの通信失敗で、ステージ選択やゲーム進行は止めない。
             if (image != null && binding.Revision == revision)
                 Debug.LogWarning($"[WorldTour Image] 画像を取得できませんでした: {url}\n{exception.Message}", this);
+        }
+        finally
+        {
+            if (binding.Revision == revision) binding.IsLoading = false;
         }
     }
 
