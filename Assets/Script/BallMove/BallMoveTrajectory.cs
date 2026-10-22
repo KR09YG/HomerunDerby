@@ -3,12 +3,12 @@ using UnityEngine;
 
 public abstract class BallMoveTrajectory : MonoBehaviour
 {
-    [Header("‹¤’Ê")]
+    [Header("å…±é€š")]
     [SerializeField] protected float _visualSpeedMultiplier = 1.0f;
     [SerializeField] protected bool _enableSpin = true;
     [SerializeField] protected float _spinSpeedMultiplier = 1.0f;
 
-    [Header("‹O“¹Ä¶İ’è")]
+    [Header("è»Œé“å†ç”Ÿè¨­å®š")]
     [SerializeField] protected float _trajectoryDeltaTime = 0.01f;
 
     protected int _index;

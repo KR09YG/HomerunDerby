@@ -4,9 +4,9 @@ using UnityEngine;
 public class BattingCalculator : MonoBehaviour
 {
     [Header("参照")]
-    [SerializeField] private HomeRunDerbyManager _homeRunDerbyManager;
     private BattingSystem _battingSystem;
     [SerializeField] private StrikeZone _strikeZone;
+    [SerializeField] private Transform _fieldReference;
     [SerializeField] private BattingParameters _parameters;
     [SerializeField] private BounceSettings _bounceSettings;
 
@@ -16,10 +16,9 @@ public class BattingCalculator : MonoBehaviour
     private const float GroundBallAngleDegrees = 10f;
     private const float FlightStepSeconds = 0.01f;
     private const float MaxFlightSeconds = 10f;
-    private const float MinFoulDirectionSquared = 0.001f;
 
     private List<Vector3> _lastTrajectory;
-    private string _lastGroundLayer;
+    private BattingBallType _lastBallType;
     public StrikeZone Zone => _strikeZone;
 
     private void Awake()
@@ -65,7 +64,6 @@ public class BattingCalculator : MonoBehaviour
         }
         else
         {
-            Debug.Log("Miss Swing");
             RaiseMissEvent();
         }
     }
@@ -124,19 +122,52 @@ public class BattingCalculator : MonoBehaviour
                 BattingParameters = _parameters
             };
 
-        var (trajectory, firstGroundLayer, landingIndex) =
-            BallPhysicsCalculator.SimulateTrajectoryWithGroundInfo(
+        TrajectoryResult simulation = BallPhysicsCalculator.SimulateBattedBallWithStadiumInfo(
             launchPosition, initialVelocity,
             spinAxis, spinRate,
             liftCoefficient, simulateConfig);
+        List<Vector3> trajectory = simulation.Points;
+        string firstGroundLayer = simulation.FirstGroundLayer;
+        int landingIndex = simulation.LandingIndex;
+
+        if (trajectory == null || trajectory.Count == 0)
+        {
+            Debug.LogError("[Batting] 打球軌道を生成できませんでした。", this);
+            RaiseMissEvent();
+            return;
+        }
 
         _lastTrajectory = trajectory;
-        _lastGroundLayer = firstGroundLayer;
 
-        float distance = CalculateDistance(launchPosition, trajectory[landingIndex]);
+        bool hasGroundContact = firstGroundLayer != null;
+        int firstGroundIndex = hasGroundContact ? landingIndex : -1;
+        int terminalIndex = hasGroundContact ? landingIndex : trajectory.Count - 1;
+        if (_fieldReference == null)
+            Debug.LogWarning("[Batting] 球場の基準Transformが未設定です。ワールド原点を本塁として判定します。", this);
+        Vector3 fieldOrigin = _fieldReference != null ? _fieldReference.position : Vector3.zero;
+        Vector3 fieldForward = _fieldReference != null ? -_fieldReference.forward : Vector3.back;
+        FairFoulDecision fairFoul = FairFoulJudge.Evaluate(
+            trajectory, firstGroundIndex, fieldOrigin, fieldForward, _parameters.MaxFairAngle,
+            BaseballWorldScale.ToWorldUnits(_parameters.BaseDistanceMeters));
+        bool crossedFence = StadiumHomeRunJudge.TryFindFenceCrossing(
+            trajectory, firstGroundIndex, fieldOrigin, fieldForward,
+            _parameters.MaxFairAngle, out int fenceCrossingIndex);
+        bool hitFoulPole = simulation.FoulPoleContactIndex >= 0 &&
+            (firstGroundIndex < 0 || simulation.FoulPoleContactIndex <= firstGroundIndex);
+        int homeRunIndex = hitFoulPole && crossedFence
+            ? Mathf.Min(simulation.FoulPoleContactIndex, fenceCrossingIndex)
+            : hitFoulPole ? simulation.FoulPoleContactIndex : fenceCrossingIndex;
+        int resolutionIndex = hitFoulPole || crossedFence
+            ? homeRunIndex : Mathf.Max(terminalIndex, fairFoul.ResolutionIndex);
+
+        if (!hasGroundContact)
+            Debug.LogWarning("[Batting] 軌道の終了まで接地しませんでした。終端位置で打球結果を判定します。", this);
+
+        float distance = CalculateDistance(launchPosition, trajectory[terminalIndex]);
 
         BattingBallType ballType = DetermineBallType(
-            trajectory, launchPosition, distance, launchAngle, horizontalAngle, firstGroundLayer, landingIndex);
+            distance, launchAngle, hasGroundContact, fairFoul.IsFoul, crossedFence || hitFoulPole);
+        _lastBallType = ballType;
 
         BattingBallResult result = new BattingBallResult(ballType)
         {
@@ -152,7 +183,9 @@ public class BattingCalculator : MonoBehaviour
             Timing = timing,
             TrajectoryPoints = trajectory,
             Distance = distance,
-            LandingIndex = landingIndex
+            LandingIndex = terminalIndex,
+            ResolutionIndex = resolutionIndex,
+            HasGroundContact = hasGroundContact
         };
 
 
@@ -161,7 +194,11 @@ public class BattingCalculator : MonoBehaviour
             Debug.Log($"[Batting] ContactPitch={pitchSpeed * BallPhysicsConstants.MPS_TO_KPH:F1}km/h, " +
                 $"ExitVel={exitVelocity * BallPhysicsConstants.MPS_TO_KPH:F1}km/h, Efficiency={efficiency:F3}, " +
                 $"Spin={spinRate:F0}rpm, Launch={launchAngle:F1}°, Timing={timing:F3}, " +
-                $"Horizontal={horizontalAngle:F1}°, Distance={distance:F1}m, Type={ballType}, Layer={firstGroundLayer}");
+                $"Horizontal={horizontalAngle:F1}°, FoulAngle={fairFoul.AngleDegrees:F1}°, " +
+                $"Distance={distance:F1}m, Type={ballType}, Layer={firstGroundLayer ?? "None"}, " +
+                $"CrossedFence={crossedFence}, FenceIndex={fenceCrossingIndex}, " +
+                $"HitFoulPole={hitFoulPole}, PoleIndex={simulation.FoulPoleContactIndex}, " +
+                $"DecisionIndex={fairFoul.ResolutionIndex}, DecisionPos={fairFoul.Position.ToString("F2")}");
         }
 
         _battedBallResultEvent?.RaiseEvent(result);
@@ -180,55 +217,22 @@ public class BattingCalculator : MonoBehaviour
         ));
     }
 
-    private bool IsFoulBallByTrajectory(List<Vector3> trajectory, Vector3 startPosition, int landingIndex)
-    {
-        if (trajectory == null)
-            return false;
-
-        Vector3 earlyPoint = trajectory[landingIndex];
-
-        Vector3 direction = earlyPoint - startPosition;
-        direction.y = 0;
-
-        if (direction.sqrMagnitude < MinFoulDirectionSquared)
-            return false;
-
-        direction.Normalize();
-
-        float angle = Mathf.Atan2(direction.x, -direction.z) * Mathf.Rad2Deg;
-        bool isFoul = Mathf.Abs(angle) > _parameters.MaxFairAngle;
-
-        if (_parameters.EnableDebugLogs && isFoul)
-        {
-            Debug.Log($"[Foul] Angle={angle:F1}°, Threshold=±{_parameters.MaxFairAngle}°");
-        }
-
-        return isFoul;
-    }
-
     private BattingBallType DetermineBallType(
-        List<Vector3> trajectory,
-        Vector3 startPosition,
         float distance,
         float launchAngle,
-        float horizontalAngle,
-        string firstGroundLayer,
-        int landingIndex)
+        bool hasGroundContact,
+        bool isFoul,
+        bool crossedFence)
     {
-        if (trajectory == null || trajectory.Count == 0)
-            return BattingBallType.Miss;
+        if (crossedFence)
+            return BattingBallType.HomeRun;
 
-        if (IsFoulBallByTrajectory(trajectory, startPosition, landingIndex))
+        if (isFoul)
             return BattingBallType.Foul;
 
-        if (firstGroundLayer != "Ground" && firstGroundLayer != "Net")
-        {
-            if (_parameters.EnableDebugLogs)
-            {
-                Debug.Log($"[HomeRun] Landed on layer: {firstGroundLayer}");
-            }
-            return BattingBallType.HomeRun;
-        }
+        // 接地していない打球を、レイヤーがないという理由で本塁打にしない。
+        if (!hasGroundContact)
+            return launchAngle < GroundBallAngleDegrees ? BattingBallType.GroundBall : BattingBallType.Hit;
 
         if (launchAngle < GroundBallAngleDegrees)
             return BattingBallType.GroundBall;
@@ -249,7 +253,7 @@ public class BattingCalculator : MonoBehaviour
         if (_parameters == null || !_parameters.ShowTrajectoryGizmos) return;
         if (_lastTrajectory == null || _lastTrajectory.Count == 0) return;
 
-        Color trajectoryColor = _lastGroundLayer == "HomerunZone" ? Color.yellow : Color.green;
+        Color trajectoryColor = _lastBallType == BattingBallType.HomeRun ? Color.yellow : Color.green;
         Gizmos.color = trajectoryColor;
 
         for (int i = 0; i < _lastTrajectory.Count - 1; i++)

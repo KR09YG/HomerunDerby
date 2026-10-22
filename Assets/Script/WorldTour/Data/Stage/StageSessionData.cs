@@ -1,0 +1,37 @@
+using System;
+
+/// <summary>
+/// プレイ中のステージの進捗を管理するクラス
+/// </summary>
+[Serializable]
+public class StageSessionData
+{
+    public string StageId;
+    // 残りの球数
+    public int RemainingBalls;
+
+    // ステージがクリアされたかどうか
+    public bool IsCleared;
+    // ステージが終了したかどうか
+    public bool IsFinished;
+
+    // 達成した星を条件順に保持する。
+    public bool[] AchievedStars;
+    // ステージの統計情報
+    public StageStatistics Statistics;
+
+    public StageSessionData(StageData stage)
+    {
+        if (stage == null)
+            throw new ArgumentNullException(nameof(stage));
+
+        StageId = stage.StageId;
+        RemainingBalls = stage.BallCount;
+
+        IsCleared = false;
+        IsFinished = false;
+
+        AchievedStars = new bool[StageData.StarCount];
+        Statistics = new StageStatistics();
+    }
+}

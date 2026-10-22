@@ -14,7 +14,7 @@ public class BattingSystem : MonoBehaviour
     [SerializeField] private BattingParameters _parameters;
     [SerializeField] private PitchBallMove _ballMove;
     [Tooltip("ヒット時に停止する実時間。空振りは停止せず、0でヒット時も停止なし。")]
-    [SerializeField, Min(0f)] private float _hitPauseSeconds = 3f;
+    [SerializeField, Min(0f)] private float _hitPauseSeconds = 0.1f;
     [Header("打撃時のボール表示")]
     [Tooltip("ミートポイントを中心とした左右上下の位置間隔（m）。")]
     [SerializeField, Min(0f)] private float _contactPointSpacingMeters = 0.05f;
@@ -255,7 +255,8 @@ public class BattingSystem : MonoBehaviour
 
     private void CalculateNow()
     {
-        Debug.Log("[BattingSystem] Batting calculation started.");
+        if (_parameters != null && _parameters.EnableDebugLogs)
+            Debug.Log("[BattingSystem] Batting calculation started.", this);
         _hitEvent?.RaiseEvent(_ballMove);
         _swingEvent?.RaiseEvent();
     }
@@ -291,7 +292,8 @@ public class BattingSystem : MonoBehaviour
 
     private void ReleasedBall(PitchBallMove ball)
     {
-        Debug.Log("[BattingSystem] Ball Released - Swing is now allowed.");
+        if (_parameters != null && _parameters.EnableDebugLogs)
+            Debug.Log("[BattingSystem] Ball Released - Swing is now allowed.", this);
         EndHitStop();
         _canSwing = true;
         _isSwinging = false;

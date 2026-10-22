@@ -50,10 +50,11 @@ MonoBehaviour:
   MinLaunchAngle: -20
   MaxLaunchAngle: 55
   MaxFairAngle: 45
+  BaseDistanceMeters: 28.28
   MaxFoulAngle: 60
-  FoulThreshold: 0.7
-  HorizontalAnglePower: 1.5
-  TimingRangeMeters: 0.5
+  FoulThreshold: 0.85
+  HorizontalAnglePower: 1
+  TimingRangeMeters: 1
   BaseBackspinRPM: 1800
   MinSpinRate: 500
   MaxSpinRate: 4000

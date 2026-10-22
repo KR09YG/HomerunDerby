@@ -3,37 +3,37 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "BounceSettings", menuName = "Baseball/Bounce Settings")]
 public class BounceSettings : ScriptableObject
 {
-    [Header("’n–ÊƒoƒEƒ“ƒhİ’è")]
-    [Tooltip("’n–Ê‚Ì‚‚³iUnity‚Ìƒ[ƒ‹ƒhÀ•Wj")]
+    [Header("åœ°é¢ãƒã‚¦ãƒ³ãƒ‰è¨­å®š")]
+    [Tooltip("åœ°é¢ã®é«˜ã•ï¼ˆUnityã®ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ï¼‰")]
     public float groundLevel = 0f;
 
-    [Tooltip("’n–Ê‚Ì”½”­ŒW”i0~1jB–ì‹…ê: 0.4~0.6")]
+    [Tooltip("åœ°é¢ã®åç™ºä¿‚æ•°ï¼ˆ0~1ï¼‰ã€‚é‡çƒå ´: 0.4~0.6")]
     [Range(0f, 1f)]
     public float groundRestitution = 0.4f;
 
-    [Tooltip("’n–Ê‚Ì–€CŒW”i0~1jBÅ¶: 0.3~0.5")]
+    [Tooltip("åœ°é¢ã®æ‘©æ“¦ä¿‚æ•°ï¼ˆ0~1ï¼‰ã€‚èŠç”Ÿ: 0.3~0.5")]
     [Range(0f, 1f)]
     public float groundFriction = 0.2f;
 
-    [Tooltip("Å‘åƒoƒEƒ“ƒh‰ñ”")]
+    [Tooltip("æœ€å¤§ãƒã‚¦ãƒ³ãƒ‰å›æ•°")]
     public int maxBounces = 2;
 
-    [Tooltip("ƒoƒEƒ“ƒh’â~‘¬“x (m/s)B‚±‚Ì‘¬“xˆÈ‰º‚Å’â~")]
+    [Tooltip("ãƒã‚¦ãƒ³ãƒ‰åœæ­¢é€Ÿåº¦ (m/s)ã€‚ã“ã®é€Ÿåº¦ä»¥ä¸‹ã§åœæ­¢")]
     public float stopVelocityThreshold = 0.5f;
 
-    [Header("•Ç/ƒtƒFƒ“ƒXİ’è")]
-    [Tooltip("•ÇƒoƒEƒ“ƒh‚ğ—LŒø‰»")]
+    [Header("å£/ãƒ•ã‚§ãƒ³ã‚¹è¨­å®š")]
+    [Tooltip("å£ãƒã‚¦ãƒ³ãƒ‰ã‚’æœ‰åŠ¹åŒ–")]
     public bool enableWallBounce = true;
 
-    [Tooltip("•Ç‚Ì”½”­ŒW”")]
+    [Tooltip("å£ã®åç™ºä¿‚æ•°")]
     [Range(0f, 1f)]
     public float wallRestitution = 0.3f;
 
-    [Tooltip("ƒtƒB[ƒ‹ƒh‹«ŠEiƒ[ƒ‹ƒhÀ•Wj")]
+    [Tooltip("ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰å¢ƒç•Œï¼ˆãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ï¼‰")]
     public Bounds fieldBounds = new Bounds(Vector3.zero, new Vector3(100f, 50f, 100f));
 
-    [Header("“]‚ª‚èİ’è")]
-    [Tooltip("“]‚ª‚èn‚ß‚©‚ç0.01•bŒã‚Éc‚é‘¬“x‚ÌŠ„‡B0.95‚È‚ç5%Œ¸‘¬‚·‚éB")]
+    [Header("è»¢ãŒã‚Šè¨­å®š")]
+    [Tooltip("è»¢ãŒã‚Šå§‹ã‚ã‹ã‚‰0.01ç§’å¾Œã«æ®‹ã‚‹é€Ÿåº¦ã®å‰²åˆã€‚0.95ãªã‚‰5%æ¸›é€Ÿã™ã‚‹ã€‚")]
     [Range(0f, 1f)]
     public float rollingDeceleration = 0.995f;
 

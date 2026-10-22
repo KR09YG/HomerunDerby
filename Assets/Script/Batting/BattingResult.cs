@@ -21,6 +21,8 @@ public class BattingBallResult
     public List<Vector3> TrajectoryPoints = new List<Vector3>();
     public BattingBallType BallType;
     public int LandingIndex;
+    public int ResolutionIndex;
+    public bool HasGroundContact;
     public float Distance;
 
     public BattingBallResult(BattingBallType type)

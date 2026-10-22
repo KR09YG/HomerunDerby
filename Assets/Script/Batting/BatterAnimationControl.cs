@@ -42,7 +42,6 @@ public class BatterAnimationControl : MonoBehaviour
 
     private void ResetAtBat()
     {
-        Debug.Log("打席をリセット");
         _animator.SetTrigger("Reset");
         _isFinSwing = false;
         _isSwinging = false;

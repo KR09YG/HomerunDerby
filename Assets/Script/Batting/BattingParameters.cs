@@ -59,6 +59,10 @@ public class BattingParameters : ScriptableObject
     [Tooltip("フェア最大角度(度)")]
     public float MaxFairAngle = 45f;
 
+    [Tooltip("球場モデルの本塁から一・三塁までの距離(m)")]
+    [Min(0.001f)]
+    public float BaseDistanceMeters = 28.28f;
+
     [Tooltip("ファール最大角度(度)")]
     public float MaxFoulAngle = 60f;
 

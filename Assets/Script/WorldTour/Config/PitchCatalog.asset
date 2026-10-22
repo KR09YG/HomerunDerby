@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0519a0ce95dc1b47b29bdb159938e77, type: 3}
+  m_Name: PitchCatalog
+  m_EditorClassIdentifier: 
+  _entries:
+  - PitchId: 0001
+    PitchData: {fileID: 11400000, guid: a4f18af1d49148dfbe92173705aa928c, type: 2}
+  - PitchId: 0002
+    PitchData: {fileID: 11400000, guid: 406167f6de7941779d4b97359e9c9151, type: 2}
+  - PitchId: 0003
+    PitchData: {fileID: 11400000, guid: ddd3c0cdfdc24a0c96d84c991b7c21db, type: 2}
+  - PitchId: 0004
+    PitchData: {fileID: 11400000, guid: 60d553d8d72d47709638eb4f0095eaaf, type: 2}

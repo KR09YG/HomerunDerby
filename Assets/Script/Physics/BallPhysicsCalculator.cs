@@ -123,4 +123,17 @@ public static class BallPhysicsCalculator
             spinRateRpm, liftCoefficient, config);
         return (result.Points, result.FirstGroundLayer, result.LandingIndex);
     }
+
+    public static TrajectoryResult SimulateBattedBallWithStadiumInfo(
+        Vector3 startPosition,
+        Vector3 initialVelocityMps,
+        Vector3 spinAxisNormalized,
+        float spinRateRpm,
+        float liftCoefficient,
+        SimulationConfig config)
+    {
+        return BallTrajectorySimulator.SimulateTrajectoryWithMetadata(
+            startPosition, initialVelocityMps, spinAxisNormalized,
+            spinRateRpm, liftCoefficient, config);
+    }
 }
