@@ -75,58 +75,60 @@ public static class WorldTourStageResultView
         TourUI.Panel(root, "Result Frame", 110, 330, 1700, 575, true);
         TourUI.Panel(root, "Result Banner", 505, 165, 910, 145, true);
         TourUI.Text(root, "Result Title", session.IsCleared ? "STAGE CLEAR" : "STAGE FAILED",
-            535, 172, 850, 123, 112, theme.DisplayFont, session.IsCleared ? TourUI.Gold : Color.white, true);
+            532, 185, 600, 100, 80, theme.DisplayFont, session.IsCleared ? TourUI.Gold : Color.white, true);
         for (int i = 0; i < 3; i++)
         {
             bool earned = WorldTourMenuView.HasStar(previousStars, i) ||
                 (session.IsCleared && WorldTourMenuView.HasStar(session.AchievedStars, i));
             TourUI.Icon(root, "Earned Star " + i, TourIconGraphic.Symbol.Star,
-                785 + i * 119, 284, 112, earned);
+                1148 + i * 89, 200, 76, earned);
         }
 
         TourUI.Panel(root, "Stage Card", 138, 370, 490, 505, true);
-        images.SetImage(TourUI.Picture(root, "Stage Illustration", theme.StadiumMap, 148, 380, 470, 350),
+        images.SetImage(TourUI.Picture(root, "Stage Illustration", theme.StadiumMap, 148, 380, 470, 320),
             imageUrl);
         TourUI.Panel(root, "Stage Caption", 148, 710, 470, 154);
-        TourUI.Text(root, "World Name", manager?.CurrentWorld?.Name ?? "WORLD TOUR", 172, 390, 420, 45, 33, theme.JapaneseFont);
+        ReadableText(root, "World Name", manager?.CurrentWorld?.Name ?? "WORLD TOUR", 172, 390, 420, 45, 28, theme.JapaneseFont);
         TourUI.Text(root, "Stage Number", "STAGE " + session.StageId, 168, 723, 430, 39, 36, theme.DisplayFont, TourUI.Gold, true);
-        TourUI.Text(root, "Stage Name", stage?.Name ?? session.StageId, 168, 770, 430, 71, 38, theme.JapaneseFont, null, true);
+        ReadableText(root, "Stage Name", stage?.Name ?? session.StageId, 168, 770, 430, 71, 30, theme.JapaneseFont, null, true);
 
-        TourUI.Panel(root, "Current Record", 650, 417, 555, 320);
-        TourUI.Text(root, "Current Record Heading", "今回の記録", 674, 430, 500, 46, 31, theme.JapaneseFont);
-        Record(root, theme, 492, "ホームラン数", stats.HomeRunCount.ToString());
-        Record(root, theme, 547, "最大HR飛距離", $"{stats.MaxHomeRunDistance:F1} m");
-        Record(root, theme, 602, "総フェア飛距離", $"{stats.TotalFairDistance:F1} m");
-        Record(root, theme, 657, "方向別HR（左 / 中 / 右）", $"{stats.LeftHomeRunCount} / {stats.CenterHomeRunCount} / {stats.RightHomeRunCount}");
+        TourUI.Panel(root, "Current Record", 650, 370, 555, 365);
+        ReadableText(root, "Current Record Heading", "今回の記録", 674, 386, 500, 46, 30, theme.JapaneseFont);
+        Record(root, theme, 450, "ホームラン数", stats.HomeRunCount.ToString());
+        Record(root, theme, 511, "最大HR飛距離", $"{stats.MaxHomeRunDistance:F1} m");
+        Record(root, theme, 572, "総フェア飛距離", $"{stats.TotalFairDistance:F1} m");
+        Record(root, theme, 633, "方向別HR（左 / 中 / 右）", $"{stats.LeftHomeRunCount} / {stats.CenterHomeRunCount} / {stats.RightHomeRunCount}");
 
         TourPanelGraphic reward = TourUI.Panel(root, "Reward", 650, 758, 555, 117, true);
         reward.TopColor = new Color(1, 0.97f, 0.84f);
         reward.BottomColor = new Color(0.95f, 0.87f, 0.63f);
-        TourUI.Icon(root, "New Stars", TourIconGraphic.Symbol.Star, 668, 782, 69);
-        TourUI.Text(root, "New Stars Count", $"+ {newStarCount}", 745, 779, 116, 53, 46, theme.DisplayFont, TourUI.Navy);
-        TourUI.Text(root, "New Stars Caption", "新しく獲得した星", 674, 837, 215, 24, 18, theme.JapaneseFont, TourUI.Navy);
-        TourUI.Icon(root, "Reward Coin", TourIconGraphic.Symbol.Coin, 901, 786, 58);
-        TourUI.Text(root, "Player Points", (manager?.SaveData.Points ?? 0).ToString("N0"), 971, 779, 215, 53, 43, theme.DisplayFont, TourUI.Navy);
-        TourUI.Text(root, "Player Points Caption", "所持ポイント", 971, 837, 215, 24, 18, theme.JapaneseFont, TourUI.Navy);
+        TourUI.Icon(root, "New Stars", TourIconGraphic.Symbol.Star, 815, 778, 65);
+        TourUI.Text(root, "New Stars Count", $"+ {newStarCount}", 898, 779, 150, 53, 46, theme.DisplayFont, TourUI.Navy);
+        ReadableText(root, "New Stars Caption", "新しく獲得した星", 760, 838, 340, 27, 20, theme.JapaneseFont, TourUI.Navy, true);
 
         TourUI.Panel(root, "Stage Missions", 1230, 370, 550, 338);
-        TourUI.Text(root, "Missions Heading", "ステージミッション", 1255, 380, 500, 48, 32, theme.JapaneseFont);
+        ReadableText(root, "Missions Heading", "ステージミッション", 1255, 380, 500, 48, 30, theme.JapaneseFont);
         for (int i = 0; i < 3; i++)
         {
             StageCondition condition = stage?.StarObjectives != null && i < stage.StarObjectives.Count ? stage.StarObjectives[i] : null;
-            float y = 441 + i * 85;
+            float y = 445 + i * 80;
             bool achieved = WorldTourMenuView.HasStar(session.AchievedStars, i);
             bool previouslyEarned = WorldTourMenuView.HasStar(previousStars, i);
             bool newlyEarned = session.IsCleared && achieved && !previouslyEarned;
-            string status = previouslyEarned ? "獲得済み" : newlyEarned ? "初獲得" : achieved ? "条件達成（未クリア）" : "未獲得";
-            TourUI.Icon(root, "Mission Star " + i, TourIconGraphic.Symbol.Star, 1247, y + 3, 57, previouslyEarned || newlyEarned);
-            TourUI.Text(root, "Mission " + i, WorldTourMenuView.ConditionText(condition), 1320, y, 430, 40, 23, theme.JapaneseFont);
-            TourUI.Text(root, "Mission Value " + i, ConditionValue(condition, stats) + $"   {(achieved ? "今回達成" : "今回未達成")} / {status}",
-                1320, y + 39, 430, 32, 25, theme.JapaneseFont, achieved ? TourUI.Gold : Color.white);
+            string status;
+            if (previouslyEarned) status = achieved ? "今回達成・獲得済み" : "獲得済み";
+            else if (newlyEarned) status = "今回初獲得";
+            else status = achieved ? "今回達成（未クリア）" : "未獲得";
+            TourUI.Icon(root, "Mission Star " + i, TourIconGraphic.Symbol.Star, 1249, y + 4, 50, previouslyEarned || newlyEarned);
+            ReadableText(root, "Mission " + i, WorldTourMenuView.ConditionText(condition), 1315, y, 435, 34, 22, theme.JapaneseFont);
+            ReadableText(root, "Mission Value " + i, ConditionValue(condition, stats),
+                1315, y + 37, 150, 28, 21, theme.JapaneseFont, achieved ? TourUI.Gold : Color.white);
+            ReadableText(root, "Mission Status " + i, status,
+                1472, y + 37, 278, 28, 19, theme.JapaneseFont, achieved ? TourUI.Gold : Color.white);
         }
         TourUI.Panel(root, "Best Record", 1230, 731, 550, 144);
-        TourUI.Text(root, "Best Record Heading", "ベスト記録", 1255, 742, 500, 42, 29, theme.JapaneseFont);
-        TourUI.Text(root, "Best Record Note", "記録なし", 1255, 798, 500, 44, 23, theme.JapaneseFont, new Color(0.7f, 0.81f, 0.93f));
+        ReadableText(root, "Best Record Heading", "ベスト記録", 1255, 742, 500, 42, 28, theme.JapaneseFont);
+        ReadableText(root, "Best Record Note", "記録なし", 1255, 798, 500, 44, 22, theme.JapaneseFont, new Color(0.7f, 0.81f, 0.93f));
 
         SaveControls controls = null;
         Button retryButton = TourUI.Button(root, "Retry", "RETRY", "もう一度挑戦する", 490, 944, 450,
@@ -149,9 +151,20 @@ public static class WorldTourStageResultView
 
     private static void Record(Transform root, WorldTourUITheme theme, float y, string label, string value)
     {
-        TourUI.Icon(root, label + " Icon", TourIconGraphic.Symbol.Baseball, 667, y + 1, 42);
-        TourUI.Text(root, label, label, 724, y, 285, 43, 23, theme.JapaneseFont);
-        TourUI.Text(root, label + " Value", value, 1012, y, 175, 43, 36, theme.DisplayFont, TourUI.Gold);
+        TourUI.Icon(root, label + " Icon", TourIconGraphic.Symbol.Baseball, 670, y + 2, 38);
+        ReadableText(root, label, label, 720, y, 300, 43,
+            label.StartsWith("方向別", StringComparison.Ordinal) ? 19 : 22, theme.JapaneseFont);
+        TourUI.Text(root, label + " Value", value, 1030, y, 155, 43, 30, theme.DisplayFont, TourUI.Gold);
+    }
+
+    private static TMP_Text ReadableText(Transform root, string name, string value, float x, float y,
+        float width, float height, float size, TMP_FontAsset font, Color? color = null, bool center = false)
+    {
+        TMP_Text text = TourUI.Text(root, name, value, x, y, width, height, size, font, color, center);
+        text.fontStyle = FontStyles.Normal;
+        text.fontSizeMin = Mathf.Max(17f, size - 3f);
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        return text;
     }
 
     private static string ConditionValue(StageCondition condition, StageStatistics stats)

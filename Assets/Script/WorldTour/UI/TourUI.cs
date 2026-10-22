@@ -21,7 +21,7 @@ public static class TourUI
         CanvasScaler scaler = go.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.matchWidthOrHeight = 0.5f;
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
         if (Object.FindFirstObjectByType<EventSystem>() == null)
             new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule)).transform.SetParent(go.transform, false);
         return (RectTransform)go.transform;
@@ -118,6 +118,7 @@ public static class TourUI
         surface.BottomColor = top.HasValue ? top.Value * new Color(0.65f, 0.65f, 0.65f, 1f) : new Color(0.95f, 0.54f, 0.025f);
         surface.raycastTarget = true;
         Button button = surface.gameObject.AddComponent<Button>();
+        ButtonClickSound.Register(button);
         button.targetGraphic = surface;
         ColorBlock colors = button.colors;
         colors.highlightedColor = new Color(1.13f, 1.13f, 1.13f);
@@ -140,8 +141,8 @@ public static class TourUI
 
     public static void Totals(Transform parent, WorldTourUITheme theme, WorldTourManager manager)
     {
-        Panel(parent, "Player Totals", 1325f, 30f, 555f, 94f);
-        Icon(parent, "Total Star", TourIconGraphic.Symbol.Star, 1347f, 43f, 65f);
+        Panel(parent, "Player Totals", 1535f, 30f, 345f, 94f);
+        Icon(parent, "Total Star", TourIconGraphic.Symbol.Star, 1555f, 43f, 65f);
         int earned = 0, total = 0;
         if (manager?.Config != null)
         foreach (WorldData world in manager.Config.Worlds)
@@ -150,10 +151,7 @@ public static class TourUI
             earned += WorldTourMenuView.WorldStars(world, manager.SaveData);
             total += world.Stages.Count * 3;
         }
-        Text(parent, "Stars Label", "STARS", 1423f, 38f, 170f, 26f, 23f, theme.DisplayFont);
-        Text(parent, "Stars Count", $"{earned} / {total}", 1423f, 65f, 170f, 47f, 38f, theme.DisplayFont, Gold);
-        Icon(parent, "Points Icon", TourIconGraphic.Symbol.Coin, 1613f, 45f, 59f);
-        Text(parent, "Points Label", "POINTS", 1684f, 38f, 175f, 26f, 23f, theme.DisplayFont);
-        Text(parent, "Points Count", (manager?.SaveData.Points ?? 0).ToString("N0"), 1684f, 65f, 175f, 47f, 38f, theme.DisplayFont);
+        Text(parent, "Stars Label", "STARS", 1635f, 38f, 220f, 26f, 23f, theme.DisplayFont);
+        Text(parent, "Stars Count", $"{earned} / {total}", 1635f, 65f, 220f, 47f, 38f, theme.DisplayFont, Gold);
     }
 }

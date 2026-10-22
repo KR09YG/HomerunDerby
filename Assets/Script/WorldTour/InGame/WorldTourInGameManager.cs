@@ -459,6 +459,7 @@ public class WorldTourInGameManager : MonoBehaviour
         CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
 
         _resultPanel = new GameObject("Result Panel", typeof(RectTransform), typeof(Image));
         _resultPanel.transform.SetParent(canvasObject.transform, false);

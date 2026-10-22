@@ -5,11 +5,13 @@ using UnityEngine.UI;
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using KanKikuchi.AudioManager;
 
 public sealed class WorldTourMenuView : MonoBehaviour
 {
     public enum MenuScreen { World, Stage }
     [SerializeField] private MenuScreen _screen;
+    [SerializeField, Range(0f, 1f)] private float _bgmVolumeRate = 0.3f;
     private int _worldSlots;
     private int _stageSlots;
     private readonly Dictionary<string, Transform> _elements = new Dictionary<string, Transform>();
@@ -43,6 +45,14 @@ public sealed class WorldTourMenuView : MonoBehaviour
 
     private void Start()
     {
+        string bgmPath = _screen == MenuScreen.World
+            ? "BGM/racing_game_menu_bpm165" : "BGM/Funked Up";
+        string bgmName = _screen == MenuScreen.World
+            ? "racing_game_menu_bpm165" : "Funked Up";
+        BGMManager bgm = BGMManager.Instance;
+        if (!bgm.GetCurrentAudioNames().Contains(bgmName))
+            bgm.Play(bgmPath, volumeRate: _bgmVolumeRate);
+
         foreach (Transform item in GetComponentsInChildren<Transform>(true)) _elements[item.name] = item;
         _manager = WorldTourManager.Instance;
         _images = GetComponent<WorldTourImageLoader>();
@@ -613,7 +623,6 @@ public sealed class WorldTourMenuView : MonoBehaviour
         int count = 0, total = 0;
         foreach (WorldData world in _worlds) { count += WorldStars(world, _manager.SaveData); total += world.Stages.Count * 3; }
         Text("TotalStars", $"{count} / {total}");
-        Text("TotalPoints", _manager.SaveData.Points.ToString("N0"));
     }
 
     private void RevealMenu()
