@@ -24,6 +24,7 @@ public class WorldTourManager : MonoBehaviour
     private CancellationTokenSource _configLifetime;
     private WorldTourConfigState _configState;
     private string _configError;
+    private string _saveError;
     private bool _isStageSavePending;
 
     public event Action StateChanged;
@@ -34,7 +35,9 @@ public class WorldTourManager : MonoBehaviour
     public StageData CurrentStage => _currentStage;
     public bool IsLoading => _isLoading || _isStageSavePending || _configState == WorldTourConfigState.Loading;
     public bool IsConfigReady => _configState == WorldTourConfigState.Ready;
+    public bool IsSaveReady => _isSaveReady;
     public bool IsSaveInitializing => _isSaveInitializing;
+    public string SaveError => _saveError;
     public WorldTourConfigState ConfigState => _configState;
     public string ConfigError => _configError;
     public IReadOnlyList<WorldData> Worlds => Progress.Worlds;
@@ -66,9 +69,8 @@ public class WorldTourManager : MonoBehaviour
             return;
         }
 
-        InitializeSaveAsync().Forget();
-
         _configLifetime = new CancellationTokenSource();
+        InitializeSaveAsync().Forget();
         RetryConfigDownload();
     }
 
@@ -80,6 +82,8 @@ public class WorldTourManager : MonoBehaviour
         if (_isSaveInitializing || _isSaveReady) return;
 
         _isSaveInitializing = true;
+        _saveError = null;
+        StateChanged?.Invoke();
 
         try
         {
@@ -90,7 +94,8 @@ public class WorldTourManager : MonoBehaviour
 
                 if (!registered)
                 {
-                    Debug.LogError("プレイヤー登録に失敗しました。");
+                    _saveError = "プレイヤー登録に失敗しました。接続を確認して再試行してください。";
+                    Debug.LogError(_saveError, this);
                     return;
                 }
             }
@@ -99,7 +104,8 @@ public class WorldTourManager : MonoBehaviour
 
             if (saveData == null)
             {
-                Debug.LogError("進捗のロードに失敗しました。");
+                _saveError = "進捗の取得に失敗しました。接続を確認して再試行してください。";
+                Debug.LogError(_saveError, this);
                 return;
             }
 
@@ -108,7 +114,8 @@ public class WorldTourManager : MonoBehaviour
 
             if (string.Equals(SceneManager.GetActiveScene().name, "Homerun", StringComparison.OrdinalIgnoreCase))
             {
-                Debug.LogError("進捗のロードはステージ開始前に行ってください。");
+                _saveError = "進捗の取得がステージ開始後になりました。選択画面で再試行してください。";
+                Debug.LogError(_saveError, this);
                 return;
             }
 
@@ -117,6 +124,7 @@ public class WorldTourManager : MonoBehaviour
         }
         catch (System.Exception exception)
         {
+            _saveError = "進捗の取得に失敗しました。接続を確認して再試行してください。";
             Debug.LogException(exception);
         }
         finally
@@ -124,6 +132,13 @@ public class WorldTourManager : MonoBehaviour
             _isSaveInitializing = false;
             StateChanged?.Invoke();
         }
+    }
+
+    public void RetrySaveInitialization()
+    {
+        if (_isSaveReady || _isSaveInitializing || _isLoading || _isStageSavePending ||
+            string.Equals(SceneManager.GetActiveScene().name, "Homerun", StringComparison.OrdinalIgnoreCase)) return;
+        InitializeSaveAsync().Forget();
     }
 
     private void OnDestroy()

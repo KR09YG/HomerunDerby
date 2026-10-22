@@ -103,19 +103,26 @@ public sealed class WorldTourMenuView : MonoBehaviour
     private void RefreshMenu()
     {
         RevealMenu();
-        if (!_manager.IsConfigReady)
+        if (!_manager.IsConfigReady || !_manager.IsSaveReady)
         {
             foreach (var path in _stagePaths)
                 foreach (var dot in path) dot.gameObject.SetActive(false);
-            bool failed = _manager.ConfigState == WorldTourConfigState.ConnectionError || _manager.ConfigState == WorldTourConfigState.InvalidData;
-            Text("Status", failed ? _manager.ConfigError : "CloudFrontから設定を取得しています…");
-            Text("DetailTitle", failed ? "設定の取得に失敗しました" : "読み込み中");
+            bool configPending = !_manager.IsConfigReady;
+            bool failed = configPending
+                ? _manager.ConfigState == WorldTourConfigState.ConnectionError || _manager.ConfigState == WorldTourConfigState.InvalidData
+                : !string.IsNullOrEmpty(_manager.SaveError);
+            string subject = configPending ? "設定" : "進捗";
+            string error = configPending ? _manager.ConfigError : _manager.SaveError;
+            string loadingMessage = configPending
+                ? "CloudFrontから設定を取得しています…" : "クラウドから進捗を取得しています…";
+            Text("Status", failed ? error : loadingMessage);
+            Text("DetailTitle", failed ? $"{subject}の取得に失敗しました" : "読み込み中");
             Text("DetailSubtitle", failed ? "再試行ボタンで取得し直せます" : "通信完了までお待ちください");
             if (_screen == MenuScreen.World) Text("PrimaryActionTitle", failed ? "再試行" : "取得中…");
             else
             {
                 Text("ActionTitle", failed ? "RETRY" : "LOADING");
-                Text("ActionSubtitle", failed ? "設定を取得し直す" : "設定を取得しています");
+                Text("ActionSubtitle", failed ? $"{subject}を取得し直す" : $"{subject}を取得しています");
             }
             Button("PrimaryAction").interactable = failed;
             foreach (Button button in GetComponentsInChildren<Button>(true))
@@ -179,6 +186,11 @@ public sealed class WorldTourMenuView : MonoBehaviour
         if (!_manager.IsConfigReady)
         {
             _manager.RetryConfigDownload();
+            return;
+        }
+        if (!_manager.IsSaveReady)
+        {
+            if (!string.IsNullOrEmpty(_manager.SaveError)) _manager.RetrySaveInitialization();
             return;
         }
         if (_screen == MenuScreen.World && _manager.IsWorldUnlocked(_selectedWorld))
