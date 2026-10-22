@@ -266,7 +266,7 @@ MonoBehaviour:
   _hitEvent: {fileID: 11400000, guid: d3d37fd7ce6b4354ebbe390628720fe2, type: 2}
   _cursor: {fileID: 0}
   _parameters: {fileID: 11400000, guid: 0217ad7c9f953874895c58743f78ad29, type: 2}
-  _hitPauseSeconds: 3
+  _hitPauseSeconds: 0.1
   _ballMove: {fileID: 0}
 --- !u!114 &6208319828464467918
 MonoBehaviour:
