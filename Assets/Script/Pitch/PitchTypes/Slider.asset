@@ -17,7 +17,6 @@ MonoBehaviour:
     Speed: 134.2
     RotateSpeed: 2405
     SpinAxis: {x: 0.01399983, y: -0.13929826, z: -0.99015150}
-  _selectionWeight: 1
   _referencePitcher: "\u7530\u4E2D\u5C06\u5927\uFF08\u53F3\u6295\uFF09"
   _referenceSeason: 2018
   _referencePeriod: "2018\u5E74MLB\u30EC\u30AE\u30E5\u30E9\u30FC\u30B7\u30FC\u30BA\u30F3\u30022026-10-06\u53D6\u5F97"

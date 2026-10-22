@@ -2,17 +2,20 @@ using UnityEngine;
 
 public class ResultTallyer : MonoBehaviour
 {
-    [SerializeField] OnBattingResultEvent _onBattingResultEvent;
-    [SerializeField] OnAtBatResetEvent _onAtBatResetEvent;
-    [SerializeField] BattingDistanceTracker _distanceTracker;
+    private const float CenterBoundaryDegrees = 15f;
+    private const float FairBoundaryDegrees = 45f;
+
+    [SerializeField] private OnBattingResultEvent _onBattingResultEvent;
+    [SerializeField] private OnAtBatResetEvent _onAtBatResetEvent;
+    [SerializeField] private BattingDistanceTracker _distanceTracker;
     private StageStatistics _stageStatistics;
     public StageStatistics StageStatistics => _stageStatistics;
-    private Vector3 _homebasePos = Vector3.zero;
+    private readonly Vector3 _homePlatePosition = Vector3.zero;
     private bool _isReceivedResult;
 
     private void Awake()
     {
-        if (_onBattingResultEvent) _onBattingResultEvent.RegisterListener(OnBattingResultReceive);
+        if (_onBattingResultEvent) _onBattingResultEvent.RegisterListener(OnBattingResultReceived);
         else Debug.LogError("OnBattingResultEventが設定されていません");
         if (_onAtBatResetEvent) _onAtBatResetEvent.RegisterListener(OnAtBatReset);
         else Debug.LogError("OnAtBatResetEventが設定されていません");
@@ -20,12 +23,12 @@ public class ResultTallyer : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (_onBattingResultEvent) _onBattingResultEvent.UnregisterListener(OnBattingResultReceive);
+        if (_onBattingResultEvent) _onBattingResultEvent.UnregisterListener(OnBattingResultReceived);
         if (_onAtBatResetEvent) _onAtBatResetEvent.UnregisterListener(OnAtBatReset);
     }
 
     /// <summary>
-    /// イベントかマネージャークラスに呼び出してもらう
+    /// ステージで共有する集計先を設定し、打席の受信状態を初期化する。
     /// </summary>
     public void Initialize(StageStatistics stageStatistics)
     {
@@ -38,7 +41,7 @@ public class ResultTallyer : MonoBehaviour
         _isReceivedResult = false;
     }
 
-    private void OnBattingResultReceive(BattingBallResult result)
+    private void OnBattingResultReceived(BattingBallResult result)
     {
         if (_stageStatistics == null || result == null)
         {
@@ -53,7 +56,7 @@ public class ResultTallyer : MonoBehaviour
         }
 
         _isReceivedResult = true;
-        // ホームランかヒットなら距離を加算する
+        // フェアの打球だけを総飛距離に加える。
         if (result.BallType == BattingBallType.HomeRun ||
             result.BallType == BattingBallType.Hit ||
             result.BallType == BattingBallType.GroundBall)
@@ -62,16 +65,12 @@ public class ResultTallyer : MonoBehaviour
                 result.TrajectoryPoints[result.LandingIndex], result.TrajectoryPoints[0]);
             _stageStatistics.TotalFairDistance += distance;
 
-            // 最大飛距離を更新する
             if (result.BallType == BattingBallType.HomeRun)
             {
-                // ホームランの数をカウントする
                 _stageStatistics.HomeRunCount++;
-                // 最大のホームラン距離を更新する
                 if (_stageStatistics.MaxHomeRunDistance < distance)
                     _stageStatistics.MaxHomeRunDistance = distance;
 
-                // ホームランの方向を判定する
                 HomeRunDirection direction =
                     GetHomeRunDirection(result.TrajectoryPoints[result.LandingIndex]);
                 switch (direction)
@@ -91,37 +90,21 @@ public class ResultTallyer : MonoBehaviour
                 }
             }
         }
-        // _stageStatisticsの内容をデバッグログに出力する
-        Debug.Log($"[ResultTallyer]TotalFairDistance: {_stageStatistics.TotalFairDistance}, " +
-                  $"HomeRunCount: {_stageStatistics.HomeRunCount}, " +
-                  $"MaxHomeRunDistance: {_stageStatistics.MaxHomeRunDistance}, " +
-                  $"LeftHomeRunCount: {_stageStatistics.LeftHomeRunCount}, " +
-                  $"RightHomeRunCount: {_stageStatistics.RightHomeRunCount}, " +
-                  $"CenterHomeRunCount: {_stageStatistics.CenterHomeRunCount}");
     }
 
-    private HomeRunDirection GetHomeRunDirection(Vector3 LandingPos)
+    private HomeRunDirection GetHomeRunDirection(Vector3 landingPosition)
     {
-        Vector3 direction = LandingPos - _homebasePos;
-        // 水平の角度を計算するためにy成分を0にする
+        Vector3 direction = landingPosition - _homePlatePosition;
         direction.y = 0f;
-        // 真正面からの角度を計算,正面が-Z方向、左が+X方向、右が-X方向
+        // センターは-Z。右方向が負角、左方向が正角になる。
         float angle = Vector3.SignedAngle(Vector3.back, direction, Vector3.up);
 
-        switch (angle)
-        {
-            case float a when a < -15f && a >= -45f:
-                Debug.Log($"ホームランの方向: Left, 角度: {angle}");
-                return HomeRunDirection.Right;
-            case float a when a > 15f && a <= 45f:
-                Debug.Log($"ホームランの方向: Right, 角度: {angle}");
-                return HomeRunDirection.Left;
-            case float a when a <= 15f && a >= -15f:
-                Debug.Log($"ホームランの方向: Center, 角度: {angle}");
-                return HomeRunDirection.Center;
-            default:
-                Debug.LogWarning($"ホームランの方向が不明です。角度: {angle}");
-                return HomeRunDirection.None;
-        }
+        if (angle >= -FairBoundaryDegrees && angle < -CenterBoundaryDegrees)
+            return HomeRunDirection.Right;
+        if (angle > CenterBoundaryDegrees && angle <= FairBoundaryDegrees)
+            return HomeRunDirection.Left;
+        if (angle >= -CenterBoundaryDegrees && angle <= CenterBoundaryDegrees)
+            return HomeRunDirection.Center;
+        return HomeRunDirection.None;
     }
 }

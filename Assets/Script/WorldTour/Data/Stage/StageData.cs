@@ -4,6 +4,8 @@ using System.Collections.Generic;
 [Serializable]
 public class StageData
 {
+    public const int StarCount = 3;
+
     public string StageId;
     public string Name;
     public string ImageUrl;
@@ -13,13 +15,10 @@ public class StageData
     public bool IsUnlocked;
 
     public StageCondition ClearObjective;
-    // 星獲得条件のリスト(どのステージでも星の数は固定で３個)
-    public List<StageCondition> StarObjectives = new List<StageCondition>(3);
+    public List<StageCondition> StarObjectives = new List<StageCondition>(StarCount);
 
-    // 持ち球のリスト
     public List<StagePitchEntry> PitchPool = new List<StagePitchEntry>(20);
 
-    // 今後ステージが分岐するかもしれないのでリストで管理
     public List<string> NextStagesId = new List<string>();
 
     public int? StarRewardOverride;

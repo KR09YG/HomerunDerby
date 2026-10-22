@@ -94,7 +94,6 @@ public class BattingBallMove : BallMoveTrajectory
         ClearTrail();
         _result = result;
         _trajectory = result.TrajectoryPoints;
-        Debug.Log($"打球結果受信: {result.BallType}");
 
         if (result.BallType == BattingBallType.Miss)
             return;
@@ -124,7 +123,6 @@ public class BattingBallMove : BallMoveTrajectory
 
         transform.position = _trajectory[0];
         if (_trail != null) _trail.emitting = true;
-        Debug.Log($"打球結果受信: {result.BallType}, 軌道点数: {_trajectory.Count}");
         StartMoving();
     }
 

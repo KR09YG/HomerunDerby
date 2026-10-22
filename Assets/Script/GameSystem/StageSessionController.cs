@@ -9,7 +9,7 @@ using System;
 public class StageSessionController
 {
     private StageCondition _stageClearCondition;
-    private List<StageCondition> _starConditions = new List<StageCondition>(3);
+    private List<StageCondition> _starConditions;
     public StageSessionData Session { get; private set; }
 
     public StageStatistics Initialize(StageData stage)
@@ -24,15 +24,12 @@ public class StageSessionController
     {
         if (Session == null || Session.IsFinished) return;
 
-        // 球数減少
         Session.RemainingBalls--;
-        // クリア条件を評価
         if (IsConditionCleared(_stageClearCondition, Session.Statistics))
         {
             Session.IsCleared = true;
         }
 
-        // 星条件を評価
         for (int i = 0; i < _starConditions.Count; i++)
         {
             if (IsConditionCleared(_starConditions[i], Session.Statistics))
@@ -48,7 +45,6 @@ public class StageSessionController
     {
         if (Session == null) return false;
 
-        // StarAchievedがすべてtrueか判定
         bool allStarsAchieved = true;
 
         foreach (bool achieved in Session.AchievedStars)
@@ -60,7 +56,7 @@ public class StageSessionController
             }
         }
 
-        // 残り球数0、またはクリア＋3星
+        // 全条件達成時は残り球数があっても終了する。
         if (Session.RemainingBalls <= 0 || (Session.IsCleared && allStarsAchieved))
         {
             Session.IsFinished = true;
@@ -75,7 +71,6 @@ public class StageSessionController
     /// </summary>
     private bool IsConditionCleared(StageCondition condition, StageStatistics statistics)
     {
-        // 条件タイプに応じて判定
         switch (condition.Type)
         {
             case ChallengeConditionType.HomeRunCount:
@@ -85,7 +80,7 @@ public class StageSessionController
             case ChallengeConditionType.TotalFairDistance:
                 return statistics.TotalFairDistance >= condition.TargetValue;
             case ChallengeConditionType.DirectionalHomeRunCount:
-                switch(condition.Direction)
+                switch (condition.Direction)
                 {
                     case HomeRunDirection.Left:
                         return statistics.LeftHomeRunCount >= condition.TargetValue;

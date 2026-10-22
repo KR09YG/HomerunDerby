@@ -8,11 +8,10 @@ public static class StageProgressService
     /// <returns>新たに獲得した星の数</returns>
     public static int MergeStageProgress(PlayerSaveData saveData, StageSessionData session)
     {
-        // 今回クリアできていない場合は進捗を更新しない
+        // 失敗時は既存のクリア状態と星を維持する。
         if (!session.IsFinished || !session.IsCleared)
             return 0;
 
-        // 過去のステージ進捗を取得する。なければ新規作成する
         if (!saveData.Stages.TryGetValue(
             session.StageId, out StageProgressData progress))
         {
@@ -22,10 +21,9 @@ public static class StageProgressService
 
         progress.IsCleared = true;
         int newStarCount = 0;
-        // 過去の進捗と今回の結果を比較して、星の獲得状況を更新する
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < StageData.StarCount; i++)
         {
-            // 過去に獲得していない星で、今回獲得した星があれば進捗を更新する
+            // 再挑戦では新しく達成した星だけを加える。
             if (!progress.EarnedStars[i] &&
                 session.AchievedStars[i])
             {

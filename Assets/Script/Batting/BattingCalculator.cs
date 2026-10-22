@@ -64,7 +64,6 @@ public class BattingCalculator : MonoBehaviour
         }
         else
         {
-            Debug.Log("Miss Swing");
             RaiseMissEvent();
         }
     }

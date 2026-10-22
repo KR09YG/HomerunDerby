@@ -15,7 +15,7 @@ public class StageSessionData
     // ステージが終了したかどうか
     public bool IsFinished;
 
-    // 達成した星の数を表す配列（3つの星に対応）
+    // 達成した星を条件順に保持する。
     public bool[] AchievedStars;
     // ステージの統計情報
     public StageStatistics Statistics;
@@ -31,7 +31,7 @@ public class StageSessionData
         IsCleared = false;
         IsFinished = false;
 
-        AchievedStars = new bool[3];
+        AchievedStars = new bool[StageData.StarCount];
         Statistics = new StageStatistics();
     }
 }

@@ -22,7 +22,6 @@ public sealed class StrikeZone : MonoBehaviour
 
     private void HideZone()
     {
-        Debug.Log("StrikeZone: HideZone called.");
         if (_renderer != null)
         {
             _renderer.enabled = false;
@@ -30,7 +29,6 @@ public sealed class StrikeZone : MonoBehaviour
     }
     private void ShowZone()
     {
-        Debug.Log("StrikeZone: ShowZone called.");
         if (_renderer != null)
         {
             _renderer.enabled = true;

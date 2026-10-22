@@ -86,7 +86,7 @@ public class WorldTourManager : MonoBehaviour
             if (!WorldTourSaveService.HasCredentials())
             {
                 bool registered =
-                    await WorldTourSaveService.RegisterData();
+                    await WorldTourSaveService.RegisterDataAsync();
 
                 if (!registered)
                 {
@@ -95,7 +95,7 @@ public class WorldTourManager : MonoBehaviour
                 }
             }
 
-            var saveData = await WorldTourSaveService.LoadData();
+            var saveData = await WorldTourSaveService.LoadDataAsync();
 
             if (saveData == null)
             {

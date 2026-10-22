@@ -13,7 +13,6 @@ public sealed class PitchTypeDataEditor : Editor
     {
         serializedObject.Update();
         EditorGUILayout.PropertyField(serializedObject.FindProperty("_ballData"), true);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("_selectionWeight"));
         EditorGUILayout.HelpBox("回転軸はワールド座標です。+Zが捕手方向の球場では、-Xがバックスピン、+Xがトップスピンです。軸の長さは回転数に影響しません。", MessageType.Info);
 
         EditorGUILayout.LabelField("回転軸の設定例（+Zへ投球）");

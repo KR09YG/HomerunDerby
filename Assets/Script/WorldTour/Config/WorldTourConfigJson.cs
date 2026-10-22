@@ -42,7 +42,8 @@ public static class WorldTourConfigJson
                     foreach (JToken id in RequireArray(stage["NextStagesId"], "NextStagesId")) RequireString(id, "NextStagesId[]");
                     ValidateCondition(stage["ClearObjective"]);
                     JArray objectives = RequireArray(stage["StarObjectives"], "StarObjectives");
-                    if (objectives.Count != 3) throw new InvalidDataException("StarObjectivesは3件必要です。");
+                    if (objectives.Count != StageData.StarCount)
+                        throw new InvalidDataException($"StarObjectivesは{StageData.StarCount}件必要です。");
                     foreach (JToken condition in objectives) ValidateCondition(condition);
                     foreach (JToken pitch in RequireArray(stage["PitchPool"], "PitchPool"))
                     {

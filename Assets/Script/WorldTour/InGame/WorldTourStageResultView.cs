@@ -76,7 +76,7 @@ public static class WorldTourStageResultView
         TourUI.Panel(root, "Result Banner", 505, 165, 910, 145, true);
         TourUI.Text(root, "Result Title", session.IsCleared ? "STAGE CLEAR" : "STAGE FAILED",
             532, 185, 600, 100, 80, theme.DisplayFont, session.IsCleared ? TourUI.Gold : Color.white, true);
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < StageData.StarCount; i++)
         {
             bool earned = WorldTourMenuView.HasStar(previousStars, i) ||
                 (session.IsCleared && WorldTourMenuView.HasStar(session.AchievedStars, i));
@@ -108,7 +108,7 @@ public static class WorldTourStageResultView
 
         TourUI.Panel(root, "Stage Missions", 1230, 370, 550, 338);
         ReadableText(root, "Missions Heading", "ステージミッション", 1255, 380, 500, 48, 30, theme.JapaneseFont);
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < StageData.StarCount; i++)
         {
             StageCondition condition = stage?.StarObjectives != null && i < stage.StarObjectives.Count ? stage.StarObjectives[i] : null;
             float y = 445 + i * 80;

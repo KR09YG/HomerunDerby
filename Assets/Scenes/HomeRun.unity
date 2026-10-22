@@ -3010,7 +3010,6 @@ MonoBehaviour:
   _delayToNextPitch: 0.1
   _animationController: {fileID: 8578986599924884679}
   _collider: {fileID: 807301286}
-  _lineRenderer: {fileID: 0}
   _ballMove: {fileID: 1916383626}
   _trajectorySettings:
     DeltaTime: 0.01
@@ -3019,13 +3018,6 @@ MonoBehaviour:
   _releasePoint: {fileID: 229178176}
   _passPoint: {fileID: 2131704642}
   _stopZ: 2.07
-  _nodAnimTime: 0
-  _selectedBall:
-    Name: 
-    Speed: 0
-    RotateSpeed: 0
-    SpinAxis: {x: 0, y: 0, z: 0}
-  _isPlaying: 0
 --- !u!95 &8578986599924884677 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: d786317cb05bab24b9233b1592d788db, type: 3}
@@ -3044,7 +3036,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _animator: {fileID: 8578986599924884677}
-  _ballReleasePoint: {fileID: 229178176}
 --- !u!4 &8862616673350534058
 Transform:
   m_ObjectHideFlags: 0

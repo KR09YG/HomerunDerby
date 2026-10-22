@@ -363,7 +363,7 @@ public class WorldTourInGameManager : MonoBehaviour
                   $"Stars=[{session.AchievedStars[0]}, {session.AchievedStars[1]}, {session.AchievedStars[2]}]", this);
 
         if (_resultPanel != null) _resultPanel.SetActive(false);
-        var previousStars = new bool[3];
+        var previousStars = new bool[StageData.StarCount];
         if (_saveData.Stages.TryGetValue(session.StageId, out StageProgressData previous) && previous?.EarnedStars != null)
             Array.Copy(previous.EarnedStars, previousStars, Mathf.Min(previous.EarnedStars.Length, previousStars.Length));
         int newStarCount = StageProgressService.MergeStageProgress(_saveData, session);
@@ -397,7 +397,7 @@ public class WorldTourInGameManager : MonoBehaviour
                 using var timeout = saveCts.CancelAfterSlim(TimeSpan.FromSeconds(StageSaveTimeoutSeconds), DelayType.Realtime);
                 try
                 {
-                    saved = await WorldTourSaveService.SaveData(_saveData, saveCts.Token);
+                    saved = await WorldTourSaveService.SaveDataAsync(_saveData, saveCts.Token);
                 }
                 catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
                 {

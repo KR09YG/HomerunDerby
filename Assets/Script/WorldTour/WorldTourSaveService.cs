@@ -1,25 +1,23 @@
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using System.Threading;
 
-public class WorldTourSaveService
+public static class WorldTourSaveService
 {
     private static bool _isSaving;
 
     /// <summary>
-    /// すでにセーブデータが存在するかどうかを確認する
+    /// ローカルにプレイヤーIDとトークンが揃っているか確認する。
     /// </summary>
-    /// <returns></returns>
     public static bool HasCredentials()
     {
         return TokenStorage.LoadCredentials() != null;
     }
 
     /// <summary>
-    /// プレイヤーの情報を登録する
+    /// プレイヤーを登録し、発行された認証情報を保存する。
     /// </summary>
-    /// <returns></returns>
-    public static async UniTask<bool> RegisterData()
+    public static async UniTask<bool> RegisterDataAsync()
     {
         var data = await WorldTourApiClient.CreatePlayerAsync();
 
@@ -36,10 +34,9 @@ public class WorldTourSaveService
     }
 
     /// <summary>
-    /// セーブデータをロードする
+    /// クラウドからプレイヤーの進捗を読み込む。
     /// </summary>
-    /// <returns></returns>
-    public static async UniTask<PlayerSaveData> LoadData()
+    public static async UniTask<PlayerSaveData> LoadDataAsync()
     {
         TokenStorage.Credentials credentials = TokenStorage.LoadCredentials();
         if (credentials == null)
@@ -47,14 +44,14 @@ public class WorldTourSaveService
             Debug.LogError("No credentials found. Please register first.");
             return null;
         }
-        var saveDataDto = await WorldTourApiClient.LoadSaveData(credentials.PlayerId, credentials.Token);
+        var saveDataDto = await WorldTourApiClient.LoadSaveDataAsync(credentials.PlayerId, credentials.Token);
         return PlayerSaveDataConverter.FromDto(saveDataDto);
     }
 
     /// <summary>
-    /// セーブデータを保存する
+    /// クラウドへ進捗を保存し、成功時はサーバーのRevisionを反映する。
     /// </summary>
-    public static async UniTask<bool> SaveData(PlayerSaveData saveData, CancellationToken cancellationToken = default)
+    public static async UniTask<bool> SaveDataAsync(PlayerSaveData saveData, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (_isSaving)
@@ -77,7 +74,7 @@ public class WorldTourSaveService
         try
         {
             PlayerSaveDataDto dto = PlayerSaveDataConverter.ToDto(saveData);
-            bool success = await WorldTourApiClient.SavePlayerData(credentials.PlayerId, credentials.Token, dto, cancellationToken);
+            bool success = await WorldTourApiClient.SavePlayerDataAsync(credentials.PlayerId, credentials.Token, dto, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             if (success)
                 saveData.Revision = dto.Revision;

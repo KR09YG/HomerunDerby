@@ -6,7 +6,8 @@ using UnityEngine.Networking;
 
 public static class WorldTourApiClient
 {
-    private const string BASE_URL = "https://y9noekispf.execute-api.ap-southeast-2.amazonaws.com";
+    private const string BaseUrl = "https://y9noekispf.execute-api.ap-southeast-2.amazonaws.com";
+    private const int RequestTimeoutSeconds = 10;
 
     [Serializable]
     public class PlayerData
@@ -18,8 +19,8 @@ public static class WorldTourApiClient
 
     public static async UniTask<PlayerData> CreatePlayerAsync()
     {
-        using var request = UnityWebRequest.PostWwwForm($"{BASE_URL}/register", UnityWebRequest.kHttpVerbPOST);
-        request.timeout = 10;
+        using var request = UnityWebRequest.PostWwwForm($"{BaseUrl}/register", UnityWebRequest.kHttpVerbPOST);
+        request.timeout = RequestTimeoutSeconds;
 
         request.downloadHandler = new DownloadHandlerBuffer();
         try
@@ -50,11 +51,12 @@ public static class WorldTourApiClient
     }
 
     /// <summary>
-    /// セーブデータの取得
+    /// プレイヤーの進捗を取得する。
     /// </summary>
-    public static async UniTask<PlayerSaveDataDto> LoadSaveData(string playerId, string token)
+    public static async UniTask<PlayerSaveDataDto> LoadSaveDataAsync(string playerId, string token)
     {
-        using var request = UnityWebRequest.Get($"{BASE_URL}/save");
+        using var request = UnityWebRequest.Get($"{BaseUrl}/save");
+        request.timeout = RequestTimeoutSeconds;
 
         request.SetRequestHeader("x-player-id", playerId);
         request.SetRequestHeader("Authorization", $"Bearer {token}");
@@ -102,9 +104,9 @@ public static class WorldTourApiClient
     }
 
     /// <summary>
-    /// セーブデータの保存
+    /// 進捗を保存し、更新後のRevisionを送信元へ反映する。
     /// </summary>
-    public static async UniTask<bool> SavePlayerData(string playerId, string token, PlayerSaveDataDto saveData,
+    public static async UniTask<bool> SavePlayerDataAsync(string playerId, string token, PlayerSaveDataDto saveData,
         CancellationToken cancellationToken = default)
     {
         if (saveData == null)
@@ -123,7 +125,7 @@ public static class WorldTourApiClient
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
 
         using var request = new UnityWebRequest(
-            $"{BASE_URL}/save",
+            $"{BaseUrl}/save",
             UnityWebRequest.kHttpVerbPUT);
 
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -132,7 +134,7 @@ public static class WorldTourApiClient
         request.SetRequestHeader("x-player-id", playerId);
         request.SetRequestHeader("Authorization", $"Bearer {token}");
         request.SetRequestHeader("Content-Type", "application/json");
-        request.timeout = 10;
+        request.timeout = RequestTimeoutSeconds;
 
         try
         {
@@ -156,7 +158,7 @@ public static class WorldTourApiClient
                 return false;
             }
 
-            // サーバーで更新されたRevisionを送信元DTOに反映する
+            // 次回の保存では、このRevisionを期待値として送る。
             saveData.Revision = response.revision;
 
             return true;

@@ -212,14 +212,14 @@ public sealed class WorldTourMenuView : MonoBehaviour
             TMP_Text count = _elements["WorldCount" + i].GetComponent<TMP_Text>();
             count.enabled = true;
             count.gameObject.SetActive(world != null);
-            count.text = world == null ? "" : $"{WorldStars(world, _manager.SaveData)} / {_manager.GetStages(world).Count * 3}";
+            count.text = world == null ? "" : $"{WorldStars(world, _manager.SaveData)} / {_manager.GetStages(world).Count * StageData.StarCount}";
             Icon("WorldLock" + i, TourIconGraphic.Symbol.Lock, !available);
 
             bool selected = world != null && world == _selectedWorld;
             SetWorldSelected("WorldCard" + i, selected);
             if (_comingSoon.TryGetValue(i, out GameObject overlay)) overlay.SetActive(false);
             _elements["CardNumber" + i].GetComponent<TMP_Text>().color = selected ? TourUI.Gold : Color.white;
-            for (int star = 0; star < 3; star++)
+            for (int star = 0; star < StageData.StarCount; star++)
                 _elements[$"Card{i}Star{star}"].gameObject.SetActive(false);
         }
         RefreshWorldPins();
@@ -227,14 +227,14 @@ public sealed class WorldTourMenuView : MonoBehaviour
         Text("DetailEyebrow", $"WORLD {index + 1:00}");
         Text("DetailTitle", _selectedWorld.Name);
         Picture("Background", _selectedWorld.ImageUrl);
-        // WorldMapFocus keeps its scene-authored local map texture and UV rect.
+        // ワールドマップの地図はシーンに配置した画像を使う。
         Picture("DetailArt", _selectedWorld.ImageUrl);
         Text("DetailSubtitle", _manager.IsWorldCleared(_selectedWorld) ? "WORLD CLEAR" :
             _manager.IsWorldUnlocked(_selectedWorld) ? "挑戦可能" : "前のワールドのボスをクリアすると開放");
         Text("WorldDescription", string.IsNullOrWhiteSpace(_selectedWorld.Description)
             ? "さまざまな球種とステージ条件に挑戦。\nホームランを放ち、スターを集めよう！" : _selectedWorld.Description);
         Text("DetailStageCount", _manager.GetStages(_selectedWorld).Count.ToString());
-        Text("DetailStarCount", $"{WorldStars(_selectedWorld, _manager.SaveData)} / {_manager.GetStages(_selectedWorld).Count * 3}");
+        Text("DetailStarCount", $"{WorldStars(_selectedWorld, _manager.SaveData)} / {_manager.GetStages(_selectedWorld).Count * StageData.StarCount}");
         Text("Status", "ワールドを選んで冒険を始めよう ／ 左右にドラッグしてスクロール");
         Button("PrimaryAction").interactable = _manager.IsWorldUnlocked(_selectedWorld);
     }
@@ -255,7 +255,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
         Text("DetailSubtitle", $"{_selectedStage.BallCount}球で挑戦  /  STAGE {_selectedStage.StageId}");
         Text("ClearCondition", "クリア条件：" + ConditionText(_selectedStage.ClearObjective));
         StageProgressData progress = Progress(_selectedStage.StageId, _manager.SaveData);
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < StageData.StarCount; i++)
         {
             StageCondition condition = _selectedStage.StarObjectives != null && i < _selectedStage.StarObjectives.Count ? _selectedStage.StarObjectives[i] : null;
             Text("MissionText" + i, ConditionText(condition));
@@ -283,7 +283,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
             string number = stage?.IsBoss == true ? "BOSS" : (index + 1).ToString();
             Text("NodeNumber" + slot, stage == null ? "—" : progress?.IsCleared == true ? number + " CLEAR" : number);
             Icon("NodeIcon" + slot, !unlocked ? TourIconGraphic.Symbol.Lock : stage.IsBoss ? TourIconGraphic.Symbol.Crown : TourIconGraphic.Symbol.Baseball, stage != null);
-            for (int star = 0; star < 3; star++) SetStar($"Node{slot}Star{star}", HasStar(progress?.EarnedStars, star));
+            for (int star = 0; star < StageData.StarCount; star++) SetStar($"Node{slot}Star{star}", HasStar(progress?.EarnedStars, star));
             SetSelected("StageNode" + slot, stage != null && stage == _selectedStage);
         }
         for (int segment = 0; segment < _stagePaths.Count; segment++)
@@ -436,7 +436,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
         Text("ActionSubtitle", "前のステージをクリアすると開放");
         Text("Status", "開放済みのステージがありません");
         Picture("DetailArt", null);
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < StageData.StarCount; i++)
         {
             Text("MissionText" + i, "—");
             Text("MissionState" + i, "未開放");
@@ -478,7 +478,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
             BindWorldCard(i);
         }
 
-        // A visible handle also makes the strip usable without a drag gesture.
+        // ドラッグ操作が難しい場合もスクロールできるように、つまみを表示する。
         RectTransform track = TourUI.Rect(viewport.parent, "WorldCardScrollbar",
             viewport.anchoredPosition.x, -viewport.anchoredPosition.y + _cardHeight + 8f, width, 12f);
         Image trackImage = track.gameObject.AddComponent<Image>();
@@ -514,7 +514,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
         count.alignment = TextAlignmentOptions.Center;
         count.textWrappingMode = TextWrappingModes.NoWrap;
         count.gameObject.SetActive(false);
-        for (int star = 0; star < 3; star++)
+        for (int star = 0; star < StageData.StarCount; star++)
             _elements[$"Card{index}Star{star}"].gameObject.SetActive(false);
     }
 
@@ -524,7 +524,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
         while (_worldSlots < required)
         {
             int index = _worldSlots;
-            // Reuse the authored spare card's local artwork and styling.
+            // シーンに置いた予備カードの見た目を複製する。
             int templateIndex = _worldSlots - 1;
             Transform template = _elements["WorldCard" + templateIndex];
             Transform clone = Instantiate(template, _worldContent);
@@ -561,7 +561,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
 
     private void RefreshWorldPins()
     {
-        // Keep the authored map positions independent of the scrolling cards.
+        // 地図上の配置は、スクロールするカードとは独立させる。
         for (int i = 0; i < _pinSlots; i++)
         {
             WorldData world = i < _worlds.Count ? _worlds[i] : null;
@@ -588,7 +588,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
         Text("WorldName" + index, "準備中");
         Picture("CardArt" + index, null);
         Icon("WorldLock" + index, TourIconGraphic.Symbol.Lock, false);
-        for (int star = 0; star < 3; star++) _elements[$"Card{index}Star{star}"].gameObject.SetActive(false);
+        for (int star = 0; star < StageData.StarCount; star++) _elements[$"Card{index}Star{star}"].gameObject.SetActive(false);
         if (!_comingSoon.TryGetValue(index, out GameObject overlay))
         {
             RectTransform art = (RectTransform)_elements["CardArt" + index];
@@ -621,7 +621,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
     private void RefreshTotals()
     {
         int count = 0, total = 0;
-        foreach (WorldData world in _worlds) { count += WorldStars(world, _manager.SaveData); total += world.Stages.Count * 3; }
+        foreach (WorldData world in _worlds) { count += WorldStars(world, _manager.SaveData); total += world.Stages.Count * StageData.StarCount; }
         Text("TotalStars", $"{count} / {total}");
     }
 
@@ -648,7 +648,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
 
     private void Picture(string name, string url)
     {
-        // Never bind remote world/stage images to the fixed world map.
+        // 地図の画像はシーン側で固定し、配信画像へ差し替えない。
         if (name == "WorldMapFocus") return;
         if (_elements.TryGetValue(name, out Transform element))
             _images.SetImage(element.GetComponent<RawImage>(), url);
@@ -665,7 +665,7 @@ public sealed class WorldTourMenuView : MonoBehaviour
         button.interactable = available;
         CanvasGroup group = button.GetComponent<CanvasGroup>();
         if (group == null) group = button.gameObject.AddComponent<CanvasGroup>();
-        // Fade artwork and labels together; keep raycasts so locked cards can still be dragged.
+        // ロック中もカードをドラッグできるよう、Raycastは有効にしておく。
         group.alpha = available ? 1f : 0.45f;
         group.interactable = available;
         group.blocksRaycasts = true;

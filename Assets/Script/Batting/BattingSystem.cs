@@ -255,7 +255,8 @@ public class BattingSystem : MonoBehaviour
 
     private void CalculateNow()
     {
-        Debug.Log("[BattingSystem] Batting calculation started.");
+        if (_parameters != null && _parameters.EnableDebugLogs)
+            Debug.Log("[BattingSystem] Batting calculation started.", this);
         _hitEvent?.RaiseEvent(_ballMove);
         _swingEvent?.RaiseEvent();
     }
@@ -291,7 +292,8 @@ public class BattingSystem : MonoBehaviour
 
     private void ReleasedBall(PitchBallMove ball)
     {
-        Debug.Log("[BattingSystem] Ball Released - Swing is now allowed.");
+        if (_parameters != null && _parameters.EnableDebugLogs)
+            Debug.Log("[BattingSystem] Ball Released - Swing is now allowed.", this);
         EndHitStop();
         _canSwing = true;
         _isSwinging = false;

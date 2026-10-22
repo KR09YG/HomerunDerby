@@ -49,7 +49,7 @@ public static class PlayerSaveDataConverter
 
     private static bool[] CopyStars(bool[] source)
     {
-        var stars = new bool[3];
+        var stars = new bool[StageData.StarCount];
         if (source != null) System.Array.Copy(source, stars, System.Math.Min(source.Length, stars.Length));
         return stars;
     }

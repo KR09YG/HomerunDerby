@@ -149,7 +149,7 @@ public static class TourUI
         {
             if (string.IsNullOrEmpty(world.WorldId)) continue;
             earned += WorldTourMenuView.WorldStars(world, manager.SaveData);
-            total += world.Stages.Count * 3;
+            total += world.Stages.Count * StageData.StarCount;
         }
         Text(parent, "Stars Label", "STARS", 1635f, 38f, 220f, 26f, 23f, theme.DisplayFont);
         Text(parent, "Stars Count", $"{earned} / {total}", 1635f, 65f, 220f, 47f, 38f, theme.DisplayFont, Gold);

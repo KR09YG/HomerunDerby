@@ -20,28 +20,24 @@
         [SerializeField] private float _delayToNextPitch;
         [SerializeField] private PitcherAnimationController _animationController;
         [SerializeField] private BoxCollider _collider;
-        [SerializeField] LineRenderer _lineRenderer;
         [SerializeField] private PitchBallMove _ballMove;
         [SerializeField] private TrajectorySettings _trajectorySettings;
         [SerializeField] private BounceSettings _bounceSettings;
         [SerializeField] private Transform _releasePoint;
         [SerializeField] private Transform _passPoint;
         [SerializeField] private float _stopZ;
-        [SerializeField] private float _nodAnimTime;
 
-        private Vector3 _startPos;
-        private Vector3 _startRota;
-        public BallData _selectedBall;
+        private Vector3 _startPosition;
+        private Vector3 _startEulerAngles;
+        private BallData _selectedBall;
         private List<WeightedPitch> _ballList;
-        private List<Vector3> _ballTrajectory = new List<Vector3>();
-        public bool _isPlaying = false;
+        private List<Vector3> _ballTrajectory;
         private bool _pitchPending;
-        public List<WeightedPitch> BallList => _ballList;
 
-        public void Awake()
+        private void Awake()
         {
-            _startPos = transform.position;
-            _startRota = transform.eulerAngles;
+            _startPosition = transform.position;
+            _startEulerAngles = transform.eulerAngles;
 
             if (_startPitchEvent != null) _startPitchEvent.RegisterListener(ToNextPitch);
             else Debug.LogError("OnStartPitchEvent が未設定");
@@ -68,8 +64,8 @@
 
         private void ResetPos()
         {
-            transform.position = _startPos;
-            transform.eulerAngles = _startRota; 
+            transform.position = _startPosition;
+            transform.eulerAngles = _startEulerAngles;
         }
 
         private async UniTask WaitPitch()
@@ -95,12 +91,11 @@
             PitchTypeData pitch = PitchTypeSelector.Select(_ballList, Random.value);
             _passPoint.position = GetRandomPositionInCollider();
             _selectedBall = pitch.Data;
-            Debug.Log($"Ball decided: {_selectedBall.Name}");
         }
 
         private Vector3 GetRandomPositionInCollider()
         {
-            BoxCollider box = _collider as BoxCollider;
+            BoxCollider box = _collider;
 
             Vector3 localCenter = box.center;
             Vector3 localSize = box.size;
@@ -141,7 +136,7 @@
 
         private SpinState _pitchSpin;
 
-        public List<Vector3> CalculateTrajectory(BallData ball)
+        private List<Vector3> CalculateTrajectory(BallData ball)
         {
             return BallPhysicsCalculator.CalculateTrajectory(new PitchRequest()
             {

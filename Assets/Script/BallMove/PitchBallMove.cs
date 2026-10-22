@@ -172,7 +172,6 @@ public class PitchBallMove : BallMoveTrajectory
         _elapsedTime = (_trajectory.Count - 1) * _trajectoryDeltaTime;
         _isMoving = false;
         HasReachedTarget = true;
-        Debug.Log("PitchBallMove: ボールがターゲットに到達しました");
         _onBallReachedTarget?.RaiseEvent(this);
         _trajectory = null;
     }

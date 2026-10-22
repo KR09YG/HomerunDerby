@@ -21,5 +21,5 @@ public class StageProgressDataDto
 {
     public string StageId;
     public bool IsCleared;
-    public bool[] EarnedStars = new bool[3];
+    public bool[] EarnedStars = new bool[StageData.StarCount];
 }

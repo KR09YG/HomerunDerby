@@ -8,10 +8,6 @@ namespace Homerunderby
         [Tooltip("球速はkm/h、回転数はrpm。回転軸はワールド座標で指定する。")]
         [SerializeField] private BallData _ballData = new BallData { Speed = 140f, RotateSpeed = 2000f, SpinAxis = Vector3.left };
 
-        [Tooltip("自動投球で選ばれる重み。同じ値なら等確率、0なら選択しない。")]
-        [Min(0f)]
-        [SerializeField] private float _selectionWeight = 1f;
-
         [Header("参考にした投球データ")]
         [SerializeField] private string _referencePitcher;
         [SerializeField] private int _referenceSeason;
