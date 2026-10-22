@@ -19,6 +19,7 @@ public sealed class StadiumSurfaceColliders : MonoBehaviour
 
         int groundCount = 0;
         int fenceCount = 0;
+        int homeRunFenceCount = 0;
         foreach (MeshFilter filter in GetComponentsInChildren<MeshFilter>(true))
         {
             string meshName = filter.gameObject.name;
@@ -39,6 +40,12 @@ public sealed class StadiumSurfaceColliders : MonoBehaviour
             if (filter.sharedMesh == null)
                 continue;
 
+            if (!Application.isEditor && !filter.sharedMesh.isReadable)
+            {
+                Debug.LogError($"[Stadium] {meshName} の当たり判定を生成できません。球場モデルのRead/Writeを有効にしてください。", filter);
+                continue;
+            }
+
             GameObject surface = filter.gameObject;
             surface.layer = layer;
             MeshCollider meshCollider = surface.GetComponent<MeshCollider>();
@@ -50,12 +57,14 @@ public sealed class StadiumSurfaceColliders : MonoBehaviour
                 groundCount++;
             else
                 fenceCount++;
+            if (meshName.StartsWith("WALL_Panel_", StringComparison.Ordinal)) homeRunFenceCount++;
         }
 
         if (groundCount == 0 || fenceCount == 0)
             Debug.LogError($"球場の当たり判定を設定できませんでした。地面: {groundCount}、フェンス: {fenceCount}", this);
 
         Physics.SyncTransforms();
+        Debug.Log($"[Stadium] 当たり判定設定: Ground={groundCount}, Walls={fenceCount}, HomeRunFencePanels={homeRunFenceCount}", this);
     }
 
     private static bool IsGroundSurface(string name)
